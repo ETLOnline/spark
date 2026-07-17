@@ -66,7 +66,11 @@ async function layout({ children, params }: Props) {
       ) : (
         <PrivatePage
           page="project"
-          pageHref={`/channels/${currSpace.data?.channel.channel_slug}/spaces/${currSpace.data?.space_slug}?page-type=project-management`}
+          pageHref={
+            currSpace.data?.channel?.channel_slug
+              ? `/channels/${currSpace.data.channel.channel_slug}/spaces/${currSpace.data?.space_slug}?page-type=project-management`
+              : `/mentorship/${currSpace.data?.created_by}/spaces/${currSpace.data?.space_slug}?page-type=project-management`
+          }
         />
       )}
     </div>

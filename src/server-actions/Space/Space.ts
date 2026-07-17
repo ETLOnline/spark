@@ -1,6 +1,7 @@
 "use server"
 
 import {
+  attachSpaceFeatures,
   attachSpaceUser,
   CreateSpace,
   DeleteSpace,
@@ -10,11 +11,13 @@ import {
   GetSpaceBySlug,
   GetSpaces,
   getSpaceUsers,
+  IsIndependentSpaceSlugAvailable,
   IsSlugAvailable,
   spaceQueryFilters,
   UpdateSpace,
   updateSpaceUser
 } from "@/src/db/data-access/spaces/query"
+import { getFeatures } from "@/src/db/data-access/feature/query"
 import { CreateServerAction } from ".."
 import {
   InsertSpace,
@@ -55,6 +58,14 @@ import { AddRewardAction } from "../Reward/Reward"
 // Define the broadcast channel name constant for cleaner code
 const BROADCAST_CHANNEL = EntityUpdateBroadCast
 
+// Every independent space comes with chat, file sharing, and
+// project management enabled by default.
+const DEFAULT_INDEPENDENT_SPACE_FEATURE_SLUGS = [
+  "chat",
+  "file-sharing",
+  "project-management"
+]
+
 export const CreateSpaceAction = CreateServerAction(
   true,
   async (SpaceData: InsertSpace) => {
@@ -70,7 +81,9 @@ export const CreateSpaceAction = CreateServerAction(
         newSpace.created_by
       )
 
-      const channelUsersAfter = await getChannelUsers(SpaceData?.channel_id)
+      const channelUsersAfter = await getChannelUsers(
+        SpaceData.channel_id as string
+      )
 
       const channel_user_id = channelUsersAfter.find(
         (cu) => cu.user_id === newSpace.created_by
@@ -86,7 +99,9 @@ export const CreateSpaceAction = CreateServerAction(
 
       const spaceURL = GetSpaceURL(
         spaceWithRelations?.channel?.channel_slug || "",
-        spaceWithRelations?.space_slug || ""
+        spaceWithRelations?.space_slug || "",
+        undefined,
+        spaceWithRelations?.created_by
       )
 
       await AddRewardAction(
@@ -105,6 +120,78 @@ export const CreateSpaceAction = CreateServerAction(
       return {
         error: error
       }
+    }
+  }
+)
+
+export const CreateIndependentSpaceAction = CreateServerAction(
+  true,
+  async (spaceData: Omit<InsertSpace, "channel_id">) => {
+    try {
+      const overview = defaultSpaceOverviewTemplate(spaceData.space_name)
+      const newSpace = await CreateSpace({
+        ...spaceData,
+        channel_id: null,
+        overview
+      })
+
+      const result = await createScopedSpaceRolesAndAssignAdmin(
+        newSpace.id,
+        newSpace.space_name,
+        newSpace.created_by
+      )
+
+      await attachSpaceUser(
+        newSpace.id,
+        newSpace.created_by,
+        null,
+        result.adminRole?.name
+      )
+
+      const allFeatures = await getFeatures({ feature_type: "space" })
+      const defaultFeatureIds = allFeatures
+        .filter((f) =>
+          DEFAULT_INDEPENDENT_SPACE_FEATURE_SLUGS.includes(f.feature_slug)
+        )
+        .map((f) => f.id)
+      if (defaultFeatureIds.length) {
+        await attachSpaceFeatures(newSpace.id, defaultFeatureIds)
+      }
+
+      return { success: true, data: newSpace }
+    } catch (error: any) {
+      return {
+        error: error
+      }
+    }
+  }
+)
+
+export const GetSpacesByCreatorAction = CreateServerAction(
+  true,
+  async (creatorId: string, page?: number, limit?: number) => {
+    try {
+      const result = await GetSpaces({
+        created_by: creatorId,
+        isIndependent: true,
+        page,
+        limit
+      })
+      return { success: true, data: result }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const IsIndependentSlugAvailableAction = CreateServerAction(
+  true,
+  async (slug: string) => {
+    try {
+      const isAvailable = await IsIndependentSpaceSlugAvailable(slug)
+      return { success: true, data: isAvailable }
+    } catch (error) {
+      return { error: error }
     }
   }
 )
@@ -244,7 +331,11 @@ export const DeleteSpaceAction = CreateServerAction(
 
 export const GetSpaceBySlugAction = CreateServerAction(
   true,
-  async (spaceSlug: string, channelSlug: string, withSpaceUsers?: boolean) => {
+  async (
+    spaceSlug: string,
+    channelSlug?: string | null,
+    withSpaceUsers?: boolean
+  ) => {
     try {
       const space = await GetSpaceBySlug(spaceSlug, channelSlug, withSpaceUsers)
       return { success: true, data: space }
@@ -278,8 +369,30 @@ export const AttachSpaceUserAction = CreateServerAction(
         return { success: true, data: null } // already a member
       }
 
-      if (!space.channel_id)
-        return { success: false, error: "Space has no associated channel" }
+      if (!space.channel_id) {
+        // Independent space (no channel/community) - skip the hierarchy
+        // cascade entirely and attach the user directly to the space.
+        const spaceViewerRole = await getAndAssignViewerRoles(
+          userId,
+          "space_viewer",
+          spaceId
+        )
+
+        const newSpaceUser = await attachSpaceUser(
+          spaceId,
+          userId,
+          null,
+          spaceViewerRole?.viewerRole?.name
+        )
+
+        await pusherServer.trigger(
+          `user-${userId}`,
+          "update-role",
+          spaceViewerRole
+        )
+
+        return { success: true, data: newSpaceUser }
+      }
 
       const channel = await GetChannelById(space.channel_id)
       if (!channel) return { success: false, error: "Channel not found" }
