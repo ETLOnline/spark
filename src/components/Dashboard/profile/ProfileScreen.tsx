@@ -66,7 +66,6 @@ import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
 import EditMentorModal from "./EditMentorModal"
 import {
-  GetAcceptedSessionRequestsForMenteeAction,
   GetAcceptedSessionRequestsForMentorAction,
   GetMentorAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
@@ -89,7 +88,6 @@ import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import ViewAvailabilityButton from "./ViewAvailabilityButton"
 import EditFypInfoModal from "./EditFypInfoModal"
 import MentorSessionsCard from "./MentorSessionsCard"
-import MenteeSessionsCard, { MenteeSessionRequest } from "./MenteeSessionsCard"
 
 type ProfileScreenProps = {
   tab?: string
@@ -145,12 +143,6 @@ export default function ProfileScreen({
   >([])
   const [, , , getAcceptedMentorSessions] = useServerAction(
     GetAcceptedSessionRequestsForMentorAction
-  )
-  const [acceptedMenteeSessions, setAcceptedMenteeSessions] = useState<
-    MenteeSessionRequest[]
-  >([])
-  const [, , , getAcceptedMenteeSessions] = useServerAction(
-    GetAcceptedSessionRequestsForMenteeAction
   )
   const authUser = useAtomValue(userStore.AuthUser)
 
@@ -235,18 +227,6 @@ export default function ProfileScreen({
     }
     fetchAcceptedMentorSessions()
   }, [isMentor, user.unique_id])
-
-  // This user's own bookings as a mentee — private, only shown on their own profile
-  useEffect(() => {
-    if (!isMyProfile || !authUser) return
-    const fetchAcceptedMenteeSessions = async () => {
-      const res = await getAcceptedMenteeSessions(authUser.unique_id)
-      if (res?.success && res.data) {
-        setAcceptedMenteeSessions(res.data as MenteeSessionRequest[])
-      }
-    }
-    fetchAcceptedMenteeSessions()
-  }, [isMyProfile, authUser])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
   const todayStr = toLocalDateStr(new Date())
@@ -522,10 +502,6 @@ export default function ProfileScreen({
 
             {isMentor && (
               <MentorSessionsCard acceptedRequests={acceptedMentorSessions} />
-            )}
-
-            {isMyProfile && (
-              <MenteeSessionsCard acceptedRequests={acceptedMenteeSessions} />
             )}
           </div>
           {/* Right Column */}
