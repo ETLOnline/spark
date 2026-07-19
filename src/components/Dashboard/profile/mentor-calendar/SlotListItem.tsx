@@ -46,6 +46,7 @@ interface SlotListItemProps {
   onDeleteOccurrence: (slotId: number, date: Date) => void
   onRequestSlot: (slot: SelectMentorAvailability) => void
   suggestedRequest: SelectSessionRequest | null
+  isConfirming?: boolean
   onConfirmSuggestedSlot: (
     slot: SelectMentorAvailability,
     requestId: number
@@ -67,6 +68,7 @@ export function SlotListItem({
   onDeleteOccurrence,
   onRequestSlot,
   suggestedRequest,
+  isConfirming,
   onConfirmSuggestedSlot
 }: SlotListItemProps) {
   const mentorPendingCount = isMyProfile
@@ -178,6 +180,7 @@ export function SlotListItem({
               variant="outline"
               size="sm"
               className="w-full border-purple-500/30"
+              loading={isConfirming}
               onClick={(e) => {
                 e.currentTarget.blur()
                 onConfirmSuggestedSlot(slot, suggestedRequest.id)

@@ -384,25 +384,9 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                   <Button
                     size="sm"
                     loading={responding}
-                    onClick={() => handleRespond("accepted")}
+                    onClick={() => setShowWorkspaceDialog(true)}
                   >
                     Accept
-                  </Button>
-                </div>
-              )}
-
-              {selectedRequest.status === "slot_suggested" && (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs text-amber-600 font-medium">
-                    Waiting for mentee to select a slot…
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    loading={responding}
-                    onClick={() => handleRespond("rejected")}
-                  >
-                    Reject
                   </Button>
                 </div>
               )}

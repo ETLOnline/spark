@@ -139,7 +139,7 @@ export function toggleItemCls(
 // availability replaces every slot row with a fresh id, so a stale id match
 // would silently stop showing "Pending"/"Booked" even though the request exists.
 
-/** The viewer's own pending request overlapping this slot's window on this date. */
+/** The viewer's own pending or resubmitted request overlapping this slot's window on this date. */
 export function myPendingRequestFor(
   slot: SelectMentorAvailability,
   date: Date,
@@ -151,7 +151,25 @@ export function myPendingRequestFor(
   return myRequests.find(
     (r) =>
       r.session_date === dateStr &&
-      r.status === "pending" &&
+      (r.status === "pending" || r.status === "resubmitted") &&
+      toMins(r.start_time) < slotEnd &&
+      slotStart < toMins(r.end_time)
+  )
+}
+
+/** The viewer's own slot_suggested request on the original date — shown as "Rescheduled". */
+export function myRescheduledRequestFor(
+  slot: SelectMentorAvailability,
+  date: Date,
+  myRequests: SelectSessionRequest[]
+) {
+  const dateStr = moment(date).format("YYYY-MM-DD")
+  const slotStart = toMins(slot.start_time)
+  const slotEnd = toMins(slot.end_time)
+  return myRequests.find(
+    (r) =>
+      r.session_date === dateStr &&
+      r.status === "slot_suggested" &&
       toMins(r.start_time) < slotEnd &&
       slotStart < toMins(r.end_time)
   )

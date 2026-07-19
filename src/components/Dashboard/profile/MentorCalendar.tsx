@@ -46,7 +46,6 @@ import { MentorCalendarGrid } from "./mentor-calendar/MentorCalendarGrid"
 import { SlotListItem } from "./mentor-calendar/SlotListItem"
 import { SessionRequestForm } from "./mentor-calendar/SessionRequestForm"
 import { AvailabilitySlotForm } from "./mentor-calendar/AvailabilitySlotForm"
-import { SuggestedSlotForm } from "./mentor-calendar/SuggestedSlotForm"
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -121,14 +120,6 @@ export function MentorCalendar({
   const [, , , deleteSessionRequestsForSlot] = useServerAction(
     DeleteSessionRequestsForRemovedSlotAction
   )
-
-  // Resubmit state — mentee picks a suggested slot
-  const [resubmitFormSlot, setResubmitFormSlot] =
-    useState<SelectMentorAvailability | null>(null)
-  const [resubmitOriginalRequestId, setResubmitOriginalRequestId] = useState<
-    number | null
-  >(null)
-  const [resubmitError, setResubmitError] = useState("")
 
   /** Returns the slot_suggested request for this exact slot + date occurrence, if any. */
   const getSuggestedRequestForSlot = (slotId: number, date: Date) => {
@@ -366,35 +357,37 @@ export function MentorCalendar({
     setRequestDuration(fitting[0] ?? 60)
   }
 
-  const openResubmitForm = (
+  const confirmSuggestedSlot = async (
     slot: SelectMentorAvailability,
-    originalRequestId: number
+    requestId: number
   ) => {
-    setResubmitFormSlot(slot)
-    setResubmitOriginalRequestId(originalRequestId)
-    setResubmitError("")
-    setRequestStartTime(slot.start_time)
-    const fitting = getDurationOptions(slot, slot.start_time, [])
-    setRequestDuration(fitting[0] ?? 60)
-  }
-
-  const confirmSuggestedSlot = async () => {
-    if (!resubmitFormSlot || !selectedDate || !resubmitOriginalRequestId) return
-    const endTime = minsToTime(toMins(requestStartTime) + requestDuration)
+    if (!selectedDate) return
     const res = await resubmitSessionRequest({
-      requestId: resubmitOriginalRequestId,
-      slotId: resubmitFormSlot.id,
+      requestId,
+      slotId: slot.id,
       sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
-      startTime: requestStartTime,
-      endTime
+      startTime: slot.start_time,
+      endTime: slot.end_time
     })
     if (res?.success) {
       await loadMyRequests()
-      setResubmitFormSlot(null)
-      setResubmitOriginalRequestId(null)
+      setIsPopupOpen(false)
       toast({ title: "Session request resubmitted", duration: 2000 })
     } else {
-      setResubmitError(res?.error ?? "Failed to resubmit")
+      toast({
+        variant: "destructive",
+        title: "Failed to resubmit",
+        description: res?.error ?? "Please try again.",
+        duration: 3000
+      })
+    }
+  }
+
+  const handleDialogBack = () => {
+    if (requestFormSlot) {
+      setRequestFormSlot(null)
+    } else {
+      setIsPopupOpen(false)
     }
   }
 
@@ -408,15 +401,6 @@ export function MentorCalendar({
       acceptedRequests
     )
     const fitting = getDurationOptions(requestFormSlot, value, unavailable)
-    if (!fitting.includes(requestDuration)) {
-      setRequestDuration(fitting[0] ?? 60)
-    }
-  }
-
-  const handleResubmitStartTimeChange = (value: string) => {
-    setRequestStartTime(value)
-    if (!resubmitFormSlot) return
-    const fitting = getDurationOptions(resubmitFormSlot, value, [])
     if (!fitting.includes(requestDuration)) {
       setRequestDuration(fitting[0] ?? 60)
     }
@@ -578,27 +562,16 @@ export function MentorCalendar({
         <DialogContent className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]">
           <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
             <DialogTitle className="text-lg font-semibold">
-              {resubmitFormSlot
-                ? "Suggested Slot"
-                : requestFormSlot
-                  ? "Request a Session"
-                  : isMyProfile
-                    ? "New Availability Slot"
-                    : `${selectedDayName} Availability`}
+              {requestFormSlot
+                ? "Request a Session"
+                : isMyProfile
+                  ? "New Availability Slot"
+                  : `${selectedDayName} Availability`}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-3">
-            {resubmitFormSlot ? (
-              <SuggestedSlotForm
-                slot={resubmitFormSlot}
-                startTime={requestStartTime}
-                onStartTimeChange={handleResubmitStartTimeChange}
-                duration={requestDuration}
-                onDurationChange={setRequestDuration}
-                error={resubmitError}
-              />
-            ) : requestFormSlot ? (
+            {requestFormSlot ? (
               <SessionRequestForm
                 slot={requestFormSlot}
                 unavailableRanges={
@@ -691,9 +664,8 @@ export function MentorCalendar({
                             slot.id,
                             selectedDate!
                           )}
-                          onConfirmSuggestedSlot={(s, requestId) =>
-                            openResubmitForm(s, requestId)
-                          }
+                          isConfirming={resubmitSubmitting}
+                          onConfirmSuggestedSlot={confirmSuggestedSlot}
                         />
                       ))}
                     </div>
@@ -711,26 +683,12 @@ export function MentorCalendar({
 
           <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
             <button
-              onClick={() => {
-                if (resubmitFormSlot) {
-                  setResubmitFormSlot(null)
-                  setResubmitOriginalRequestId(null)
-                  setResubmitError("")
-                } else if (requestFormSlot) {
-                  setRequestFormSlot(null)
-                } else {
-                  setIsPopupOpen(false)
-                }
-              }}
+              onClick={handleDialogBack}
               className="px-4 py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
             >
-              {resubmitFormSlot || requestFormSlot
-                ? "Back"
-                : isMyProfile
-                  ? "Cancel"
-                  : "Close"}
+              {requestFormSlot ? "Back" : isMyProfile ? "Cancel" : "Close"}
             </button>
-            {isMyProfile && !requestFormSlot && !resubmitFormSlot && (
+            {isMyProfile && !requestFormSlot && (
               <Button
                 onClick={handleAddSlot}
                 loading={saving}
@@ -746,15 +704,6 @@ export function MentorCalendar({
                 className="h-9 px-5 text-sm rounded-lg"
               >
                 Send Request
-              </Button>
-            )}
-            {resubmitFormSlot && (
-              <Button
-                onClick={confirmSuggestedSlot}
-                loading={resubmitSubmitting}
-                className="h-9 px-5 text-sm rounded-lg"
-              >
-                Confirm Selection
               </Button>
             )}
           </div>

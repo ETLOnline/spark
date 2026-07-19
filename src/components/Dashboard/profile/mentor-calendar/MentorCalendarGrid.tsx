@@ -9,6 +9,7 @@ import {
   Clock,
   Lock,
   Plus,
+  RefreshCw,
   Sparkles,
   Users,
   Video
@@ -24,6 +25,7 @@ import {
   isSlotFullyBooked,
   myAcceptedRequestsFor,
   myPendingRequestFor,
+  myRescheduledRequestFor,
   toggleItemCls,
   ViewType
 } from "./mentorCalendarUtils"
@@ -188,10 +190,17 @@ export function MentorCalendarGrid({
             !suggested &&
             !myAccepted &&
             isSlotFullyBooked(slot, date, bookedRequests)
+          const rescheduled =
+            !isMyProfile &&
+            !suggested &&
+            !myAccepted &&
+            !booked &&
+            myRescheduledRequestFor(slot, date, myRequests)
           const pending =
             !booked &&
             !suggested &&
             !myAccepted &&
+            !rescheduled &&
             !isMyProfile &&
             myPendingRequestFor(slot, date, myRequests)
 
@@ -213,11 +222,13 @@ export function MentorCalendarGrid({
                     ? `Booked by you · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
                     : booked
                       ? `Booked · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
-                      : pending
-                        ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
-                        : isMyProfile && pendingCount > 0
-                          ? `${pendingCount} pending request${pendingCount > 1 ? "s" : ""} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
-                          : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                      : rescheduled
+                        ? `Rescheduled · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                        : pending
+                          ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                          : isMyProfile && pendingCount > 0
+                            ? `${pendingCount} pending request${pendingCount > 1 ? "s" : ""} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                            : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
               }
               className={cn(
                 "text-[10px] leading-tight rounded px-1 py-0.5 font-medium flex items-center gap-1",
@@ -227,9 +238,11 @@ export function MentorCalendarGrid({
                     ? "bg-emerald-500/15 text-emerald-600"
                     : booked
                       ? "bg-foreground/10 text-muted-foreground"
-                      : pending
-                        ? "bg-amber-500/20 text-amber-600"
-                        : "bg-primary/20 text-primary"
+                      : rescheduled
+                        ? "bg-orange-500/20 text-orange-600"
+                        : pending
+                          ? "bg-amber-500/20 text-amber-600"
+                          : "bg-primary/20 text-primary"
               )}
             >
               {suggested ? (
@@ -238,6 +251,8 @@ export function MentorCalendarGrid({
                 <CheckCircle2 className="h-2.5 w-2.5 shrink-0" />
               ) : booked ? (
                 <Lock className="h-2.5 w-2.5 shrink-0" />
+              ) : rescheduled ? (
+                <RefreshCw className="h-2.5 w-2.5 shrink-0" />
               ) : pending ? (
                 <Clock className="h-2.5 w-2.5 shrink-0" />
               ) : slot.session_type === "group" ? (
@@ -252,9 +267,11 @@ export function MentorCalendarGrid({
                     ? "Booked by you"
                     : booked
                       ? "Booked"
-                      : pending
-                        ? "Pending"
-                        : formatTime(slot.start_time)}
+                      : rescheduled
+                        ? "Rescheduled"
+                        : pending
+                          ? "Pending"
+                          : formatTime(slot.start_time)}
               </span>
               {isMyProfile && pendingCount > 0 && (
                 <span className="ml-auto shrink-0 flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none">
