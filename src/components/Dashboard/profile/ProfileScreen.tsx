@@ -23,15 +23,20 @@ import {
   Briefcase,
   Building2,
   Video,
-  CheckCircle2
+  CheckCircle2,
+  Inbox,
+  LayoutGrid,
+  ArrowRight
 } from "lucide-react"
 import {
   SelectCertificate,
   SelectProfile,
   SelectRecommendation,
+  SelectSpace,
   SelectTag,
   SelectUser
 } from "@/src/db/schema"
+import { GetSpacesByCreatorAction } from "@/src/server-actions/Space/Space"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -42,6 +47,7 @@ import {
   CardContent
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
+import { REPUTATION_POINTS_REWARD_ID } from "@/src/utils/constants"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -125,6 +131,8 @@ export default function ProfileScreen({
   const [, , , getMentorAvailability] = useServerAction(
     GetMentorAvailabilityAction
   )
+  const [mentorSpaces, setMentorSpaces] = useState<SelectSpace[]>([])
+  const [, , , getSpacesByCreator] = useServerAction(GetSpacesByCreatorAction)
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
@@ -162,7 +170,10 @@ export default function ProfileScreen({
   useEffect(() => {
     if (!authUser || isMyProfile) return
     const fetchViewerRp = async () => {
-      const res = await GetViewerRpBalance(authUser.unique_id, 1)
+      const res = await GetViewerRpBalance(
+        authUser.unique_id,
+        REPUTATION_POINTS_REWARD_ID
+      )
       if (res?.success && res.data) {
         setViewerRp(res.data.current_balance ?? 0)
       }
@@ -181,6 +192,18 @@ export default function ProfileScreen({
     }
     fetchSlots()
   }, [isMentor, user.unique_id])
+
+  // Independent spaces the mentor created — only relevant on their own profile
+  useEffect(() => {
+    if (!isMentor || !isMyProfile) return
+    const fetchMentorSpaces = async () => {
+      const res = await getSpacesByCreator(user.unique_id)
+      if (res?.success && res.data) {
+        setMentorSpaces(res.data.spaces)
+      }
+    }
+    fetchMentorSpaces()
+  }, [isMentor, isMyProfile, user.unique_id])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
   const todayStr = toLocalDateStr(new Date())
@@ -639,13 +662,27 @@ export default function ProfileScreen({
                           className="w-full mt-2"
                           size="sm"
                         >
-                          <CalendarDays className="h-4 w-4 mr-2" />
+                          <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
                           Manage Availability
                         </Button>
                       </Link>
                     )}
 
-                    {/* Viewer: see mentor's availability when slots exist */}
+                    {/* Mentor: review incoming session requests */}
+                    {isMyProfile && (
+                      <Link href="/profile/session-requests" className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full mt-2"
+                          size="sm"
+                        >
+                          <Inbox className="h-4 w-4 mr-2 text-muted-foreground" />
+                          Session Requests
+                        </Button>
+                      </Link>
+                    )}
+
+                    {/* Viewer: see mentor's availability + jump straight to requesting a session */}
                     {!isMyProfile && mentorSlots.length > 0 && (
                       <ViewAvailabilityButton
                         mentorId={user.unique_id}
@@ -655,6 +692,39 @@ export default function ProfileScreen({
                   </CardContent>
                 </Card>
               )}
+
+            {/* Mentor: active independent spaces */}
+            {isMyProfile && mentorSpaces.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    Active Spaces
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {mentorSpaces.slice(0, 3).map((space) => (
+                    <Link
+                      key={space.id}
+                      href={`/mentorship/${user.unique_id}/spaces/${encodeURIComponent(space.space_slug)}`}
+                      className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
+                    >
+                      <span className="truncate">{space.space_name}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    </Link>
+                  ))}
+
+                  <Link
+                    href={`/mentorship/${user.unique_id}/spaces`}
+                    className="w-full"
+                  >
+                    <Button variant="outline" className="w-full mt-2" size="sm">
+                      Show All Spaces
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Education */}
             <Card>

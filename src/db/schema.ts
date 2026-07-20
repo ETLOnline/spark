@@ -131,6 +131,12 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   testedTasks: many(taskTable, {
     relationName: "taskTester"
+  }),
+  mentorSessionRequests: many(sessionRequestsTable, {
+    relationName: "sessionRequestToMentor"
+  }),
+  menteeSessionRequests: many(sessionRequestsTable, {
+    relationName: "sessionRequestToMentee"
   })
 }))
 
@@ -221,6 +227,50 @@ export type InsertMentorAvailability =
   typeof mentorAvailabilityTable.$inferInsert
 export type SelectMentorAvailability =
   typeof mentorAvailabilityTable.$inferSelect
+
+export const sessionRequestsTable = pgTable("session_requests", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  mentee_id: varchar("mentee_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  // No FK constraint on purpose: a mentor editing their availability replaces
+  // every slot row with a fresh id (see ReplaceMentorAvailability), so this
+  // column is informational only. The request's own
+  // session_date/start_time/end_time/session_type are the source of truth,
+  // and availability is re-checked live against current slots wherever it
+  // matters — nothing about this row should ever be touched by a slot delete.
+  availability_slot_id: integer("availability_slot_id"),
+  session_date: varchar("session_date").notNull(),
+  start_time: varchar("start_time").notNull(),
+  end_time: varchar("end_time").notNull(),
+  session_type: varchar("session_type").notNull(),
+  topic: varchar("topic").notNull(),
+  description: varchar("description"),
+  status: varchar("status").notNull().default("pending"),
+  ...timestamps
+})
+
+export const sessionRequestsRelations = relations(
+  sessionRequestsTable,
+  ({ one }) => ({
+    mentor: one(usersTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentor"
+    }),
+    mentee: one(usersTable, {
+      fields: [sessionRequestsTable.mentee_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentee"
+    })
+  })
+)
+
+export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -867,9 +917,10 @@ export const spacesTable = pgTable("spaces", {
   space_slug: varchar().notNull(),
   space_name: varchar().notNull(),
   description: varchar(),
-  channel_id: varchar("channel_id", { length: 36 })
-    .references(() => channelsTable.id, { onDelete: "cascade" })
-    .notNull(),
+  channel_id: varchar("channel_id", { length: 36 }).references(
+    () => channelsTable.id,
+    { onDelete: "cascade" }
+  ),
   created_by: varchar().notNull(),
   ownerId: varchar(),
   space_type: varchar(),
@@ -906,7 +957,7 @@ export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   posts?: SelectPost[]
   features?: SelectSpaceFeature[]
   owner?: SelectUser | null
-  channel?: SelectChannel
+  channel?: SelectChannel | null
   users?: SelectSpaceUser[]
 }
 
@@ -1063,7 +1114,7 @@ export const projectTable = pgTable("project", {
   description: varchar(),
   project_startDate: varchar().notNull(),
   project_targetDate: varchar().notNull(),
-  channel_id: varchar().notNull(),
+  channel_id: varchar(),
   space_id: varchar("space_id", { length: 36 }).references(
     () => spacesTable.id,
     { onDelete: "cascade" }

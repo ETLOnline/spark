@@ -871,21 +871,21 @@ export default function HomePage() {
         {/* Find a Mentor Section */}
         <section id="mentors">
           <div className="bg-gradient-to-br from-primary/30 via-primary/10 to-secondary/20 border-y-2 border-primary/30 shadow-inner dark:from-background dark:via-background dark:to-primary/5 dark:border-none dark:shadow-none">
+            {/* Animated Badge */}
+            <motion.div
+              className="flex justify-center pt-16"
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Badge className="mb-4 bg-secondary/10 text-secondary-foreground border-primary/20">
+                <Search className="w-4 h-4 mr-2" />
+                Find Your Mentor
+              </Badge>
+            </motion.div>
             <div className="container mx-auto px-4 py-16">
               <div className="max-w-3xl mx-auto text-center">
-                {/* Animated Badge */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  viewport={{ once: true }}
-                >
-                  <Badge className="mb-4 bg-secondary/10 text-secondary-foreground border-primary/20">
-                    <Search className="w-4 h-4 mr-2" />
-                    Find Your Mentor
-                  </Badge>
-                </motion.div>
-
                 {/* Animated Heading */}
                 <motion.h1
                   className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance"

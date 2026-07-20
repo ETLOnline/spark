@@ -1,7 +1,9 @@
 import {
   and,
   asc,
+  count,
   countDistinct,
+  desc,
   eq,
   exists,
   gte,
@@ -15,10 +17,12 @@ import {
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
+import { toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   profileTable,
   rolesTable,
+  sessionRequestsTable,
   tagsTable,
   userRolesTable,
   userTagsTable,
@@ -276,4 +280,236 @@ export async function GetMentors(filters?: GetMentorFilters) {
     console.error("GetMentors error:", err)
     throw new Error("Failed to fetch mentors")
   }
+}
+
+// ── Session Requests ────────────────────────────────────────────────────────────
+
+export interface CreateSessionRequestInput {
+  mentorId: string
+  menteeId: string
+  availabilitySlotId: number
+  sessionDate: string
+  startTime: string
+  endTime: string
+  sessionType: string
+  topic: string
+  description?: string | null
+}
+
+/**
+ * A mentee can only have one *pending* request per overlapping date/time —
+ * once mentor accept/reject exists, a rejected request can be re-requested.
+ *
+ * Matches by mentor/date/time overlap rather than availability_slot_id:
+ * editing availability replaces every slot row with a fresh id, so an id
+ * match would let a mentee silently re-request a slot they already have a
+ * pending request against, just because the mentor touched their calendar.
+ */
+export async function HasPendingSessionRequest(
+  menteeId: string,
+  mentorId: string,
+  sessionDate: string,
+  startMins: number,
+  endMins: number
+) {
+  const existing = await db
+    .select({
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time
+    })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentee_id, menteeId),
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.session_date, sessionDate),
+        eq(sessionRequestsTable.status, "pending")
+      )
+    )
+
+  return existing.some(
+    (r) => startMins < toMins(r.end_time) && toMins(r.start_time) < endMins
+  )
+}
+
+export async function CreateSessionRequest(input: CreateSessionRequestInput) {
+  const [request] = await db
+    .insert(sessionRequestsTable)
+    .values({
+      mentor_id: input.mentorId,
+      mentee_id: input.menteeId,
+      availability_slot_id: input.availabilitySlotId,
+      session_date: input.sessionDate,
+      start_time: input.startTime,
+      end_time: input.endTime,
+      session_type: input.sessionType,
+      topic: input.topic,
+      description: input.description ?? null
+    })
+    .returning()
+
+  return request
+}
+
+/** All of this mentee's requests toward a specific mentor — used to mark Pending dates on the calendar. */
+export async function GetSessionRequestsForMenteeAndMentor(
+  menteeId: string,
+  mentorId: string
+) {
+  return await db
+    .select()
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentee_id, menteeId),
+        eq(sessionRequestsTable.mentor_id, mentorId)
+      )
+    )
+}
+
+/** A mentor's session requests filtered by status, newest first, with the requesting mentee's profile joined in — paginated. */
+export async function GetSessionRequestsForMentorByStatus(
+  mentorId: string,
+  status: "pending" | "accepted" | "rejected",
+  page = 1,
+  limit = 10
+) {
+  const offset = (page - 1) * limit
+  const where = and(
+    eq(sessionRequestsTable.mentor_id, mentorId),
+    eq(sessionRequestsTable.status, status)
+  )
+
+  const [requests, totalCountResult] = await Promise.all([
+    db.query.sessionRequestsTable.findMany({
+      where,
+      orderBy: desc(sessionRequestsTable.created_at),
+      limit,
+      offset,
+      with: {
+        mentee: {
+          with: { profile: true }
+        }
+      }
+    }),
+    db.select({ value: count() }).from(sessionRequestsTable).where(where)
+  ])
+
+  const total = totalCountResult[0]?.value ?? 0
+
+  return {
+    requests,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+  }
+}
+
+export async function GetSessionRequestById(requestId: number) {
+  return await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, requestId)
+  })
+}
+
+export async function UpdateSessionRequestStatus(
+  requestId: number,
+  status: "accepted" | "rejected"
+) {
+  const [request] = await db
+    .update(sessionRequestsTable)
+    .set({ status })
+    .where(eq(sessionRequestsTable.id, requestId))
+    .returning()
+
+  return request
+}
+
+/** All accepted bookings for a mentor — used to grey out already-booked times on the calendar. */
+export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
+  return await db
+    .select()
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "accepted")
+      )
+    )
+}
+
+/** True if an accepted booking already overlaps this exact date/time range for the mentor. */
+export async function HasAcceptedOverlap(
+  mentorId: string,
+  sessionDate: string,
+  startMins: number,
+  endMins: number
+) {
+  const accepted = await db
+    .select({
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time
+    })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.session_date, sessionDate),
+        eq(sessionRequestsTable.status, "accepted")
+      )
+    )
+
+  return accepted.some((booking) => {
+    const bookedStart = toMins(booking.start_time)
+    const bookedEnd = toMins(booking.end_time)
+    return startMins < bookedEnd && bookedStart < endMins
+  })
+}
+
+/**
+ * Deletes pending requests that overlap a slot the mentor is removing.
+ * Pass `sessionDate` to clear just that one occurrence; omit it to clear
+ * every pending request at this time-of-day (deleting the whole series).
+ * Accepted requests are never touched — an accepted booking is a commitment
+ * regardless of later availability edits.
+ */
+export async function DeletePendingSessionRequestsForSlot(
+  mentorId: string,
+  startTime: string,
+  endTime: string,
+  sessionDate?: string
+) {
+  const candidates = await db
+    .select({
+      id: sessionRequestsTable.id,
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time
+    })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "pending"),
+        sessionDate
+          ? eq(sessionRequestsTable.session_date, sessionDate)
+          : undefined
+      )
+    )
+
+  const startMins = toMins(startTime)
+  const endMins = toMins(endTime)
+  const idsToDelete = candidates
+    .filter(
+      (r) => startMins < toMins(r.end_time) && toMins(r.start_time) < endMins
+    )
+    .map((r) => r.id)
+
+  if (idsToDelete.length === 0) return []
+
+  return await db
+    .delete(sessionRequestsTable)
+    .where(inArray(sessionRequestsTable.id, idsToDelete))
+    .returning()
 }
