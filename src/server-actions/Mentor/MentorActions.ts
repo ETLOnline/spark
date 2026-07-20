@@ -145,14 +145,7 @@ interface CreateSessionRequestPayload {
   endTime: string
   topic: string
   description?: string
-  // Mentee's choice: request this occurrence only, or every occurrence of
-  // the slot's own recurring pattern. Cadence always mirrors the slot
-  // itself — never taken from the client — so a mentee can't request a
-  // cadence the mentor never set up.
   recurring?: boolean
-  // Optional shorter end date for the recurring request — must fall within
-  // the slot's own repeat_end_date (if the slot itself is bounded). Omit to
-  // default to the full length of the slot's own recurring pattern.
   repeatEndDate?: string | null
 }
 
