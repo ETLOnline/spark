@@ -35,6 +35,7 @@ import {
   getSlotsForDate,
   getStartTimeOptions,
   getUnavailableRangesForRequest,
+  isPastDate,
   minsToTime,
   nextOccurrence,
   RepeatType,
@@ -119,8 +120,9 @@ export function MentorCalendar({
   )
 
   const loadSlots = useCallback(async () => {
-    const res = await getAvailability(userId)
-    if (res?.success) setSlots((res.data ?? []).filter((s) => s.is_active))
+    const availabilityRes = await getAvailability(userId)
+    if (availabilityRes?.success)
+      setSlots((availabilityRes.data ?? []).filter((s) => s.is_active))
   }, [userId])
 
   useEffect(() => {
@@ -128,8 +130,8 @@ export function MentorCalendar({
   }, [loadSlots])
 
   const loadMyRequests = useCallback(async () => {
-    const res = await getMyRequests(userId)
-    if (res?.success) setMyRequests(res.data ?? [])
+    const myRequestsRes = await getMyRequests(userId)
+    if (myRequestsRes?.success) setMyRequests(myRequestsRes.data ?? [])
   }, [userId])
 
   const loadBookedRequests = useCallback(async () => {
@@ -185,7 +187,11 @@ export function MentorCalendar({
   }
 
   const openPopup = (date: Date) => {
-    if (!isMyProfile && getSlotsForDate(slots, date).length === 0) return
+    if (
+      !isMyProfile &&
+      (getSlotsForDate(slots, date).length === 0 || isPastDate(date))
+    )
+      return
     setSelectedDate(date)
     resetPopupForm(date)
     setIsPopupOpen(true)
@@ -201,6 +207,11 @@ export function MentorCalendar({
   }
 
   const handleAddSlot = async () => {
+    const anchorStart = moment(`${newDate} ${newStart}`, "YYYY-MM-DD HH:mm")
+    if (anchorStart.isBefore(moment())) {
+      setSlotError("Cannot add availability in the past")
+      return
+    }
     if (toMins(newEnd) <= toMins(newStart)) {
       setSlotError("End time must be after start time")
       return
@@ -304,11 +315,11 @@ export function MentorCalendar({
       repeat_end_date: s.repeat_end_date ?? null
     }))
 
-    const res = await updateAvailability({
+    const addSlotRes = await updateAvailability({
       mentorId: userId,
       slots: [...existing, ...newSlots]
     })
-    if (res?.success) {
+    if (addSlotRes?.success) {
       await loadSlots()
       toast({ title: "Slot added", duration: 2000 })
     } else {
@@ -368,7 +379,7 @@ export function MentorCalendar({
     }
 
     setRequestSubmitting(true)
-    const res = await createSessionRequest({
+    const createRequestRes = await createSessionRequest({
       mentorId: userId,
       availabilitySlotId: requestFormSlot.id,
       sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
@@ -379,13 +390,13 @@ export function MentorCalendar({
     })
     setRequestSubmitting(false)
 
-    if (res?.success) {
+    if (createRequestRes?.success) {
       await loadMyRequests()
       ;(document.activeElement as HTMLElement | null)?.blur()
       setRequestFormSlot(null)
       toast({ title: "Session request sent", duration: 2000 })
     } else {
-      setRequestError(res?.error ?? "Failed to send request")
+      setRequestError(createRequestRes?.error ?? "Failed to send request")
     }
   }
 
@@ -405,8 +416,11 @@ export function MentorCalendar({
     setSlotError("")
     const slot = slots.find((s) => s.id === slotId)
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
-    const res = await updateAvailability({ mentorId: userId, slots: remaining })
-    if (res?.success) {
+    const deleteSeriesRes = await updateAvailability({
+      mentorId: userId,
+      slots: remaining
+    })
+    if (deleteSeriesRes?.success) {
       if (slot) {
         await deleteSessionRequestsForSlot({
           mentorId: userId,
@@ -467,11 +481,11 @@ export function MentorCalendar({
       })
     }
 
-    const res = await updateAvailability({
+    const deleteOccurrenceRes = await updateAvailability({
       mentorId: userId,
       slots: [...otherSlots, ...additions]
     })
-    if (res?.success) {
+    if (deleteOccurrenceRes?.success) {
       await deleteSessionRequestsForSlot({
         mentorId: userId,
         startTime: slot.start_time,
@@ -548,6 +562,7 @@ export function MentorCalendar({
               <>
                 {isMyProfile && (
                   <AvailabilitySlotForm
+                    today={today}
                     newDate={newDate}
                     onDateChange={setNewDate}
                     newStart={newStart}

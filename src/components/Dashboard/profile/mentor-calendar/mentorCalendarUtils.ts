@@ -88,6 +88,17 @@ export function getSlotsForDate(slots: SelectMentorAvailability[], date: Date) {
   return slots.filter((s) => slotAppliesToDate(s, date))
 }
 
+/** True if `date` is strictly before today (date-level, ignoring time-of-day). */
+export function isPastDate(date: Date): boolean {
+  return moment(date).startOf("day").isBefore(moment().startOf("day"))
+}
+
+/** Minutes-of-day before which a mentee can no longer pick a start time on `date` — 0 for any future date, "right now" for today. */
+export function minAllowedStartMinsFor(date: Date): number {
+  if (!moment(date).isSame(moment(), "day")) return 0
+  return moment().hours() * 60 + moment().minutes()
+}
+
 export function repeatLabel(slot: SelectMentorAvailability) {
   if (slot.repeat_type === "weekly")
     return `Every ${DAYS[moment(slot.date, "YYYY-MM-DD").day()]}`
@@ -238,9 +249,10 @@ export function isSlotFullyBooked(
 }
 
 /** What THIS mentee can no longer pick when starting a new request: hours
- * already accepted for anyone, plus hours they themselves already have a
- * pending request against (other mentees' pending requests don't block —
- * several people can still request the same open hour until the mentor decides). */
+ * already accepted for anyone, hours they themselves already have a pending
+ * request against (other mentees' pending requests don't block — several
+ * people can still request the same open hour until the mentor decides),
+ * and — for today only — any hour that has already passed. */
 export function getUnavailableRangesForRequest(
   slot: SelectMentorAvailability,
   date: Date,
@@ -262,8 +274,13 @@ export function getUnavailableRangesForRequest(
     )
     .map((r) => ({ start: toMins(r.start_time), end: toMins(r.end_time) }))
 
+  const elapsedToday = minAllowedStartMinsFor(date)
+  const pastRanges: TimeRange[] =
+    elapsedToday > 0 ? [{ start: 0, end: elapsedToday }] : []
+
   return [
     ...getBookedRangesForSlot(slot, date, bookedRequests),
+    ...pastRanges,
     ...myPendingRanges
   ]
 }

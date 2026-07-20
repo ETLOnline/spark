@@ -23,7 +23,7 @@ export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
       <Link href={`/profile/${mentorId}/availability`} className="w-full">
         <Button variant="outline" className="w-full mt-2" size="sm">
           <CalendarDays className="h-4 w-4 mr-2" />
-          View Availability
+          View Availability / Request Session
         </Button>
       </Link>
     )
@@ -41,7 +41,7 @@ export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
               disabled
             >
               <CalendarDays className="h-4 w-4 mr-2" />
-              View Availability
+              View Availability / Request Session
             </Button>
           </span>
         </TooltipTrigger>

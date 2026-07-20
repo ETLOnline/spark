@@ -40,3 +40,33 @@ export async function createSessionRequestEmailNotification(
     withData: true
   })
 }
+
+export async function createSessionResponseEmailNotification(
+  request: SelectSessionRequest,
+  mentorName: string,
+  status: "accepted" | "rejected"
+) {
+  const menteeRes = await FindUserByUniqueIdAction(request.mentee_id)
+  if (!menteeRes.data?.email) return
+
+  const payload = {
+    logoUrl: getSiteLogoUrl(),
+    mentorName,
+    menteeName:
+      `${menteeRes.data.first_name ?? ""} ${menteeRes.data.last_name ?? ""}`.trim(),
+    topic: request.topic,
+    slotText: formatSlotText(request),
+    ctaLink: createAbsoluteUrl(`/profile/${request.mentor_id}/availability`),
+    accepted: status === "accepted"
+  }
+
+  await AddToQueue({
+    sendingTo: [menteeRes.data.email],
+    event:
+      status === "accepted"
+        ? NotificationEvent.SESSION_REQUEST_ACCEPTED
+        : NotificationEvent.SESSION_REQUEST_REJECTED,
+    payload,
+    withData: true
+  })
+}

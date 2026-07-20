@@ -14,6 +14,8 @@ import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import {
   countOverlappingRequests,
   formatTime,
+  getStartTimeOptions,
+  getUnavailableRangesForRequest,
   isSlotFullyBooked,
   myAcceptedRequestsFor,
   myPendingRequestFor,
@@ -148,16 +150,29 @@ export function SlotListItem({
 
       {/* Request action — viewer only */}
       {!isMyProfile &&
-        (isSlotFullyBooked(slot, selectedDate, bookedRequests) ? (
+        (myAcceptedRequestsFor(slot, selectedDate, myRequests).length >
+        0 ? null : isSlotFullyBooked(slot, selectedDate, bookedRequests) ? (
           <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">
             <Lock className="h-3 w-3" />
             Booked
           </div>
-        ) : myAcceptedRequestsFor(slot, selectedDate, myRequests).length >
-          0 ? null : myPendingRequestFor(slot, selectedDate, myRequests) ? (
+        ) : myPendingRequestFor(slot, selectedDate, myRequests) ? (
           <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
             <Clock className="h-3 w-3" />
             Request pending
+          </div>
+        ) : getStartTimeOptions(
+            slot,
+            getUnavailableRangesForRequest(
+              slot,
+              selectedDate,
+              myRequests,
+              bookedRequests
+            )
+          ).length === 0 ? (
+          <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">
+            <Clock className="h-3 w-3" />
+            This time has passed
           </div>
         ) : viewerRp < RP_THRESHOLD ? (
           <div className="px-3 py-2 border-t border-foreground/8">

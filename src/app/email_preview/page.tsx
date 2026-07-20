@@ -94,6 +94,16 @@ const emailTemplates = [
     value: "new_session_request",
     label: "New Session Request Email",
     file: "new_session_request.html"
+  },
+  {
+    value: "session_request_accepted",
+    label: "Session Request Accepted Email",
+    file: "session_request_response.html"
+  },
+  {
+    value: "session_request_rejected",
+    label: "Session Request Rejected Email",
+    file: "session_request_response.html"
   }
 ]
 

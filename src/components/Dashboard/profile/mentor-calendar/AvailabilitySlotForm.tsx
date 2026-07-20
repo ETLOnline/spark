@@ -1,5 +1,6 @@
 "use client"
 
+import moment from "moment-timezone"
 import { RefreshCw, Users, Video } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
@@ -13,6 +14,7 @@ import {
 } from "./mentorCalendarUtils"
 
 interface AvailabilitySlotFormProps {
+  today: Date
   newDate: string
   onDateChange: (value: string) => void
   newStart: string
@@ -32,6 +34,7 @@ interface AvailabilitySlotFormProps {
 }
 
 export function AvailabilitySlotForm({
+  today,
   newDate,
   onDateChange,
   newStart,
@@ -89,6 +92,7 @@ export function AvailabilitySlotForm({
         <Input
           type="date"
           value={newDate}
+          min={moment(today).format("YYYY-MM-DD")}
           onChange={(e) => {
             onDateChange(e.target.value)
             if (e.target.value) onRepeatEndChange(endOfMonth(e.target.value))
