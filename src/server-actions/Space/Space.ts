@@ -184,6 +184,23 @@ export const GetSpacesByCreatorAction = CreateServerAction(
   }
 )
 
+export const GetSpacesForUserAction = CreateServerAction(
+  true,
+  async (userId: string, page?: number, limit?: number) => {
+    try {
+      const result = await GetSpaces({
+        forUserId: userId,
+        isIndependent: true,
+        page,
+        limit
+      })
+      return { success: true, data: result }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
 export const IsIndependentSlugAvailableAction = CreateServerAction(
   true,
   async (slug: string) => {

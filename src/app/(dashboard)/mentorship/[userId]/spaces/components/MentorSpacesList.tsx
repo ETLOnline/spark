@@ -6,7 +6,7 @@ import { Skeleton } from "@/src/components/ui/skeleton"
 import PaginationComponent from "@/src/components/common/Pagination"
 import type { PaginationType } from "@/src/components/common/types/pagination.type"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetSpacesByCreatorAction } from "@/src/server-actions/Space/Space"
+import { GetSpacesForUserAction } from "@/src/server-actions/Space/Space"
 import type { SelectSpace } from "@/src/db/schema"
 import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/SpacesCard"
 
@@ -25,7 +25,7 @@ export default function MentorSpacesList({ userId }: Props) {
     spaces: [],
     pagination: { total: 0, page: 1, limit: SPACES_PAGE_SIZE, totalPages: 0 }
   })
-  const [loading, , , fetchSpaces] = useServerAction(GetSpacesByCreatorAction)
+  const [loading, , , fetchSpaces] = useServerAction(GetSpacesForUserAction)
 
   useEffect(() => {
     const load = async () => {
