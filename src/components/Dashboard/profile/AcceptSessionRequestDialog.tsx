@@ -20,6 +20,7 @@ import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDial
 import { toast } from "@/src/hooks/use-toast"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 import { SelectSpace } from "@/src/db/schema"
 import {
   AttachSpaceUserAction,
@@ -79,6 +80,7 @@ export default function AcceptSessionRequestDialog({
   const [, , , respondToRequest] = useServerAction(
     RespondToSessionRequestAction
   )
+  const { refreshAuthUser } = useAuthUserRefresh()
 
   const isDirty =
     option === "create" &&
@@ -178,6 +180,8 @@ export default function AcceptSessionRequestDialog({
           return
         }
         spaceIdToLink = created.data.id
+
+        await refreshAuthUser()
 
         const attached = await attachSpaceUser(
           created.data.id,
