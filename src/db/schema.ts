@@ -228,6 +228,15 @@ export type InsertMentorAvailability =
 export type SelectMentorAvailability =
   typeof mentorAvailabilityTable.$inferSelect
 
+export const mentorAvailabilityRelations = relations(
+  mentorAvailabilityTable,
+  ({ many }) => ({
+    sessionRequests: many(sessionRequestsTable, {
+      relationName: "mentorAvailabilityToRequests"
+    })
+  })
+)
+
 export const sessionRequestsTable = pgTable("session_requests", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   mentor_id: varchar("mentor_id")
@@ -250,6 +259,9 @@ export const sessionRequestsTable = pgTable("session_requests", {
   topic: varchar("topic").notNull(),
   description: varchar("description"),
   status: varchar("status").notNull().default("pending"),
+  // Populated when mentor suggests alternative slots
+  suggestion_message: text("suggestion_message"),
+  suggested_slot_ids: jsonb("suggested_slot_ids").$type<number[]>(),
   ...timestamps
 })
 
@@ -265,12 +277,25 @@ export const sessionRequestsRelations = relations(
       fields: [sessionRequestsTable.mentee_id],
       references: [usersTable.unique_id],
       relationName: "sessionRequestToMentee"
+    }),
+    availabilitySlot: one(mentorAvailabilityTable, {
+      fields: [sessionRequestsTable.availability_slot_id],
+      references: [mentorAvailabilityTable.id],
+      relationName: "sessionRequestToSlot"
+    }),
+    mentorAvailability: one(mentorAvailabilityTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [mentorAvailabilityTable.mentor_id],
+      relationName: "mentorAvailabilityToRequests"
     })
   })
 )
 
 export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
-export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect & {
+  mentor?: SelectUser
+  mentee?: SelectUser
+}
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

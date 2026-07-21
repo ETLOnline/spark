@@ -96,6 +96,11 @@ const emailTemplates = [
     file: "new_session_request.html"
   },
   {
+    value: "session_slot_suggested",
+    label: "Session Slot Suggested (Mentee)",
+    file: "session_slot_suggested.html"
+  },
+  {
     value: "session_request_accepted",
     label: "Session Request Accepted Email",
     file: "session_request_response.html"

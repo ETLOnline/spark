@@ -366,8 +366,37 @@ export async function GetSessionRequestsForMenteeAndMentor(
       )
     )
 }
+export async function SuggestSlots(
+  requestId: number,
+  mentorId: string,
+  slotIds: string[], // occurrence keys: "slotId-YYYY-MM-DD"
+  message: string | null
+) {
+  const [updated] = await db
+    .update(sessionRequestsTable)
+    .set({
+      status: "slot_suggested",
+      suggested_slot_ids: sql`${JSON.stringify(slotIds)}::jsonb`,
+      suggestion_message: message
+    })
+    .where(
+      and(
+        eq(sessionRequestsTable.id, requestId),
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "pending")
+      )
+    )
+    .returning()
+  if (!updated) return null
 
-/** A mentor's session requests filtered by status, newest first, with the requesting mentee's profile joined in — paginated. */
+  return (
+    (await db.query.sessionRequestsTable.findFirst({
+      where: eq(sessionRequestsTable.id, requestId),
+      with: { mentee: true, mentor: true }
+    })) ?? null
+  )
+}
+
 export async function GetSessionRequestsForMentorByStatus(
   mentorId: string,
   status: "pending" | "accepted" | "rejected",
@@ -377,7 +406,9 @@ export async function GetSessionRequestsForMentorByStatus(
   const offset = (page - 1) * limit
   const where = and(
     eq(sessionRequestsTable.mentor_id, mentorId),
-    eq(sessionRequestsTable.status, status)
+    status === "pending"
+      ? inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
+      : eq(sessionRequestsTable.status, status)
   )
 
   const [requests, totalCountResult] = await Promise.all([
@@ -436,6 +467,19 @@ export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
       and(
         eq(sessionRequestsTable.mentor_id, mentorId),
         eq(sessionRequestsTable.status, "accepted")
+      )
+    )
+}
+
+/** All pending + resubmitted requests for a mentor — used for calendar badge counts. */
+export async function GetPendingSessionRequestsForMentor(mentorId: string) {
+  return await db
+    .select()
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
       )
     )
 }
@@ -512,4 +556,40 @@ export async function DeletePendingSessionRequestsForSlot(
     .delete(sessionRequestsTable)
     .where(inArray(sessionRequestsTable.id, idsToDelete))
     .returning()
+}
+
+export async function ResubmitSessionRequest(
+  requestId: number,
+  menteeId: string,
+  slotId: number,
+  sessionDate: string,
+  startTime: string,
+  endTime: string
+): Promise<Record<string, unknown> | null> {
+  const [result] = await db
+    .update(sessionRequestsTable)
+    .set({
+      status: "resubmitted",
+      availability_slot_id: slotId,
+      session_date: sessionDate,
+      start_time: startTime,
+      end_time: endTime,
+      suggested_slot_ids: null,
+      suggestion_message: null
+    })
+    .where(
+      and(
+        eq(sessionRequestsTable.id, requestId),
+        eq(sessionRequestsTable.mentee_id, menteeId),
+        eq(sessionRequestsTable.status, "slot_suggested")
+      )
+    )
+    .returning({
+      id: sessionRequestsTable.id,
+      mentor_id: sessionRequestsTable.mentor_id,
+      topic: sessionRequestsTable.topic
+    })
+
+  if (!result) return null
+  return result
 }
