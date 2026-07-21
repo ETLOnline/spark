@@ -5,6 +5,7 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import {
   CreateSessionRequest,
   DeletePendingSessionRequestsForSlot,
+  GetAcceptedSessionRequestsForMentee,
   GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
   GetMentors,
@@ -237,6 +238,15 @@ interface CreateSessionRequestPayload {
   endTime: string
   topic: string
   description?: string
+  // Mentee's choice: request this occurrence only, or every occurrence of
+  // the slot's own recurring pattern. Cadence always mirrors the slot
+  // itself — never taken from the client — so a mentee can't request a
+  // cadence the mentor never set up.
+  recurring?: boolean
+  // Optional shorter end date for the recurring request — must fall within
+  // the slot's own repeat_end_date (if the slot itself is bounded). Omit to
+  // default to the full length of the slot's own recurring pattern.
+  repeatEndDate?: string | null
 }
 
 /** Mentee submits a request for a specific occurrence of a mentor's availability slot. */
@@ -297,12 +307,53 @@ export const CreateSessionRequestAction = CreateServerAction(
         return { error: "Selected time is outside the mentor's availability" }
       }
 
+      if (payload.recurring && slot.repeat_type === "none") {
+        return { error: "This slot doesn't repeat" }
+      }
+      const repeatType = payload.recurring ? slot.repeat_type : "none"
+      let repeatEndDate: string | null = null
+      if (payload.recurring) {
+        repeatEndDate = payload.repeatEndDate?.trim() || slot.repeat_end_date
+        if (
+          repeatEndDate &&
+          moment(repeatEndDate, "YYYY-MM-DD").isBefore(
+            moment(payload.sessionDate, "YYYY-MM-DD")
+          )
+        ) {
+          return {
+            error: "Repeat-until date can't be before the session date"
+          }
+        }
+        if (
+          slot.repeat_end_date &&
+          repeatEndDate &&
+          repeatEndDate > slot.repeat_end_date
+        ) {
+          return {
+            error:
+              "Repeat-until date can't be after the mentor's availability ends"
+          }
+        }
+        if (
+          repeatType === "weekly" &&
+          repeatEndDate &&
+          moment(repeatEndDate, "YYYY-MM-DD").day() !==
+            moment(payload.sessionDate, "YYYY-MM-DD").day()
+        ) {
+          return {
+            error: "Repeat-until date must fall on the same weekday as the slot"
+          }
+        }
+      }
+
       const alreadyRequested = await HasPendingSessionRequest(
         authUser.unique_id,
         payload.mentorId,
         payload.sessionDate,
         requestedStart,
-        requestedEnd
+        requestedEnd,
+        repeatType,
+        repeatEndDate
       )
       if (alreadyRequested) {
         return { error: "You already have a pending request for this slot" }
@@ -312,7 +363,9 @@ export const CreateSessionRequestAction = CreateServerAction(
         payload.mentorId,
         payload.sessionDate,
         requestedStart,
-        requestedEnd
+        requestedEnd,
+        repeatType,
+        repeatEndDate
       )
       if (alreadyBooked) {
         return { error: "This time has already been booked" }
@@ -327,7 +380,9 @@ export const CreateSessionRequestAction = CreateServerAction(
         endTime: payload.endTime,
         sessionType: slot.session_type,
         topic: payload.topic.trim(),
-        description: payload.description?.trim() || null
+        description: payload.description?.trim() || null,
+        repeatType,
+        repeatEndDate
       })
 
       const menteeName = `${authUser.first_name} ${authUser.last_name}`.trim()
@@ -431,6 +486,24 @@ export const GetAcceptedSessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
+/** A mentee's own accepted bookings — private, only the mentee themselves can fetch this. */
+export const GetAcceptedSessionRequestsForMenteeAction = CreateServerAction(
+  true,
+  async (menteeId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== menteeId) {
+        return { error: "Unauthorised" }
+      }
+      const requests = await GetAcceptedSessionRequestsForMentee(menteeId)
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetAcceptedSessionRequestsForMenteeAction error:", error)
+      return { error: "Failed to fetch booked sessions" }
+    }
+  }
+)
+
 /** Fetch a mentor's pending requests — used for badge counts on the mentor's own calendar. */
 export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
   true,
@@ -449,10 +522,15 @@ export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
-/** Mentor accepts or rejects a pending session request. */
+/** Mentor accepts or rejects a pending session request. Pass `spaceId` when
+ * accepting with a workspace attached, so the session can link straight to it. */
 export const RespondToSessionRequestAction = CreateServerAction(
   true,
-  async (requestId: number, status: "accepted" | "rejected") => {
+  async (
+    requestId: number,
+    status: "accepted" | "rejected",
+    spaceId?: string | null
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
@@ -465,7 +543,11 @@ export const RespondToSessionRequestAction = CreateServerAction(
         return { error: "This request has already been responded to" }
       }
 
-      const updated = await UpdateSessionRequestStatus(requestId, status)
+      const updated = await UpdateSessionRequestStatus(
+        requestId,
+        status,
+        spaceId
+      )
 
       const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
       const responseTemplate = {
