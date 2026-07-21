@@ -1,7 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { CheckCircle2, Clock, Lock, Users, Video, X } from "lucide-react"
+import {
+  CheckCircle2,
+  Clock,
+  Lock,
+  Sparkles,
+  Users,
+  Video,
+  X
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
   Tooltip,
@@ -37,6 +45,12 @@ interface SlotListItemProps {
   onDeleteSeries: (slotId: number) => void
   onDeleteOccurrence: (slotId: number, date: Date) => void
   onRequestSlot: (slot: SelectMentorAvailability) => void
+  suggestedRequest: SelectSessionRequest | null
+  isConfirming?: boolean
+  onConfirmSuggestedSlot: (
+    slot: SelectMentorAvailability,
+    requestId: number
+  ) => void
 }
 
 export function SlotListItem({
@@ -52,7 +66,10 @@ export function SlotListItem({
   onTogglePendingDelete,
   onDeleteSeries,
   onDeleteOccurrence,
-  onRequestSlot
+  onRequestSlot,
+  suggestedRequest,
+  isConfirming,
+  onConfirmSuggestedSlot
 }: SlotListItemProps) {
   const mentorPendingCount = isMyProfile
     ? countOverlappingRequests(slot, selectedDate, mentorPendingRequests)
@@ -155,6 +172,23 @@ export function SlotListItem({
           <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">
             <Lock className="h-3 w-3" />
             Booked
+          </div>
+        ) : myAcceptedRequestsFor(slot, selectedDate, myRequests).length >
+          0 ? null : suggestedRequest !== null ? (
+          <div className="px-3 py-2 border-t border-foreground/8">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-purple-500/30"
+              loading={isConfirming}
+              onClick={(e) => {
+                e.currentTarget.blur()
+                onConfirmSuggestedSlot(slot, suggestedRequest.id)
+              }}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+              Confirm Suggested Slot
+            </Button>
           </div>
         ) : myPendingRequestFor(slot, selectedDate, myRequests) ? (
           <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
