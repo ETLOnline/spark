@@ -1,8 +1,7 @@
 import Link from "next/link"
 import { CalendarDays } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-
-const RP_THRESHOLD = 500
+import { RP_THRESHOLD } from "@/src/utils/constants"
 
 type Props = {
   mentorId: string
