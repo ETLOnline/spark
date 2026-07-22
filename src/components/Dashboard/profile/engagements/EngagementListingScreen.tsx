@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import { Engagement, EngagementStatus } from "./types"
@@ -106,6 +106,7 @@ export function EngagementListingScreen() {
   const [tab, setTab] = useState<Tab>("all")
   const [engagements, setEngagements] = useState<Engagement[]>([])
   const [selected, setSelected] = useState<Engagement | null>(null)
+  const [showDetail, setShowDetail] = useState(false)
   const [showCompletion, setShowCompletion] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [loading, , , fetchEngagements] = useServerAction(GetEngagementsAction)
@@ -196,14 +197,23 @@ export function EngagementListingScreen() {
         key={e.id}
         e={e}
         selected={selected?.id === e.id}
-        onSelect={() => setSelected(e)}
+        onSelect={() => {
+          setSelected(e)
+          setShowDetail(true)
+        }}
       />
     ))
 
   return (
     <div className="flex h-full overflow-hidden">
       {/* ── Left: list panel ── */}
-      <div className="w-[380px] shrink-0 flex flex-col border-r border-foreground/5 overflow-hidden">
+      <div
+        className={cn(
+          "flex flex-col border-r border-foreground/5 overflow-hidden",
+          "lg:w-[380px] lg:shrink-0 lg:flex",
+          showDetail ? "hidden" : "flex w-full"
+        )}
+      >
         {/* Tabs */}
         <div className="flex border-b border-foreground/5 shrink-0">
           {tabs.map((t) => (
@@ -211,13 +221,16 @@ export function EngagementListingScreen() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                "flex-1 py-2.5 text-xs font-medium transition-colors",
+                "relative flex-1 py-2.5 text-xs font-medium transition-colors",
                 tab === t.key
-                  ? "text-foreground border-b-2 border-foreground"
+                  ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               {t.label}
+              {tab === t.key && (
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-foreground rounded-full" />
+              )}
             </button>
           ))}
         </div>
@@ -266,22 +279,39 @@ export function EngagementListingScreen() {
       </div>
 
       {/* ── Right: detail panel ── */}
-      <div className="flex-1 overflow-y-auto">
-        {selected ? (
-          <EngagementDetail
-            engagement={selected}
-            onComplete={() => setShowCompletion(true)}
-            onFeedback={() => setShowFeedback(true)}
-            onArchive={handleArchiveSpace}
-            isArchiving={archiving}
-          />
-        ) : (
-          !loading && (
-            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              Select an engagement to view details
-            </div>
-          )
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto flex flex-col",
+          "lg:flex",
+          showDetail ? "flex w-full" : "hidden"
         )}
+      >
+        {/* Back button — mobile only */}
+        <button
+          onClick={() => setShowDetail(false)}
+          className="lg:hidden flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground border-b border-foreground/5 shrink-0 hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          All engagements
+        </button>
+
+        <div className="flex-1 overflow-y-auto">
+          {selected ? (
+            <EngagementDetail
+              engagement={selected}
+              onComplete={() => setShowCompletion(true)}
+              onFeedback={() => setShowFeedback(true)}
+              onArchive={handleArchiveSpace}
+              isArchiving={archiving}
+            />
+          ) : (
+            !loading && (
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                Select an engagement to view details
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       {/* ── Dialogs ── */}
