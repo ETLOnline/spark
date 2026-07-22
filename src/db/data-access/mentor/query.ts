@@ -17,7 +17,7 @@ import {
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
-import { toMins } from "@/src/utils/time"
+import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
@@ -297,41 +297,64 @@ export interface CreateSessionRequestInput {
   sessionType: string
   topic: string
   description?: string | null
+  repeatType?: string
+  repeatEndDate?: string | null
 }
 
 /**
- * A mentee can only have one *pending* request per overlapping date/time —
+ * A mentee can only have one *pending* request per overlapping occurrence —
  * once mentor accept/reject exists, a rejected request can be re-requested.
  *
- * Matches by mentor/date/time overlap rather than availability_slot_id:
+ * Matches by mentor/recurrence/time overlap rather than availability_slot_id:
  * editing availability replaces every slot row with a fresh id, so an id
  * match would let a mentee silently re-request a slot they already have a
  * pending request against, just because the mentor touched their calendar.
+ * Recurrence-aware so an existing recurring request (or a new recurring
+ * request) is checked against every occurrence it covers, not just its
+ * anchor date.
  */
 export async function HasPendingSessionRequest(
   menteeId: string,
   mentorId: string,
   sessionDate: string,
   startMins: number,
-  endMins: number
+  endMins: number,
+  repeatType: string = "none",
+  repeatEndDate?: string | null
 ) {
   const existing = await db
     .select({
+      session_date: sessionRequestsTable.session_date,
       start_time: sessionRequestsTable.start_time,
-      end_time: sessionRequestsTable.end_time
+      end_time: sessionRequestsTable.end_time,
+      repeat_type: sessionRequestsTable.repeat_type,
+      repeat_end_date: sessionRequestsTable.repeat_end_date
     })
     .from(sessionRequestsTable)
     .where(
       and(
         eq(sessionRequestsTable.mentee_id, menteeId),
         eq(sessionRequestsTable.mentor_id, mentorId),
-        eq(sessionRequestsTable.session_date, sessionDate),
         eq(sessionRequestsTable.status, "pending")
       )
     )
 
   return existing.some(
-    (r) => startMins < toMins(r.end_time) && toMins(r.start_time) < endMins
+    (r) =>
+      startMins < toMins(r.end_time) &&
+      toMins(r.start_time) < endMins &&
+      recurrencesOverlap(
+        {
+          date: r.session_date,
+          repeat_type: r.repeat_type,
+          repeat_end_date: r.repeat_end_date
+        },
+        {
+          date: sessionDate,
+          repeat_type: repeatType,
+          repeat_end_date: repeatEndDate
+        }
+      )
   )
 }
 
@@ -347,7 +370,9 @@ export async function CreateSessionRequest(input: CreateSessionRequestInput) {
       end_time: input.endTime,
       session_type: input.sessionType,
       topic: input.topic,
-      description: input.description ?? null
+      description: input.description ?? null,
+      repeat_type: input.repeatType ?? "none",
+      repeat_end_date: input.repeatEndDate ?? null
     })
     .returning()
 
@@ -369,8 +394,37 @@ export async function GetSessionRequestsForMenteeAndMentor(
       )
     )
 }
+export async function SuggestSlots(
+  requestId: number,
+  mentorId: string,
+  slotIds: string[], // occurrence keys: "slotId-YYYY-MM-DD"
+  message: string | null
+) {
+  const [updated] = await db
+    .update(sessionRequestsTable)
+    .set({
+      status: "slot_suggested",
+      suggested_slot_ids: sql`${JSON.stringify(slotIds)}::jsonb`,
+      suggestion_message: message
+    })
+    .where(
+      and(
+        eq(sessionRequestsTable.id, requestId),
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "pending")
+      )
+    )
+    .returning()
+  if (!updated) return null
 
-/** A mentor's session requests filtered by status, newest first, with the requesting mentee's profile joined in — paginated. */
+  return (
+    (await db.query.sessionRequestsTable.findFirst({
+      where: eq(sessionRequestsTable.id, requestId),
+      with: { mentee: true, mentor: true }
+    })) ?? null
+  )
+}
+
 export async function GetSessionRequestsForMentorByStatus(
   mentorId: string,
   status: "pending" | "accepted" | "rejected",
@@ -380,7 +434,9 @@ export async function GetSessionRequestsForMentorByStatus(
   const offset = (page - 1) * limit
   const where = and(
     eq(sessionRequestsTable.mentor_id, mentorId),
-    eq(sessionRequestsTable.status, status)
+    status === "pending"
+      ? inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
+      : eq(sessionRequestsTable.status, status)
   )
 
   const [requests, totalCountResult] = await Promise.all([
@@ -431,36 +487,83 @@ export async function UpdateSessionRequestStatus(
   return request
 }
 
-/** All accepted bookings for a mentor — used to grey out already-booked times on the calendar. */
+/** All accepted bookings for a mentor — used to grey out already-booked times
+ * on the calendar, and (via the joined space) to link the mentor's session
+ * card straight into the workspace created for it, if any. */
 export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      eq(sessionRequestsTable.status, "accepted")
+    ),
+    with: {
+      space: {
+        columns: { id: true, space_slug: true }
+      }
+    }
+  })
+}
+
+/** A mentee's own accepted bookings across every mentor — used to show their
+ * next upcoming session(s) on their own profile. */
+export async function GetAcceptedSessionRequestsForMentee(menteeId: string) {
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentee_id, menteeId),
+      eq(sessionRequestsTable.status, "accepted")
+    ),
+    with: {
+      mentor: {
+        columns: {
+          unique_id: true,
+          first_name: true,
+          last_name: true,
+          profile_url: true
+        }
+      },
+      space: {
+        columns: { id: true, space_slug: true }
+      }
+    }
+  })
+}
+
+/** All pending + resubmitted requests for a mentor — used for calendar badge counts. */
+export async function GetPendingSessionRequestsForMentor(mentorId: string) {
   return await db
     .select()
     .from(sessionRequestsTable)
     .where(
       and(
         eq(sessionRequestsTable.mentor_id, mentorId),
-        eq(sessionRequestsTable.status, "accepted")
+        inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
       )
     )
 }
 
-/** True if an accepted booking already overlaps this exact date/time range for the mentor. */
+/** True if an accepted booking already overlaps this occurrence for the mentor —
+ * recurrence-aware, so an existing accepted recurring booking (or a new
+ * recurring request) is checked against every occurrence it covers. */
 export async function HasAcceptedOverlap(
   mentorId: string,
   sessionDate: string,
   startMins: number,
-  endMins: number
+  endMins: number,
+  repeatType: string = "none",
+  repeatEndDate?: string | null
 ) {
   const accepted = await db
     .select({
+      session_date: sessionRequestsTable.session_date,
       start_time: sessionRequestsTable.start_time,
-      end_time: sessionRequestsTable.end_time
+      end_time: sessionRequestsTable.end_time,
+      repeat_type: sessionRequestsTable.repeat_type,
+      repeat_end_date: sessionRequestsTable.repeat_end_date
     })
     .from(sessionRequestsTable)
     .where(
       and(
         eq(sessionRequestsTable.mentor_id, mentorId),
-        eq(sessionRequestsTable.session_date, sessionDate),
         eq(sessionRequestsTable.status, "accepted")
       )
     )
@@ -468,7 +571,22 @@ export async function HasAcceptedOverlap(
   return accepted.some((booking) => {
     const bookedStart = toMins(booking.start_time)
     const bookedEnd = toMins(booking.end_time)
-    return startMins < bookedEnd && bookedStart < endMins
+    return (
+      startMins < bookedEnd &&
+      bookedStart < endMins &&
+      recurrencesOverlap(
+        {
+          date: booking.session_date,
+          repeat_type: booking.repeat_type,
+          repeat_end_date: booking.repeat_end_date
+        },
+        {
+          date: sessionDate,
+          repeat_type: repeatType,
+          repeat_end_date: repeatEndDate
+        }
+      )
+    )
   })
 }
 
@@ -683,5 +801,41 @@ export async function GetSharedSpacesForSessions(
       ) ?? null
     result[pair.sessionId] = space
   }
+  return result
+}
+
+export async function ResubmitSessionRequest(
+  requestId: number,
+  menteeId: string,
+  slotId: number,
+  sessionDate: string,
+  startTime: string,
+  endTime: string
+): Promise<Record<string, unknown> | null> {
+  const [result] = await db
+    .update(sessionRequestsTable)
+    .set({
+      status: "resubmitted",
+      availability_slot_id: slotId,
+      session_date: sessionDate,
+      start_time: startTime,
+      end_time: endTime,
+      suggested_slot_ids: null,
+      suggestion_message: null
+    })
+    .where(
+      and(
+        eq(sessionRequestsTable.id, requestId),
+        eq(sessionRequestsTable.mentee_id, menteeId),
+        eq(sessionRequestsTable.status, "slot_suggested")
+      )
+    )
+    .returning({
+      id: sessionRequestsTable.id,
+      mentor_id: sessionRequestsTable.mentor_id,
+      topic: sessionRequestsTable.topic
+    })
+
+  if (!result) return null
   return result
 }

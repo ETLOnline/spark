@@ -1,6 +1,8 @@
 "use client"
 
-import { Users, Video } from "lucide-react"
+import moment from "moment-timezone"
+import { CalendarDays, Users, Video } from "lucide-react"
+import { Checkbox } from "@/src/components/ui/checkbox"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -17,8 +19,10 @@ import {
   formatDuration,
   formatTime,
   getDurationOptions,
+  getRepeatUntilOptions,
   getStartTimeOptions,
   minsToTime,
+  repeatLabel,
   TimeRange
 } from "./mentorCalendarUtils"
 import { toMins } from "@/src/utils/time"
@@ -26,6 +30,9 @@ import {
   SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
   SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
+
+// Sentinel for "no end date" — distinct from real YYYY-MM-DD option values.
+const NO_END_VALUE = "__no_end__"
 
 interface SessionRequestFormProps {
   slot: SelectMentorAvailability
@@ -38,6 +45,11 @@ interface SessionRequestFormProps {
   onTopicChange: (value: string) => void
   description: string
   onDescriptionChange: (value: string) => void
+  recurring: boolean
+  onRecurringChange: (value: boolean) => void
+  sessionDateStr: string
+  repeatEndDate: string
+  onRepeatEndDateChange: (value: string) => void
   error: string
 }
 
@@ -52,10 +64,28 @@ export function SessionRequestForm({
   onTopicChange,
   description,
   onDescriptionChange,
+  recurring,
+  onRecurringChange,
+  sessionDateStr,
+  repeatEndDate,
+  onRepeatEndDateChange,
   error
 }: SessionRequestFormProps) {
   return (
     <>
+      {/* Date — the anchor occurrence this request is for */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">
+          Date
+        </Label>
+        <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-foreground/10 bg-muted/40">
+          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          {sessionDateStr
+            ? moment(sessionDateStr, "YYYY-MM-DD").format("dddd, MMMM D, YYYY")
+            : "—"}
+        </div>
+      </div>
+
       {/* Session Type (inherited from the slot, not editable) */}
       <div>
         <Label className="text-xs text-muted-foreground mb-1.5 block">
@@ -120,6 +150,61 @@ export function SessionRequestForm({
         Your session: {formatTime(startTime)} –{" "}
         {formatTime(minsToTime(toMins(startTime) + duration))}
       </p>
+
+      {/* Recurring — only offered when the slot itself repeats */}
+      {slot.repeat_type !== "none" && (
+        <div className="rounded-md border border-foreground/10 bg-muted/40 px-3 py-2.5 space-y-2.5">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <Checkbox
+              checked={recurring}
+              onCheckedChange={(checked) => onRecurringChange(checked === true)}
+              className="mt-0.5"
+            />
+            <span className="text-sm">
+              <span className="font-medium">
+                Request every {repeatLabel(slot).replace("Every ", "")}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Book this as a standing session instead of just this one date
+              </span>
+            </span>
+          </label>
+
+          {recurring && (
+            <div className="pl-6">
+              <Label className="text-xs text-muted-foreground mb-1.5 block">
+                Repeat until <span className="opacity-60">(optional)</span>
+              </Label>
+              <Select
+                value={repeatEndDate || NO_END_VALUE}
+                onValueChange={(v) =>
+                  onRepeatEndDateChange(v === NO_END_VALUE ? "" : v)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {!slot.repeat_end_date && (
+                    <SelectItem value={NO_END_VALUE}>
+                      No end date (matches mentor's availability)
+                    </SelectItem>
+                  )}
+                  {getRepeatUntilOptions(slot, sessionDateStr).map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {moment(d, "YYYY-MM-DD").format("ddd, MMM D, YYYY")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Only dates matching the mentor's recurring pattern can be
+                selected.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Topic */}
       <div>

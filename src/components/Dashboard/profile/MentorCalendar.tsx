@@ -15,7 +15,8 @@ import {
   GetAcceptedSessionRequestsForMentorAction,
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
-  GetSessionRequestsForMentorByStatusAction,
+  GetPendingSessionRequestsForMentorAction,
+  ResubmitSessionRequestAction,
   UpdateAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
@@ -42,9 +43,11 @@ import {
   SessionType
 } from "./mentor-calendar/mentorCalendarUtils"
 import { MentorCalendarGrid } from "./mentor-calendar/MentorCalendarGrid"
-import { AvailabilitySlotForm } from "./mentor-calendar/AvailabilitySlotForm"
-import { SessionRequestForm } from "./mentor-calendar/SessionRequestForm"
 import { SlotListItem } from "./mentor-calendar/SlotListItem"
+import { SessionRequestForm } from "./mentor-calendar/SessionRequestForm"
+import { AvailabilitySlotForm } from "./mentor-calendar/AvailabilitySlotForm"
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 interface MentorCalendarProps {
   userId: string
@@ -79,50 +82,62 @@ export function MentorCalendar({
   // Request-a-session form state (viewer only)
   const [viewerRp, setViewerRp] = useState(0)
   const [myRequests, setMyRequests] = useState<SelectSessionRequest[]>([])
-  const [bookedRequests, setBookedRequests] = useState<SelectSessionRequest[]>(
-    []
-  )
-
-  // Activity across ALL mentees, shown on the mentor's own calendar
-  const [mentorPendingRequests, setMentorPendingRequests] = useState<
-    SelectSessionRequest[]
-  >([])
-  const [mentorAcceptedRequests, setMentorAcceptedRequests] = useState<
-    SelectSessionRequest[]
-  >([])
   const [requestFormSlot, setRequestFormSlot] =
     useState<SelectMentorAvailability | null>(null)
   const [requestStartTime, setRequestStartTime] = useState("")
   const [requestDuration, setRequestDuration] = useState(60)
   const [requestTopic, setRequestTopic] = useState("")
   const [requestDescription, setRequestDescription] = useState("")
+  const [requestRecurring, setRequestRecurring] = useState(false)
+  const [requestRepeatEndDate, setRequestRepeatEndDate] = useState("")
   const [requestError, setRequestError] = useState("")
   const [requestSubmitting, setRequestSubmitting] = useState(false)
 
+  const [acceptedRequests, setAcceptedRequests] = useState<
+    SelectSessionRequest[]
+  >([])
+  const [mentorPendingRequests, setMentorPendingRequests] = useState<
+    SelectSessionRequest[]
+  >([])
+
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
-  const [, , , deleteSessionRequestsForSlot] = useServerAction(
-    DeleteSessionRequestsForRemovedSlotAction
-  )
   const [, , , getAuthUser] = useServerAction(AuthUserAction)
   const [, , , getViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
   const [, , , getMyRequests] = useServerAction(
     GetMySessionRequestsForMentorAction
   )
-  const [, , , getBookedRequests] = useServerAction(
-    GetAcceptedSessionRequestsForMentorAction
-  )
   const [, , , createSessionRequest] = useServerAction(
     CreateSessionRequestAction
   )
-  const [, , , getRequestsByStatus] = useServerAction(
-    GetSessionRequestsForMentorByStatusAction
+  const [resubmitSubmitting, , , resubmitSessionRequest] = useServerAction(
+    ResubmitSessionRequestAction
+  )
+  const [, , , getAcceptedRequests] = useServerAction(
+    GetAcceptedSessionRequestsForMentorAction
+  )
+  const [, , , getMentorPendingRequests] = useServerAction(
+    GetPendingSessionRequestsForMentorAction
+  )
+  const [, , , deleteSessionRequestsForSlot] = useServerAction(
+    DeleteSessionRequestsForRemovedSlotAction
   )
 
+  /** Returns the slot_suggested request for this exact slot + date occurrence, if any. */
+  const getSuggestedRequestForSlot = (slotId: number, date: Date) => {
+    const key = `${slotId}-${moment(date).format("YYYY-MM-DD")}`
+    return (
+      myRequests.find(
+        (r) =>
+          r.status === "slot_suggested" &&
+          ((r.suggested_slot_ids ?? []) as unknown as string[]).includes(key)
+      ) ?? null
+    )
+  }
+
   const loadSlots = useCallback(async () => {
-    const availabilityRes = await getAvailability(userId)
-    if (availabilityRes?.success)
-      setSlots((availabilityRes.data ?? []).filter((s) => s.is_active))
+    const res = await getAvailability(userId)
+    if (res?.success) setSlots((res.data ?? []).filter((s) => s.is_active))
   }, [userId])
 
   useEffect(() => {
@@ -130,26 +145,28 @@ export function MentorCalendar({
   }, [loadSlots])
 
   const loadMyRequests = useCallback(async () => {
-    const myRequestsRes = await getMyRequests(userId)
-    if (myRequestsRes?.success) setMyRequests(myRequestsRes.data ?? [])
+    const myRequestRes = await getMyRequests(userId)
+    if (myRequestRes?.success) setMyRequests(myRequestRes.data ?? [])
   }, [userId])
 
-  const loadBookedRequests = useCallback(async () => {
-    const res = await getBookedRequests(userId)
-    if (res?.success) setBookedRequests(res.data ?? [])
+  const loadAcceptedRequests = useCallback(async () => {
+    const res = await getAcceptedRequests(userId)
+    if (res?.success)
+      setAcceptedRequests((res.data as SelectSessionRequest[]) ?? [])
   }, [userId])
 
-  const loadMentorActivity = useCallback(async () => {
-    const [pendingRes, acceptedRes] = await Promise.all([
-      getRequestsByStatus(userId, "pending"),
-      getRequestsByStatus(userId, "accepted")
-    ])
-    if (pendingRes?.success) setMentorPendingRequests(pendingRes.data ?? [])
-    if (acceptedRes?.success) setMentorAcceptedRequests(acceptedRes.data ?? [])
+  const loadMentorPendingRequests = useCallback(async () => {
+    const res = await getMentorPendingRequests(userId)
+    if (res?.success)
+      setMentorPendingRequests((res.data as SelectSessionRequest[]) ?? [])
   }, [userId])
 
   useEffect(() => {
-    if (isMyProfile) return
+    loadAcceptedRequests()
+    if (isMyProfile) {
+      loadMentorPendingRequests()
+      return
+    }
     const fetchViewerContext = async () => {
       const authUser = await getAuthUser()
       if (!authUser) return
@@ -163,13 +180,12 @@ export function MentorCalendar({
     }
     fetchViewerContext()
     loadMyRequests()
-    loadBookedRequests()
-  }, [isMyProfile, loadMyRequests, loadBookedRequests])
-
-  useEffect(() => {
-    if (!isMyProfile) return
-    loadMentorActivity()
-  }, [isMyProfile, loadMentorActivity])
+  }, [
+    isMyProfile,
+    loadMyRequests,
+    loadAcceptedRequests,
+    loadMentorPendingRequests
+  ])
 
   const resetPopupForm = (date: Date) => {
     setPendingDeleteId(null)
@@ -195,15 +211,6 @@ export function MentorCalendar({
     setSelectedDate(date)
     resetPopupForm(date)
     setIsPopupOpen(true)
-    // Accept/reject happens in the mentor's own session, so refresh on every
-    // open rather than relying on the one-time mount fetch — otherwise a
-    // stale "pending" request can still show after the mentor has accepted it.
-    if (!isMyProfile) {
-      loadMyRequests()
-      loadBookedRequests()
-    } else {
-      loadMentorActivity()
-    }
   }
 
   const handleAddSlot = async () => {
@@ -315,11 +322,12 @@ export function MentorCalendar({
       repeat_end_date: s.repeat_end_date ?? null
     }))
 
-    const addSlotRes = await updateAvailability({
+    const res = await updateAvailability({
       mentorId: userId,
       slots: [...existing, ...newSlots]
     })
-    if (addSlotRes?.success) {
+    if (res?.success) {
+      setSlotError("")
       await loadSlots()
       toast({ title: "Slot added", duration: 2000 })
     } else {
@@ -336,36 +344,68 @@ export function MentorCalendar({
     setRequestFormSlot(slot)
     setRequestTopic("")
     setRequestDescription("")
+    setRequestRecurring(false)
+    setRequestRepeatEndDate(slot.repeat_end_date ?? "")
     setRequestError("")
-    const unavailableRanges = selectedDate
+    const unavailable = selectedDate
       ? getUnavailableRangesForRequest(
           slot,
           selectedDate,
           myRequests,
-          bookedRequests
+          acceptedRequests
         )
       : []
-    const startOptions = getStartTimeOptions(slot, unavailableRanges)
+    const startOptions = getStartTimeOptions(slot, unavailable)
     const firstStart = startOptions[0] ?? slot.start_time
     setRequestStartTime(firstStart)
-    const fitting = getDurationOptions(slot, firstStart, unavailableRanges)
+    const fitting = getDurationOptions(slot, firstStart, unavailable)
     setRequestDuration(fitting[0] ?? 60)
+  }
+
+  const confirmSuggestedSlot = async (
+    slot: SelectMentorAvailability,
+    requestId: number
+  ) => {
+    if (!selectedDate) return
+    const res = await resubmitSessionRequest({
+      requestId,
+      slotId: slot.id,
+      sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
+      startTime: slot.start_time,
+      endTime: slot.end_time
+    })
+    if (res?.success) {
+      await loadMyRequests()
+      setIsPopupOpen(false)
+      toast({ title: "Session request resubmitted", duration: 2000 })
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Failed to resubmit",
+        description: res?.error ?? "Please try again.",
+        duration: 3000
+      })
+    }
+  }
+
+  const handleDialogBack = () => {
+    if (requestFormSlot) {
+      setRequestFormSlot(null)
+    } else {
+      setIsPopupOpen(false)
+    }
   }
 
   const handleRequestStartTimeChange = (value: string) => {
     setRequestStartTime(value)
     if (!requestFormSlot || !selectedDate) return
-    const unavailableRanges = getUnavailableRangesForRequest(
+    const unavailable = getUnavailableRangesForRequest(
       requestFormSlot,
       selectedDate,
       myRequests,
-      bookedRequests
+      acceptedRequests
     )
-    const fitting = getDurationOptions(
-      requestFormSlot,
-      value,
-      unavailableRanges
-    )
+    const fitting = getDurationOptions(requestFormSlot, value, unavailable)
     if (!fitting.includes(requestDuration)) {
       setRequestDuration(fitting[0] ?? 60)
     }
@@ -378,25 +418,28 @@ export function MentorCalendar({
       return
     }
 
+    const recurring = requestFormSlot.repeat_type !== "none" && requestRecurring
+
     setRequestSubmitting(true)
-    const createRequestRes = await createSessionRequest({
+    const res = await createSessionRequest({
       mentorId: userId,
       availabilitySlotId: requestFormSlot.id,
       sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
       startTime: requestStartTime,
       endTime: minsToTime(toMins(requestStartTime) + requestDuration),
       topic: requestTopic,
-      description: requestDescription
+      description: requestDescription,
+      recurring,
+      repeatEndDate: recurring ? requestRepeatEndDate || null : null
     })
     setRequestSubmitting(false)
 
-    if (createRequestRes?.success) {
+    if (res?.success) {
       await loadMyRequests()
-      ;(document.activeElement as HTMLElement | null)?.blur()
       setRequestFormSlot(null)
       toast({ title: "Session request sent", duration: 2000 })
     } else {
-      setRequestError(createRequestRes?.error ?? "Failed to send request")
+      setRequestError(res?.error ?? "Failed to send request")
     }
   }
 
@@ -416,11 +459,8 @@ export function MentorCalendar({
     setSlotError("")
     const slot = slots.find((s) => s.id === slotId)
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
-    const deleteSeriesRes = await updateAvailability({
-      mentorId: userId,
-      slots: remaining
-    })
-    if (deleteSeriesRes?.success) {
+    const res = await updateAvailability({ mentorId: userId, slots: remaining })
+    if (res?.success) {
       if (slot) {
         await deleteSessionRequestsForSlot({
           mentorId: userId,
@@ -481,11 +521,11 @@ export function MentorCalendar({
       })
     }
 
-    const deleteOccurrenceRes = await updateAvailability({
+    const res = await updateAvailability({
       mentorId: userId,
       slots: [...otherSlots, ...additions]
     })
-    if (deleteOccurrenceRes?.success) {
+    if (res?.success) {
       await deleteSessionRequestsForSlot({
         mentorId: userId,
         startTime: slot.start_time,
@@ -499,10 +539,14 @@ export function MentorCalendar({
     }
   }
 
+  // ── Derived values ────────────────────────────────────────────────────────────
+
   const slotsForSelected = selectedDate
     ? getSlotsForDate(slots, selectedDate)
     : []
   const selectedDayName = selectedDate ? DAYS[selectedDate.getDay()] : ""
+
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -511,11 +555,15 @@ export function MentorCalendar({
         slots={slots}
         isMyProfile={isMyProfile}
         myRequests={myRequests}
-        bookedRequests={bookedRequests}
+        bookedRequests={acceptedRequests}
         mentorPendingRequests={mentorPendingRequests}
-        mentorAcceptedRequests={mentorAcceptedRequests}
+        mentorAcceptedRequests={acceptedRequests}
         onSelectDate={openPopup}
-        onNewSlotClick={() => openPopup(today)}
+        onNewSlotClick={() => {
+          setSelectedDate(today)
+          resetPopupForm(today)
+          setIsPopupOpen(true)
+        }}
       />
 
       {/* ── Popup ── */}
@@ -541,7 +589,7 @@ export function MentorCalendar({
                         requestFormSlot,
                         selectedDate,
                         myRequests,
-                        bookedRequests
+                        acceptedRequests
                       )
                     : []
                 }
@@ -556,6 +604,13 @@ export function MentorCalendar({
                 }}
                 description={requestDescription}
                 onDescriptionChange={setRequestDescription}
+                recurring={requestRecurring}
+                onRecurringChange={setRequestRecurring}
+                sessionDateStr={
+                  selectedDate ? moment(selectedDate).format("YYYY-MM-DD") : ""
+                }
+                repeatEndDate={requestRepeatEndDate}
+                onRepeatEndDateChange={setRequestRepeatEndDate}
                 error={requestError}
               />
             ) : (
@@ -586,7 +641,18 @@ export function MentorCalendar({
                 {slotsForSelected.length > 0 && (
                   <div className="pt-1 space-y-1.5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isMyProfile ? "Existing Slots" : "Available Times"}
+                      {isMyProfile
+                        ? "Existing Slots"
+                        : selectedDate &&
+                            slotsForSelected.some(
+                              (s) =>
+                                getSuggestedRequestForSlot(
+                                  s.id,
+                                  selectedDate
+                                ) !== null
+                            )
+                          ? "Suggested Slots"
+                          : "Available Times"}
                       {slotsForSelected.length > 2 && (
                         <span className="ml-1.5 normal-case font-normal opacity-60">
                           ({slotsForSelected.length})
@@ -601,15 +667,21 @@ export function MentorCalendar({
                           isMyProfile={isMyProfile}
                           selectedDate={selectedDate!}
                           myRequests={myRequests}
-                          bookedRequests={bookedRequests}
+                          bookedRequests={acceptedRequests}
                           mentorPendingRequests={mentorPendingRequests}
-                          mentorAcceptedRequests={mentorAcceptedRequests}
+                          mentorAcceptedRequests={acceptedRequests}
                           viewerRp={viewerRp}
                           pendingDeleteId={pendingDeleteId}
                           onTogglePendingDelete={setPendingDeleteId}
                           onDeleteSeries={handleDeleteSeries}
                           onDeleteOccurrence={handleDeleteOccurrence}
                           onRequestSlot={openRequestForm}
+                          suggestedRequest={getSuggestedRequestForSlot(
+                            slot.id,
+                            selectedDate!
+                          )}
+                          isConfirming={resubmitSubmitting}
+                          onConfirmSuggestedSlot={confirmSuggestedSlot}
                         />
                       ))}
                     </div>
@@ -627,12 +699,8 @@ export function MentorCalendar({
 
           <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
             <button
-              onClick={() =>
-                requestFormSlot
-                  ? setRequestFormSlot(null)
-                  : setIsPopupOpen(false)
-              }
-              className="px-4 py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              onClick={handleDialogBack}
+              className="px-4 py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
             >
               {requestFormSlot ? "Back" : isMyProfile ? "Cancel" : "Close"}
             </button>
