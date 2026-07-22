@@ -1,6 +1,6 @@
 {
-  "id": "e078108c-618a-4e08-8cf5-a054367f6e92",
-  "prevId": "fdcbf4dd-f8d9-4d40-b1a3-7523ad612861",
+  "id": "ade4118c-641a-4997-94f7-a56ac22ff2ed",
+  "prevId": "bbb67843-ac67-4377-806c-994c765419fc",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3729,6 +3729,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "space_id": {
+          "name": "space_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suggestion_message": {
+          "name": "suggestion_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suggested_slot_ids": {
+          "name": "suggested_slot_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -3767,6 +3785,15 @@
           "columnsFrom": ["mentee_id"],
           "columnsTo": ["unique_id"],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "session_requests_space_id_spaces_id_fk": {
+          "name": "session_requests_space_id_spaces_id_fk",
+          "tableFrom": "session_requests",
+          "tableTo": "spaces",
+          "columnsFrom": ["space_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },

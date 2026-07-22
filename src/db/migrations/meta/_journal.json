@@ -355,8 +355,15 @@
     {
       "idx": 50,
       "version": "7",
-      "when": 1784274545575,
-      "tag": "0050_2026_07_17_124904__add_repeat_fields_to_session_requests",
+      "when": 1784287434219,
+      "tag": "0050_2026_07_17_162351__add_suggestion_fields_to_session_req_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1784645832269,
+      "tag": "0051_2026_07_21_195711__add_sapce_id_column",
       "breakpoints": true
     }
   ]

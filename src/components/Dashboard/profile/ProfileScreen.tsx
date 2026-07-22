@@ -138,10 +138,10 @@ export default function ProfileScreen({
   )
   const [activeSpaces, setActiveSpaces] = useState<SelectSpace[]>([])
   const [, , , getSpacesForUser] = useServerAction(GetSpacesForUserAction)
-  const [acceptedSessions, setAcceptedSessions] = useState<
+  const [acceptedMentorSessions, setAcceptedMentorSessions] = useState<
     SelectSessionRequest[]
   >([])
-  const [, , , getAcceptedSessions] = useServerAction(
+  const [, , , getAcceptedMentorSessions] = useServerAction(
     GetAcceptedSessionRequestsForMentorAction
   )
   const authUser = useAtomValue(userStore.AuthUser)
@@ -219,13 +219,13 @@ export default function ProfileScreen({
   // Accepted bookings — shown publicly on the mentor's profile
   useEffect(() => {
     if (!isMentor) return
-    const fetchAcceptedSessions = async () => {
-      const res = await getAcceptedSessions(user.unique_id)
+    const fetchAcceptedMentorSessions = async () => {
+      const res = await getAcceptedMentorSessions(user.unique_id)
       if (res?.success && res.data) {
-        setAcceptedSessions(res.data as SelectSessionRequest[])
+        setAcceptedMentorSessions(res.data as SelectSessionRequest[])
       }
     }
-    fetchAcceptedSessions()
+    fetchAcceptedMentorSessions()
   }, [isMentor, user.unique_id])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
@@ -501,7 +501,7 @@ export default function ProfileScreen({
             </Card>
 
             {isMentor && (
-              <MentorSessionsCard acceptedRequests={acceptedSessions} />
+              <MentorSessionsCard acceptedRequests={acceptedMentorSessions} />
             )}
           </div>
           {/* Right Column */}

@@ -1,6 +1,8 @@
 "use client"
 
-import { CalendarClock, Users, Video } from "lucide-react"
+import Link from "next/link"
+import { CalendarClock, LayoutGrid, Users, Video } from "lucide-react"
+import { Button } from "@/src/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,11 +15,25 @@ import {
   summarizeMentorSessions
 } from "./mentor-calendar/mentorCalendarUtils"
 
-interface MentorSessionsCardProps {
-  acceptedRequests: SelectSessionRequest[]
+export type MentorSessionRequest = SelectSessionRequest & {
+  space?: { id: string; space_slug: string } | null
 }
 
-function SessionRow({ request, occurrence }: SessionOccurrence) {
+interface MentorSessionsCardProps {
+  acceptedRequests: MentorSessionRequest[]
+}
+
+function SessionRow({
+  request,
+  occurrence
+}: {
+  request: MentorSessionRequest
+  occurrence: SessionOccurrence["occurrence"]
+}) {
+  const spaceHref = request.space
+    ? `/mentorship/${request.mentor_id}/spaces/${request.space.space_slug}`
+    : null
+
   return (
     <div className="flex items-start gap-3 py-3 first:pt-0 last:pb-0 border-b border-foreground/8 last:border-b-0">
       <div className="h-9 w-9 rounded-md bg-primary/15 flex items-center justify-center shrink-0">
@@ -34,6 +50,14 @@ function SessionRow({ request, occurrence }: SessionOccurrence) {
           {occurrence.format("ddd, MMM D · h:mm A")}
         </p>
       </div>
+      {spaceHref && (
+        <Link href={spaceHref} className="shrink-0">
+          <Button variant="outline" size="sm">
+            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+            View Space
+          </Button>
+        </Link>
+      )}
     </div>
   )
 }
