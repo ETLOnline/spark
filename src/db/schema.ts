@@ -305,6 +305,38 @@ export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect & {
   mentee?: SelectUser
 }
 
+export const mentorshipFeedbackTable = pgTable("mentorship_feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  session_request_id: integer("session_request_id")
+    .notNull()
+    .references(() => sessionRequestsTable.id, { onDelete: "cascade" }),
+  submitted_by: varchar("submitted_by")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  ...timestamps
+})
+
+export const mentorshipFeedbackRelations = relations(
+  mentorshipFeedbackTable,
+  ({ one }) => ({
+    sessionRequest: one(sessionRequestsTable, {
+      fields: [mentorshipFeedbackTable.session_request_id],
+      references: [sessionRequestsTable.id]
+    }),
+    submittedBy: one(usersTable, {
+      fields: [mentorshipFeedbackTable.submitted_by],
+      references: [usersTable.unique_id]
+    })
+  })
+)
+
+export type InsertMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferInsert
+export type SelectMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferSelect
+
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: varchar("user_id")

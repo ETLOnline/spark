@@ -1,6 +1,6 @@
 {
-  "id": "f8caa9f4-708b-41c6-88a6-eff8739a305d",
-  "prevId": "fdcbf4dd-f8d9-4d40-b1a3-7523ad612861",
+  "id": "fc491c97-a47e-48fd-a446-96b77effd68a",
+  "prevId": "ade4118c-641a-4997-94f7-a56ac22ff2ed",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2340,7 +2340,7 @@
         },
         "comment": {
           "name": "comment",
-          "type": "varchar",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -3808,9 +3808,34 @@
           "notNull": true,
           "default": "'pending'"
         },
+        "repeat_type": {
+          "name": "repeat_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
+        },
+        "repeat_end_date": {
+          "name": "repeat_end_date",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "space_id": {
           "name": "space_id",
-          "type": "varchar",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suggestion_message": {
+          "name": "suggestion_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suggested_slot_ids": {
+          "name": "suggested_slot_ids",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -3874,7 +3899,7 @@
           "tableTo": "spaces",
           "columnsFrom": ["space_id"],
           "columnsTo": ["id"],
-          "onDelete": "set null",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
