@@ -3,21 +3,32 @@
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
+  ArchiveSessionSpace,
+  ConfirmSessionAttendance,
   CreateSessionRequest,
   DeletePendingSessionRequestsForSlot,
   GetAcceptedSessionRequestsForMentor,
+  GetEngagementsForUser,
+  GetFeedbackSubmittersForSessions,
   GetMentorAvailability,
   GetMentors,
   GetSessionRequestById,
   GetSessionRequestsForMenteeAndMentor,
   GetSessionRequestsForMentorByStatus,
+  GetSharedSpacesForSessions,
   HasAcceptedOverlap,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
+  SubmitMentorshipFeedback,
   UpdateSessionRequestStatus,
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
+import type {
+  Engagement,
+  EngagementStatus
+} from "@/src/components/Dashboard/profile/engagements/types"
+import type { SpaceBasic } from "@/src/db/data-access/mentor/query"
 import {
   updateUserProfile,
   SearchUserProfile
@@ -339,10 +350,14 @@ export const GetAcceptedSessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
-/** Mentor accepts or rejects a pending session request. */
+/** Mentor accepts or rejects a pending session request. Pass spaceId when accepting with a linked space. */
 export const RespondToSessionRequestAction = CreateServerAction(
   true,
-  async (requestId: number, status: "accepted" | "rejected") => {
+  async (
+    requestId: number,
+    status: "accepted" | "rejected",
+    spaceId?: string | null
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
@@ -355,7 +370,11 @@ export const RespondToSessionRequestAction = CreateServerAction(
         return { error: "This request has already been responded to" }
       }
 
-      const updated = await UpdateSessionRequestStatus(requestId, status)
+      const updated = await UpdateSessionRequestStatus(
+        requestId,
+        status,
+        spaceId
+      )
 
       const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
       const responseTemplate = {
@@ -424,6 +443,201 @@ export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
     } catch (error) {
       console.error("DeleteSessionRequestsForRemovedSlotAction error:", error)
       return { error: "Failed to clean up session requests" }
+    }
+  }
+)
+
+// ── Engagements ─────────────────────────────────────────────────────────────────
+
+function deriveEngagementStatus(
+  sessionDate: string,
+  endTime: string,
+  viewerId: string,
+  confirmations: Record<string, string>,
+  submitters: string[]
+): EngagementStatus {
+  const end = moment(`${sessionDate} ${endTime}`, "YYYY-MM-DD HH:mm")
+  if (end.isAfter(moment())) return "upcoming"
+
+  const viewerConfirmed = !!confirmations[viewerId]
+  const viewerSubmitted = submitters.includes(viewerId)
+
+  return viewerConfirmed && viewerSubmitted ? "completed" : "overdue"
+}
+
+type SessionRequestRow = Awaited<
+  ReturnType<typeof GetEngagementsForUser>
+>[number]
+
+function buildEngagement(
+  req: SessionRequestRow,
+  viewerId: string,
+  feedbackSubmitters: string[],
+  fallbackSpace: SpaceBasic | null
+): Engagement {
+  const isMentor = req.mentor_id === viewerId
+  const counterpartUser = isMentor ? req.mentee : req.mentor
+
+  const firstName = counterpartUser?.first_name ?? ""
+  const lastName = counterpartUser?.last_name ?? ""
+  const roleParts = [
+    counterpartUser?.profile?.professional_title,
+    counterpartUser?.profile?.company
+  ].filter(Boolean)
+
+  const confirmations = (req.attendee_confirmations ?? {}) as Record<
+    string,
+    string
+  >
+  const space = req.space ?? fallbackSpace
+
+  return {
+    id: req.id,
+    topic: req.topic,
+    description: req.description ?? "",
+    sessionDate: req.session_date,
+    startTime: req.start_time,
+    endTime: req.end_time,
+    sessionType: req.session_type as "1:1" | "group",
+    status: deriveEngagementStatus(
+      req.session_date,
+      req.end_time,
+      viewerId,
+      confirmations,
+      feedbackSubmitters
+    ),
+    counterpart: {
+      name: `${firstName} ${lastName}`.trim() || "Unknown",
+      role: roleParts.join(" · ") || (isMentor ? "Mentee" : "Mentor"),
+      initials: `${firstName[0] ?? "?"}${lastName[0] ?? "?"}`.toUpperCase(),
+      avatarUrl: counterpartUser?.profile_url ?? undefined
+    },
+    spaceId: req.space_id ?? fallbackSpace?.id ?? undefined,
+    spaceName: space?.space_name ?? undefined,
+    spaceSlug: space?.space_slug ?? undefined,
+    spaceCreatedBy: space?.created_by ?? undefined,
+    isSpaceArchived: req.is_space_archived ?? false,
+    isMentor,
+    iViewerConfirmed: !!confirmations[viewerId],
+    feedbackSubmittedByViewer: feedbackSubmitters.includes(viewerId)
+  }
+}
+
+/** Fetch all engagements (accepted + completed sessions) for the authenticated user. */
+export const GetEngagementsAction = CreateServerAction(true, async () => {
+  try {
+    const authUser = await AuthUserAction()
+    if (!authUser) return { error: "Unauthorised" }
+
+    const requests = await GetEngagementsForUser(authUser.unique_id)
+    const feedbackMap = await GetFeedbackSubmittersForSessions(
+      requests.map((r) => r.id)
+    )
+
+    // For sessions accepted before space_id was saved, fall back to finding
+    // a shared independent space between mentor and mentee
+    const sessionsWithoutSpace = requests.filter((r) => !r.space_id)
+    const fallbackSpaces = await GetSharedSpacesForSessions(
+      sessionsWithoutSpace.map((r) => ({
+        sessionId: r.id,
+        mentorId: r.mentor_id,
+        menteeId: r.mentee_id
+      }))
+    )
+
+    const engagements = requests.map((req) =>
+      buildEngagement(
+        req,
+        authUser.unique_id,
+        feedbackMap[req.id] ?? [],
+        fallbackSpaces[req.id] ?? null
+      )
+    )
+
+    return { success: true, data: engagements }
+  } catch (error) {
+    console.error("GetEngagementsAction error:", error)
+    return { error: "Failed to fetch engagements" }
+  }
+})
+
+/** Confirm that the authenticated user attended the session. */
+export const ConfirmSessionCompletionAction = CreateServerAction(
+  true,
+  async (sessionId: number) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      const session = await GetSessionRequestById(sessionId)
+      if (!session) return { error: "Session not found" }
+      if (
+        session.mentor_id !== authUser.unique_id &&
+        session.mentee_id !== authUser.unique_id
+      ) {
+        return { error: "Unauthorised" }
+      }
+
+      await ConfirmSessionAttendance(sessionId, authUser.unique_id)
+      return { success: true }
+    } catch (error) {
+      console.error("ConfirmSessionCompletionAction error:", error)
+      return { error: "Failed to confirm session" }
+    }
+  }
+)
+
+/** Mentor archives the space for a specific session. Only affects this session — the space and other sessions are untouched. */
+export const ArchiveSpaceAction = CreateServerAction(
+  true,
+  async (sessionId: number) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      const updated = await ArchiveSessionSpace(sessionId)
+      if (!updated) return { error: "Session not found" }
+
+      return { success: true }
+    } catch (error) {
+      console.error("ArchiveSpaceAction error:", error)
+      return { error: "Failed to archive space" }
+    }
+  }
+)
+
+/** Submit star-rating feedback for a completed session. */
+export const SubmitMentorshipFeedbackAction = CreateServerAction(
+  true,
+  async (sessionId: number, rating: number, comment?: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      if (rating < 1 || rating > 5)
+        return { error: "Rating must be between 1 and 5" }
+
+      const session = await GetSessionRequestById(sessionId)
+      if (!session) return { error: "Session not found" }
+      if (
+        session.mentor_id !== authUser.unique_id &&
+        session.mentee_id !== authUser.unique_id
+      ) {
+        return { error: "Unauthorised" }
+      }
+
+      const row = await SubmitMentorshipFeedback(
+        sessionId,
+        authUser.unique_id,
+        rating,
+        comment
+      )
+      if (!row) return { error: "Feedback already submitted" }
+
+      return { success: true }
+    } catch (error) {
+      console.error("SubmitMentorshipFeedbackAction error:", error)
+      return { error: "Failed to submit feedback" }
     }
   }
 )

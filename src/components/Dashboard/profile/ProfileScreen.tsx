@@ -83,6 +83,7 @@ import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import ViewAvailabilityButton from "./ViewAvailabilityButton"
 import EditFypInfoModal from "./EditFypInfoModal"
+import { EngagementsSection } from "./engagements/EngagementsSection"
 
 type ProfileScreenProps = {
   tab?: string
@@ -725,6 +726,9 @@ export default function ProfileScreen({
                 </CardContent>
               </Card>
             )}
+
+            {/* Engagements — shown on own profile for both mentor and mentee */}
+            {isMyProfile && <EngagementsSection />}
 
             {/* Education */}
             <Card>

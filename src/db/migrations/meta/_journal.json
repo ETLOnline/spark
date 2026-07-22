@@ -351,6 +351,13 @@
       "when": 1784194897227,
       "tag": "0049_2026_07_16_144133__make_channel_id_nullable_in_space_and_proect_table",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784707039013,
+      "tag": "0050_2026_07_22_125717__add_mentorship_feedback_table_and_session_request_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -250,6 +250,11 @@ export const sessionRequestsTable = pgTable("session_requests", {
   topic: varchar("topic").notNull(),
   description: varchar("description"),
   status: varchar("status").notNull().default("pending"),
+  space_id: varchar("space_id").references(() => spacesTable.id, {
+    onDelete: "set null"
+  }),
+  attendee_confirmations: jsonb("attendee_confirmations").default({}),
+  is_space_archived: boolean("is_space_archived").default(false),
   ...timestamps
 })
 
@@ -265,12 +270,60 @@ export const sessionRequestsRelations = relations(
       fields: [sessionRequestsTable.mentee_id],
       references: [usersTable.unique_id],
       relationName: "sessionRequestToMentee"
+    }),
+    space: one(spacesTable, {
+      fields: [sessionRequestsTable.space_id],
+      references: [spacesTable.id],
+      relationName: "sessionRequestToSpace"
     })
   })
 )
 
 export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
-export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect & {
+  mentor?: SelectUser | null
+  mentee?: SelectUser | null
+  space?: SelectSpace | null
+}
+
+// Mentorship feedback — one row per submission.
+// 1:1: up to 2 rows (mentor + mentee each submit their own).
+// Group: 1 row from the mentor only (shared with all mentees).
+export const mentorshipFeedbackTable = pgTable("mentorship_feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  session_request_id: integer("session_request_id")
+    .notNull()
+    .references(() => sessionRequestsTable.id, { onDelete: "cascade" }),
+  submitted_by: varchar("submitted_by")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(), // 1–5
+  comment: varchar("comment"),
+  ...timestamps
+})
+
+export const mentorshipFeedbackRelations = relations(
+  mentorshipFeedbackTable,
+  ({ one }) => ({
+    sessionRequest: one(sessionRequestsTable, {
+      fields: [mentorshipFeedbackTable.session_request_id],
+      references: [sessionRequestsTable.id],
+      relationName: "mentorshipFeedbackToRequest"
+    }),
+    submittedBy: one(usersTable, {
+      fields: [mentorshipFeedbackTable.submitted_by],
+      references: [usersTable.unique_id],
+      relationName: "mentorshipFeedbackToUser"
+    })
+  })
+)
+
+export type InsertMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferInsert
+export type SelectMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferSelect & {
+    submittedBy?: SelectUser | null
+  }
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
