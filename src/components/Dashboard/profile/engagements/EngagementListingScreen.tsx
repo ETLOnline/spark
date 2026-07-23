@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, Users } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { Skeleton } from "@/src/components/ui/skeleton"
-import { Engagement, EngagementStatus } from "./types"
+import { Engagement, EngagementStatus, FeedbackItem } from "./types"
 import { StatusPill } from "./StatusPill"
 import { EngagementDetail } from "./EngagementDetail"
 import { CompletionDialog } from "./CompletionDialog"
@@ -13,6 +13,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   ArchiveSpaceAction,
   ConfirmSessionCompletionAction,
+  GetEngagementFeedbackAction,
   GetEngagementsAction,
   SubmitMentorshipFeedbackAction
 } from "@/src/server-actions/Mentor/MentorActions"
@@ -32,7 +33,20 @@ function EngagementListItem({
   selected: boolean
   onSelect: () => void
 }) {
-  const dateLabel = `${moment(e.sessionDate).format("ddd MMM D")} · ${e.sessionType}`
+  const isGroupMentor = e.sessionType === "group" && e.isMentor
+  const isGroupMentee = e.sessionType === "group" && !e.isMentor
+  const dateStr = moment(e.sessionDate).format("ddd MMM D")
+  const dateLabel = `${dateStr} · ${e.sessionType}`
+
+  let subtitle: string
+  if (isGroupMentor) {
+    subtitle = `Group · ${e.attendeeCount ?? 0} participant${(e.attendeeCount ?? 0) !== 1 ? "s" : ""} · ${dateStr}`
+  } else if (isGroupMentee) {
+    subtitle = `Group · ${e.counterpart.name} · ${dateStr}`
+  } else {
+    subtitle = `${e.counterpart.name} · ${dateLabel}`
+  }
+
   return (
     <button
       onClick={onSelect}
@@ -52,13 +66,11 @@ function EngagementListItem({
               : "bg-emerald-100 text-emerald-700"
         )}
       >
-        {e.counterpart.initials}
+        {isGroupMentor ? <Users className="h-4 w-4" /> : e.counterpart.initials}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{e.topic}</p>
-        <p className="text-xs text-muted-foreground truncate">
-          {e.counterpart.name} · {dateLabel}
-        </p>
+        <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
       </div>
       <div className="flex items-center gap-2">
         <StatusPill status={e.status} />
@@ -109,6 +121,7 @@ export function EngagementListingScreen() {
   const [showDetail, setShowDetail] = useState(false)
   const [showCompletion, setShowCompletion] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([])
   const [loading, , , fetchEngagements] = useServerAction(GetEngagementsAction)
   const [confirming, , , confirmCompletion] = useServerAction(
     ConfirmSessionCompletionAction
@@ -117,6 +130,9 @@ export function EngagementListingScreen() {
     SubmitMentorshipFeedbackAction
   )
   const [archiving, , , archiveSpace] = useServerAction(ArchiveSpaceAction)
+  const [feedbackLoading, , , fetchFeedback] = useServerAction(
+    GetEngagementFeedbackAction
+  )
 
   const reload = async (keepId?: number) => {
     const res = await fetchEngagements()
@@ -132,6 +148,17 @@ export function EngagementListingScreen() {
   useEffect(() => {
     reload()
   }, [])
+
+  useEffect(() => {
+    if (selected?.status === "completed") {
+      fetchFeedback(selected.id).then((res) => {
+        if (res?.success && res.data) setFeedbackItems(res.data)
+        else setFeedbackItems([])
+      })
+    } else {
+      setFeedbackItems([])
+    }
+  }, [selected?.id])
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "all", label: "All" },
@@ -156,12 +183,19 @@ export function EngagementListingScreen() {
     }
   }
 
-  const handleSubmitFeedback = async (rating: number, comment: string) => {
+  const handleSubmitFeedback = async (
+    rating: number,
+    comment: string,
+    visibility: "public" | "private"
+  ) => {
     if (!selected) return
-    const res = await submitFeedback(selected.id, rating, comment)
+    const res = await submitFeedback(selected.id, rating, comment, visibility)
     if (res?.success) {
       setShowFeedback(false)
       await reload(selected.id)
+      // Refresh feedback panel
+      const fbRes = await fetchFeedback(selected.id)
+      if (fbRes?.success && fbRes.data) setFeedbackItems(fbRes.data)
     }
   }
 
@@ -176,8 +210,16 @@ export function EngagementListingScreen() {
       // Optimistic patch — avoid full page re-render
       const updated: Engagement = { ...selected, isSpaceArchived: true }
       setSelected(updated)
+      // For group sessions, patch all sibling engagements sharing the same slot
+      const siblingIds = new Set(
+        selected.groupSessionRequestIds ?? [selected.id]
+      )
       setEngagements((prev) =>
-        prev.map((e) => (e.id === selected.id ? updated : e))
+        prev.map((e) =>
+          e.id === selected.id || siblingIds.has(e.id)
+            ? { ...e, isSpaceArchived: true }
+            : e
+        )
       )
     } else {
       toast({
@@ -303,6 +345,8 @@ export function EngagementListingScreen() {
               onFeedback={() => setShowFeedback(true)}
               onArchive={handleArchiveSpace}
               isArchiving={archiving}
+              feedbackItems={feedbackItems}
+              feedbackLoading={feedbackLoading}
             />
           ) : (
             !loading && (

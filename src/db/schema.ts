@@ -313,8 +313,14 @@ export const mentorshipFeedbackTable = pgTable("mentorship_feedback", {
   submitted_by: varchar("submitted_by")
     .notNull()
     .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  // Who this feedback is addressed to. null = group-wide (mentor's group session feedback)
+  recipient_id: varchar("recipient_id").references(() => usersTable.unique_id, {
+    onDelete: "cascade"
+  }),
   rating: integer("rating").notNull(),
   comment: text("comment"),
+  // "public" = visible to all session participants; "private" = only author + recipient
+  visibility: varchar("visibility").notNull().default("public"),
   ...timestamps
 })
 

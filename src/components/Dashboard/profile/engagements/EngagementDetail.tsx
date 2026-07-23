@@ -13,10 +13,12 @@ import {
   Users
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
+import { Skeleton } from "@/src/components/ui/skeleton"
 import { cn } from "@/src/lib/utils"
 import moment from "moment"
-import { Engagement } from "./types"
+import { Engagement, FeedbackItem } from "./types"
 import { StatusPill } from "./StatusPill"
+import { FeedbackCard } from "./FeedbackCard"
 
 function Field({
   label,
@@ -39,6 +41,8 @@ interface EngagementDetailProps {
   onFeedback: () => void
   onArchive: () => void
   isArchiving?: boolean
+  feedbackItems?: FeedbackItem[]
+  feedbackLoading?: boolean
 }
 
 export function EngagementDetail({
@@ -46,7 +50,9 @@ export function EngagementDetail({
   onComplete,
   onFeedback,
   onArchive,
-  isArchiving = false
+  isArchiving = false,
+  feedbackItems = [],
+  feedbackLoading = false
 }: EngagementDetailProps) {
   const sessionLabel = `${moment(e.sessionDate).format("ddd MMM D")} · ${moment(e.startTime, "HH:mm").format("h:mm A")}`
   const isCompleted = e.status === "completed"
@@ -75,24 +81,59 @@ export function EngagementDetail({
 
       {/* Counterpart header */}
       <div className="flex items-center gap-3">
+        {/* Avatar */}
         <div
           className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0",
+            "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
             isCompleted
               ? "bg-emerald-500/15 text-emerald-600"
               : isOverdue
                 ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
+                : "bg-blue-100 text-blue-700",
+            e.sessionType !== "group" || !e.isMentor
+              ? "text-sm font-semibold"
+              : ""
           )}
         >
-          {e.counterpart.initials}
+          {e.sessionType === "group" && e.isMentor ? (
+            <Users className="h-5 w-5" />
+          ) : (
+            e.counterpart.initials
+          )}
         </div>
+
+        {/* Name + subtitle */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">{e.counterpart.name}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {e.counterpart.role} · {e.sessionType === "1:1" ? "1:1" : "Group"}
-          </p>
+          {e.sessionType === "group" && e.isMentor ? (
+            <>
+              <p className="text-sm font-semibold">Group Session</p>
+              <p className="text-xs text-muted-foreground truncate">
+                Group
+                {e.attendeeCount !== undefined && (
+                  <span className="ml-1">
+                    · {e.attendeeCount} participant
+                    {e.attendeeCount !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </p>
+            </>
+          ) : e.sessionType === "group" && !e.isMentor ? (
+            <>
+              <p className="text-sm font-semibold">{e.counterpart.name}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                Mentor · Group
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold">{e.counterpart.name}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {e.counterpart.role} · 1:1
+              </p>
+            </>
+          )}
         </div>
+
         <StatusPill status={e.status} size="md" />
       </div>
 
@@ -101,6 +142,14 @@ export function EngagementDetail({
         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
           <Field label="Topic">{e.topic}</Field>
           <Field label="Session date">{sessionLabel}</Field>
+          {e.attendeeCount !== undefined && (
+            <Field label="Participants">
+              <span className="flex items-center gap-1">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                {e.attendeeCount} mentee{e.attendeeCount !== 1 ? "s" : ""}
+              </span>
+            </Field>
+          )}
         </div>
       ) : (
         <>
@@ -180,6 +229,31 @@ export function EngagementDetail({
               will no longer be able to access this space for this session.
             </span>
           </div>
+        </div>
+      )}
+
+      {/* Feedback section — completed only */}
+      {isCompleted && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Session Feedback
+          </span>
+          {feedbackLoading ? (
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          ) : feedbackItems.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {feedbackItems.map((item) => (
+                <FeedbackCard key={item.id} item={item} isMentor={e.isMentor} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground py-2">
+              No feedback available yet.
+            </p>
+          )}
         </div>
       )}
 

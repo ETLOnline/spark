@@ -1,5 +1,22 @@
 export type EngagementStatus = "upcoming" | "overdue" | "completed"
 
+export interface FeedbackItem {
+  id: number
+  rating: number
+  comment: string | null
+  visibility: "public" | "private"
+  submittedBy: {
+    id: string
+    name: string
+    initials: string
+    role: string
+    avatarUrl?: string
+  }
+  recipientId: string | null
+  isOwnFeedback: boolean
+  createdAt: string
+}
+
 export interface Engagement {
   id: number
   topic: string
@@ -23,4 +40,7 @@ export interface Engagement {
   isMentor: boolean
   iViewerConfirmed: boolean
   feedbackSubmittedByViewer: boolean
+  // Group sessions (mentor view only): collapsed from N session_request rows
+  attendeeCount?: number
+  groupSessionRequestIds?: number[]
 }

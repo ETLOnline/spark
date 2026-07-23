@@ -1,11 +1,4 @@
-import {
-  MapPin,
-  Briefcase,
-  Calendar,
-  LinkIcon,
-  PencilIcon,
-  MailIcon
-} from "lucide-react"
+import { LinkIcon, PencilIcon, MailIcon, Star } from "lucide-react"
 import EditProfileModal from "./edit-profile-modal"
 import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip"
@@ -25,6 +18,7 @@ type ProfileCardProps = {
   currentImageUrl?: string | null
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   isMyProfile?: boolean
+  sessionRating?: string | null
 }
 
 export default function UserProfileCard({
@@ -32,7 +26,8 @@ export default function UserProfileCard({
   handleCopyUrl,
   currentImageUrl,
   onFileChange,
-  isMyProfile
+  isMyProfile,
+  sessionRating
 }: ProfileCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -127,6 +122,24 @@ export default function UserProfileCard({
             lines={2}
             className="mb-2 text-xs sm:text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-left"
           />
+
+          {sessionRating && parseFloat(sessionRating) > 0 ? (
+            <div className="flex items-center gap-1.5 mt-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-3.5 w-3.5 ${
+                    i < Math.round(parseFloat(sessionRating))
+                      ? "text-amber-400 fill-amber-400"
+                      : "text-muted-foreground/30"
+                  }`}
+                />
+              ))}
+              <span className="text-sm font-medium ml-0.5">
+                {parseFloat(sessionRating).toFixed(1)}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

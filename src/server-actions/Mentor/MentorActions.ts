@@ -3,13 +3,17 @@
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
+  ArchiveGroupSessionSpace,
   ArchiveSessionSpace,
+  ConfirmGroupSessionAttendance,
   ConfirmSessionAttendance,
+  GetSessionRequestsBySlot,
   CreateSessionRequest,
   DeletePendingSessionRequestsForSlot,
   GetAcceptedSessionRequestsForMentee,
   GetAcceptedSessionRequestsForMentor,
   GetEngagementsForUser,
+  GetFeedbackForSession,
   GetFeedbackSubmittersForSessions,
   GetMentorAvailability,
   GetMentors,
@@ -24,13 +28,15 @@ import {
   ResubmitSessionRequest,
   SubmitMentorshipFeedback,
   SuggestSlots,
+  UpdateMentorRating,
   UpdateSessionRequestStatus,
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
 import type {
   Engagement,
-  EngagementStatus
+  EngagementStatus,
+  FeedbackItem
 } from "@/src/components/Dashboard/profile/engagements/types"
 import type { SpaceBasic } from "@/src/db/data-access/mentor/query"
 import { notifySessionSlotSuggested } from "@/src/services/notify/mentor/session"
@@ -675,9 +681,14 @@ function buildEngagement(
   >
   const space = req.space ?? fallbackSpace
 
+  // For group sessions, use the shared space name as the display title so
+  // every participant sees the same label (not the individual mentee's topic).
+  const displayTopic =
+    req.session_type === "group" ? (space?.space_name ?? req.topic) : req.topic
+
   return {
     id: req.id,
-    topic: req.topic,
+    topic: displayTopic,
     description: req.description ?? "",
     sessionDate: req.session_date,
     startTime: req.start_time,
@@ -729,13 +740,70 @@ export const GetEngagementsAction = CreateServerAction(true, async () => {
       }))
     )
 
-    const engagements = requests.map((req) =>
-      buildEngagement(
-        req,
+    // For mentors: collapse group-session rows that share the same availability_slot_id
+    // + session_date + start_time into a single engagement (one per occurrence).
+    const grouped = new Map<string, SessionRequestRow[]>() // "slotId|date|startTime" → rows
+    const individual: SessionRequestRow[] = []
+
+    for (const req of requests) {
+      const isMentorRow = req.mentor_id === authUser.unique_id
+      if (
+        req.session_type === "group" &&
+        isMentorRow &&
+        req.availability_slot_id
+      ) {
+        const key = `${req.availability_slot_id}|${req.session_date}|${req.start_time}`
+        if (!grouped.has(key)) grouped.set(key, [])
+        grouped.get(key)!.push(req)
+      } else {
+        individual.push(req)
+      }
+    }
+
+    const engagements: Engagement[] = []
+
+    // Build one engagement per group slot
+    for (const rows of grouped.values()) {
+      const rep = rows[0] // representative row
+      const allIds = rows.map((r) => r.id)
+      // Mentor has confirmed if they appear in the representative row's confirmations
+      // Mentor is considered to have submitted feedback if they submitted for the rep row
+      const repSubmitters = feedbackMap[rep.id] ?? []
+      const eng = buildEngagement(
+        rep,
         authUser.unique_id,
-        feedbackMap[req.id] ?? [],
-        fallbackSpaces[req.id] ?? null
+        repSubmitters,
+        fallbackSpaces[rep.id] ?? null
       )
+      engagements.push({
+        ...eng,
+        attendeeCount: rows.length,
+        groupSessionRequestIds: allIds
+      })
+    }
+
+    // Build individual (1:1 + mentee-side group) engagements
+    for (const req of individual) {
+      engagements.push(
+        buildEngagement(
+          req,
+          authUser.unique_id,
+          feedbackMap[req.id] ?? [],
+          fallbackSpaces[req.id] ?? null
+        )
+      )
+    }
+
+    // Re-sort: overdue first, then upcoming, then completed (mirrors original desc date sort)
+    const statusOrder: Record<EngagementStatus, number> = {
+      overdue: 0,
+      upcoming: 1,
+      completed: 2
+    }
+    engagements.sort(
+      (a, b) =>
+        statusOrder[a.status] - statusOrder[b.status] ||
+        b.sessionDate.localeCompare(a.sessionDate)
     )
 
     return { success: true, data: engagements }
@@ -745,7 +813,9 @@ export const GetEngagementsAction = CreateServerAction(true, async () => {
   }
 })
 
-/** Confirm that the authenticated user attended the session. */
+/** Confirm that the authenticated user attended the session.
+ *  For a mentor confirming a group session, attendance is stamped on every
+ *  session_request row that belongs to the same availability slot. */
 export const ConfirmSessionCompletionAction = CreateServerAction(
   true,
   async (sessionId: number) => {
@@ -762,7 +832,25 @@ export const ConfirmSessionCompletionAction = CreateServerAction(
         return { error: "Unauthorised" }
       }
 
-      await ConfirmSessionAttendance(sessionId, authUser.unique_id)
+      const isMentor = session.mentor_id === authUser.unique_id
+      const isGroup = session.session_type === "group"
+
+      if (isMentor && isGroup && session.availability_slot_id) {
+        // Stamp the mentor's confirmation on every mentee's row in this group slot
+        const siblings = await GetSessionRequestsBySlot(
+          session.availability_slot_id,
+          session.mentor_id,
+          session.session_date,
+          session.start_time
+        )
+        await ConfirmGroupSessionAttendance(
+          siblings.map((s) => s.id),
+          authUser.unique_id
+        )
+      } else {
+        await ConfirmSessionAttendance(sessionId, authUser.unique_id)
+      }
+
       return { success: true }
     } catch (error) {
       console.error("ConfirmSessionCompletionAction error:", error)
@@ -771,7 +859,8 @@ export const ConfirmSessionCompletionAction = CreateServerAction(
   }
 )
 
-/** Mentor archives the space for a specific session. Only affects this session — the space and other sessions are untouched. */
+/** Mentor archives the space for a session (or the whole group slot).
+ *  For group sessions, is_space_archived is set on every row in the slot. */
 export const ArchiveSpaceAction = CreateServerAction(
   true,
   async (sessionId: number) => {
@@ -779,8 +868,25 @@ export const ArchiveSpaceAction = CreateServerAction(
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
 
-      const updated = await ArchiveSessionSpace(sessionId)
-      if (!updated) return { error: "Session not found" }
+      const session = await GetSessionRequestById(sessionId)
+      if (!session) return { error: "Session not found" }
+      if (session.mentor_id !== authUser.unique_id)
+        return { error: "Unauthorised" }
+
+      const isGroup = session.session_type === "group"
+
+      if (isGroup && session.availability_slot_id) {
+        const siblings = await GetSessionRequestsBySlot(
+          session.availability_slot_id,
+          session.mentor_id,
+          session.session_date,
+          session.start_time
+        )
+        await ArchiveGroupSessionSpace(siblings.map((s) => s.id))
+      } else {
+        const updated = await ArchiveSessionSpace(sessionId)
+        if (!updated) return { error: "Session not found" }
+      }
 
       return { success: true }
     } catch (error) {
@@ -793,13 +899,66 @@ export const ArchiveSpaceAction = CreateServerAction(
 /** Submit star-rating feedback for a completed session. */
 export const SubmitMentorshipFeedbackAction = CreateServerAction(
   true,
-  async (sessionId: number, rating: number, comment?: string) => {
+  async (
+    sessionId: number,
+    rating: number,
+    comment?: string,
+    visibility: "public" | "private" = "public"
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
 
       if (rating < 1 || rating > 5)
         return { error: "Rating must be between 1 and 5" }
+
+      const session = await GetSessionRequestById(sessionId)
+      if (!session) return { error: "Session not found" }
+
+      const isMentor = session.mentor_id === authUser.unique_id
+      const isMentee = session.mentee_id === authUser.unique_id
+      if (!isMentor && !isMentee) return { error: "Unauthorised" }
+
+      // Derive recipient:
+      // - Mentor in 1:1 → feedback for the mentee
+      // - Mentee → feedback for the mentor
+      // - Mentor in group → group-wide feedback (null recipient)
+      const isGroup = session.session_type === "group"
+      const recipientId = isMentor
+        ? isGroup
+          ? null
+          : session.mentee_id
+        : session.mentor_id
+
+      const row = await SubmitMentorshipFeedback(
+        sessionId,
+        authUser.unique_id,
+        recipientId,
+        rating,
+        comment,
+        visibility
+      )
+      if (!row) return { error: "Feedback already submitted" }
+
+      // Recalculate mentor rating in real time
+      await UpdateMentorRating(session.mentor_id)
+
+      return { success: true }
+    } catch (error) {
+      console.error("SubmitMentorshipFeedbackAction error:", error)
+      return { error: "Failed to submit feedback" }
+    }
+  }
+)
+
+/** Fetch all feedback visible to the authenticated viewer for a completed session.
+ *  For a mentor's grouped group session, queries feedback across all sibling rows. */
+export const GetEngagementFeedbackAction = CreateServerAction(
+  true,
+  async (sessionId: number) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
 
       const session = await GetSessionRequestById(sessionId)
       if (!session) return { error: "Session not found" }
@@ -810,18 +969,69 @@ export const SubmitMentorshipFeedbackAction = CreateServerAction(
         return { error: "Unauthorised" }
       }
 
-      const row = await SubmitMentorshipFeedback(
-        sessionId,
-        authUser.unique_id,
-        rating,
-        comment
-      )
-      if (!row) return { error: "Feedback already submitted" }
+      const isMentor = session.mentor_id === authUser.unique_id
+      const isGroup = session.session_type === "group"
 
-      return { success: true }
+      // For group sessions (both mentor AND mentee), collect feedback from all
+      // sibling rows so the mentor's group-wide feedback (saved on one row) is
+      // visible to every mentee in the group.
+      let allSessionIds = [sessionId]
+      if (isGroup && session.availability_slot_id) {
+        const siblings = await GetSessionRequestsBySlot(
+          session.availability_slot_id,
+          session.mentor_id,
+          session.session_date,
+          session.start_time
+        )
+        allSessionIds = siblings.map((s) => s.id)
+      }
+
+      // Fetch feedback for all relevant session IDs in parallel, then deduplicate
+      const rowArrays = await Promise.all(
+        allSessionIds.map((id) =>
+          GetFeedbackForSession(
+            id,
+            authUser.unique_id,
+            session.mentor_id,
+            session.session_type
+          )
+        )
+      )
+      const seen = new Set<number>()
+      const rows = rowArrays.flat().filter((row) => {
+        if (seen.has(row.id)) return false
+        seen.add(row.id)
+        return true
+      })
+
+      const feedback: FeedbackItem[] = rows.map((row) => {
+        const firstName = row.first_name ?? ""
+        const lastName = row.last_name ?? ""
+        const name = `${firstName} ${lastName}`.trim() || "Unknown"
+        const initials =
+          `${firstName[0] ?? "?"}${lastName[0] ?? "?"}`.toUpperCase()
+        return {
+          id: row.id,
+          rating: row.rating,
+          comment: row.comment ?? null,
+          visibility: (row.visibility ?? "public") as "public" | "private",
+          submittedBy: {
+            id: row.submitted_by,
+            name,
+            initials,
+            role: row.professional_title ?? "",
+            avatarUrl: row.profile_url ?? undefined
+          },
+          recipientId: row.recipient_id ?? null,
+          isOwnFeedback: row.submitted_by === authUser.unique_id,
+          createdAt: row.created_at ?? ""
+        }
+      })
+
+      return { success: true, data: feedback }
     } catch (error) {
-      console.error("SubmitMentorshipFeedbackAction error:", error)
-      return { error: "Failed to submit feedback" }
+      console.error("GetEngagementFeedbackAction error:", error)
+      return { error: "Failed to fetch feedback" }
     }
   }
 )
