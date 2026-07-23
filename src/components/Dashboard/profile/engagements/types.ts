@@ -38,7 +38,7 @@ export interface Engagement {
   spaceCreatedBy?: string
   isSpaceArchived?: boolean
   isMentor: boolean
-  iViewerConfirmed: boolean
+  isViewerConfirmed: boolean
   feedbackSubmittedByViewer: boolean
   // Group sessions (mentor view only): collapsed from N session_request rows
   attendeeCount?: number

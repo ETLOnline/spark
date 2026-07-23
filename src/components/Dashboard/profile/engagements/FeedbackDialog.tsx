@@ -77,12 +77,14 @@ export function FeedbackDialog({
           <span className="text-sm font-medium">Rating</span>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((i) => (
-              <button
+              <Button
                 key={i}
+                variant="ghost"
+                size="icon"
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(0)}
                 onClick={() => setRating(i)}
-                className="p-0.5 transition-transform hover:scale-110"
+                className="p-0.5 transition-transform hover:scale-110 h-auto w-auto"
               >
                 <Star
                   className={cn(
@@ -93,7 +95,7 @@ export function FeedbackDialog({
                   )}
                   strokeWidth={1.5}
                 />
-              </button>
+              </Button>
             ))}
             {(hovered || rating) > 0 && (
               <span className="ml-2 text-sm text-muted-foreground">
@@ -128,11 +130,12 @@ export function FeedbackDialog({
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">Visibility</span>
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setVisibility("public")}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                "flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors h-auto justify-start",
                 visibility === "public"
                   ? "border-primary bg-primary/5 text-foreground"
                   : "border-foreground/10 text-muted-foreground hover:border-foreground/20"
@@ -145,12 +148,13 @@ export function FeedbackDialog({
                   Visible to all participants
                 </p>
               </div>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setVisibility("private")}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                "flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors h-auto justify-start",
                 visibility === "private"
                   ? "border-primary bg-primary/5 text-foreground"
                   : "border-foreground/10 text-muted-foreground hover:border-foreground/20"
@@ -163,7 +167,7 @@ export function FeedbackDialog({
                   Only you and recipient
                 </p>
               </div>
-            </button>
+            </Button>
           </div>
         </div>
 
