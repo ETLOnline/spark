@@ -77,7 +77,7 @@ export const siteRoutes: SiteRoutes = {
       icon: Group
     },
     {
-      title: "Mentors",
+      title: "Find a Mentor",
       url: "/mentors",
       icon: GraduationCap
     }

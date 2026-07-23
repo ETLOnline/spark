@@ -568,7 +568,10 @@ export function MentorCalendar({
 
       {/* ── Popup ── */}
       <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
-        <DialogContent className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]">
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]"
+        >
           <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
             <DialogTitle className="text-lg font-semibold">
               {requestFormSlot
@@ -652,7 +655,7 @@ export function MentorCalendar({
                                 ) !== null
                             )
                           ? "Suggested Slots"
-                          : "Available Times"}
+                          : "Available Slots"}
                       {slotsForSelected.length > 2 && (
                         <span className="ml-1.5 normal-case font-normal opacity-60">
                           ({slotsForSelected.length})
@@ -698,12 +701,13 @@ export function MentorCalendar({
           </div>
 
           <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
-            <button
+            <Button
+              variant={!requestFormSlot && !isMyProfile ? "default" : "outline"}
               onClick={handleDialogBack}
-              className="px-4 py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
+              className="h-9 px-5 text-sm rounded-lg"
             >
               {requestFormSlot ? "Back" : isMyProfile ? "Cancel" : "Close"}
-            </button>
+            </Button>
             {isMyProfile && !requestFormSlot && (
               <Button
                 onClick={handleAddSlot}
