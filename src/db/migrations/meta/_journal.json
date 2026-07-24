@@ -379,6 +379,13 @@
       "when": 1784732642169,
       "tag": "0053_2026_07_22_200400__add_visibility_field",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1784878227144,
+      "tag": "0054_2026_07_24_120000__add_type_column_in_recommendations_table",
+      "breakpoints": true
     }
   ]
 }

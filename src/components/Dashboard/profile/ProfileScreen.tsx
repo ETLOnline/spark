@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import { Badge } from "@/src/components/ui/badge"
 import {
   CalendarIcon,
   CalendarDays,
@@ -474,6 +475,11 @@ export default function ProfileScreen({
                               {recommendation?.recommender?.first_name}{" "}
                               {recommendation?.recommender?.last_name}
                             </h4>
+                            {recommendation.type && (
+                              <Badge variant="outline" className="capitalize">
+                                {recommendation.type}
+                              </Badge>
+                            )}
                             <span className="flex items-center gap-1 text-sm text-muted-foreground">
                               {recommendation.rating}
                               <FlameKindling className="h-4 w-4 text-[#92400e] fill-[#fde68a]" />

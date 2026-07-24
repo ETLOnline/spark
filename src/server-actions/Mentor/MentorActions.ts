@@ -28,7 +28,6 @@ import {
   ResubmitSessionRequest,
   SubmitMentorshipFeedback,
   SuggestSlots,
-  UpdateMentorRating,
   UpdateSessionRequestStatus,
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
@@ -47,6 +46,7 @@ import {
   SearchUserProfile
 } from "@/src/db/data-access/profile/query"
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
+import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import {
   REPUTATION_POINTS_REWARD_ID,
   RP_THRESHOLD,
@@ -62,6 +62,7 @@ import {
   createSessionResponseEmailNotification
 } from "@/src/services/notify/sessionRequest/sessionRequest"
 import moment from "moment-timezone"
+import { SelectRecommendation } from "@/src/db/schema"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -940,8 +941,36 @@ export const SubmitMentorshipFeedbackAction = CreateServerAction(
       )
       if (!row) return { error: "Feedback already submitted" }
 
-      // Recalculate mentor rating in real time
-      await UpdateMentorRating(session.mentor_id)
+      // Feedback also becomes a recommendation on the recipient's profile —
+      // one entry per mentee when a mentor rates a group session, otherwise
+      // a single entry for whichever side (mentor or mentee) is rated.
+      const receiverIds =
+        isMentor && isGroup && session.availability_slot_id
+          ? (
+              await GetSessionRequestsBySlot(
+                session.availability_slot_id,
+                session.mentor_id,
+                session.session_date,
+                session.start_time
+              )
+            ).map((s) => s.mentee_id)
+          : [recipientId]
+
+      await Promise.all(
+        receiverIds
+          .filter((receiverId): receiverId is string => !!receiverId)
+          .map((receiverId) =>
+            AddRecommendationAction({
+              recommender_id: authUser.unique_id,
+              receiver_id: receiverId,
+              rating,
+              content:
+                comment?.trim() ||
+                "Recommended based on mentorship session feedback.",
+              type: "mentorship"
+            } as SelectRecommendation)
+          )
+      )
 
       return { success: true }
     } catch (error) {

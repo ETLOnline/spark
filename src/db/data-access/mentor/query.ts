@@ -1,7 +1,6 @@
 import {
   and,
   asc,
-  avg,
   count,
   countDistinct,
   desc,
@@ -665,7 +664,10 @@ export async function GetSessionRequestsBySlot(
   startTime: string
 ) {
   return db
-    .select({ id: sessionRequestsTable.id })
+    .select({
+      id: sessionRequestsTable.id,
+      mentee_id: sessionRequestsTable.mentee_id
+    })
     .from(sessionRequestsTable)
     .where(
       and(
@@ -753,35 +755,6 @@ export async function SubmitMentorshipFeedback(
     })
     .returning()
   return row
-}
-
-/** Recalculate a mentor's average rating and review count from submitted feedback,
- *  then persist the result on their profile. */
-export async function UpdateMentorRating(mentorId: string) {
-  const [result] = await db
-    .select({
-      avgRating: avg(mentorshipFeedbackTable.rating),
-      totalCount: count(mentorshipFeedbackTable.id)
-    })
-    .from(mentorshipFeedbackTable)
-    .where(
-      and(
-        eq(mentorshipFeedbackTable.recipient_id, mentorId),
-        eq(mentorshipFeedbackTable.visibility, "public")
-      )
-    )
-
-  const averageRating = result?.avgRating ? parseFloat(result.avgRating) : 0
-  const reviewCount = result?.totalCount ?? 0
-
-  await db
-    .update(profileTable)
-    .set({
-      sum_of_ratings: Math.round(averageRating * reviewCount),
-      number_of_ratings: reviewCount,
-      total_average_rating: averageRating.toFixed(1)
-    })
-    .where(eq(profileTable.user_id, mentorId))
 }
 
 /** Return all feedback for a session that the viewer is allowed to see.
