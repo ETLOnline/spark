@@ -656,6 +656,52 @@ export async function GetEngagementsForUser(userId: string) {
   })
 }
 
+/** All session_requests that share the same availability slot, date, AND start time (same group session occurrence). */
+export async function GetSessionRequestsBySlot(
+  availabilitySlotId: number,
+  mentorId: string,
+  sessionDate: string,
+  startTime: string
+) {
+  return db
+    .select({
+      id: sessionRequestsTable.id,
+      mentee_id: sessionRequestsTable.mentee_id
+    })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.availability_slot_id, availabilitySlotId),
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.session_date, sessionDate),
+        eq(sessionRequestsTable.start_time, startTime),
+        eq(sessionRequestsTable.session_type, "group"),
+        eq(sessionRequestsTable.status, "accepted")
+      )
+    )
+}
+
+/** Batch-confirm a user's attendance across multiple session_request rows (group session). */
+export async function ConfirmGroupSessionAttendance(
+  sessionIds: number[],
+  userId: string
+) {
+  if (!sessionIds.length) return []
+  return Promise.all(
+    sessionIds.map((id) => ConfirmSessionAttendance(id, userId))
+  )
+}
+
+/** Batch-archive is_space_archived across multiple session_request rows (group session). */
+export async function ArchiveGroupSessionSpace(sessionIds: number[]) {
+  if (!sessionIds.length) return []
+  return db
+    .update(sessionRequestsTable)
+    .set({ is_space_archived: true })
+    .where(inArray(sessionRequestsTable.id, sessionIds))
+    .returning()
+}
+
 /** Record that a user confirmed they attended a session (jsonb patch). */
 export async function ConfirmSessionAttendance(
   sessionId: number,
@@ -679,8 +725,10 @@ export async function ConfirmSessionAttendance(
 export async function SubmitMentorshipFeedback(
   sessionId: number,
   userId: string,
+  recipientId: string | null,
   rating: number,
-  comment?: string
+  comment?: string,
+  visibility: "public" | "private" = "public"
 ) {
   const existing = await db
     .select({ id: mentorshipFeedbackTable.id })
@@ -700,11 +748,68 @@ export async function SubmitMentorshipFeedback(
     .values({
       session_request_id: sessionId,
       submitted_by: userId,
+      recipient_id: recipientId,
       rating,
-      comment: comment?.trim() || null
+      comment: comment?.trim() || null,
+      visibility
     })
     .returning()
   return row
+}
+
+/** Return all feedback for a session that the viewer is allowed to see.
+ *
+ * Visibility rules:
+ *  - A user always sees their own submitted feedback.
+ *  - recipient_id = null means mentor's group-wide feedback → visible to all participants.
+ *  - viewer is the recipient → always visible.
+ *  - visibility = 'public' in a 1:1 → both parties see each other's feedback.
+ *  - In a group session, mentees never see other mentees' feedback.
+ */
+export async function GetFeedbackForSession(
+  sessionId: number,
+  viewerId: string,
+  mentorId: string,
+  sessionType: string
+) {
+  const rows = await db.query.mentorshipFeedbackTable.findMany({
+    where: eq(mentorshipFeedbackTable.session_request_id, sessionId),
+    with: {
+      submittedBy: {
+        with: { profile: true }
+      }
+    }
+  })
+
+  return rows
+    .filter((row) => {
+      // Never show a user their own submitted feedback
+      if (row.submitted_by === viewerId) return false
+      // Show feedback explicitly addressed to the viewer
+      if (row.recipient_id === viewerId) return true
+      // Group-wide mentor feedback (null recipient): visible to mentees only, not back to the mentor
+      if (
+        row.recipient_id === null &&
+        row.submitted_by === mentorId &&
+        row.submitted_by !== viewerId &&
+        sessionType === "group"
+      )
+        return true
+      return false
+    })
+    .map((row) => ({
+      id: row.id,
+      rating: row.rating,
+      comment: row.comment,
+      visibility: row.visibility,
+      submitted_by: row.submitted_by,
+      recipient_id: row.recipient_id,
+      created_at: row.created_at,
+      first_name: row.submittedBy?.first_name ?? null,
+      last_name: row.submittedBy?.last_name ?? null,
+      profile_url: row.submittedBy?.profile_url ?? null,
+      professional_title: row.submittedBy?.profile?.professional_title ?? null
+    }))
 }
 
 /** Returns a map of sessionRequestId → [user_ids who submitted feedback].

@@ -13,10 +13,13 @@ import {
   Users
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
+import { Skeleton } from "@/src/components/ui/skeleton"
 import { cn } from "@/src/lib/utils"
 import moment from "moment"
-import { Engagement } from "./types"
+import Link from "next/link"
+import { Engagement, FeedbackItem } from "./types"
 import { StatusPill } from "./StatusPill"
+import { FeedbackCard } from "./FeedbackCard"
 
 function Field({
   label,
@@ -39,6 +42,8 @@ interface EngagementDetailProps {
   onFeedback: () => void
   onArchive: () => void
   isArchiving?: boolean
+  feedbackItems?: FeedbackItem[]
+  feedbackLoading?: boolean
 }
 
 export function EngagementDetail({
@@ -46,7 +51,9 @@ export function EngagementDetail({
   onComplete,
   onFeedback,
   onArchive,
-  isArchiving = false
+  isArchiving = false,
+  feedbackItems = [],
+  feedbackLoading = false
 }: EngagementDetailProps) {
   const sessionLabel = `${moment(e.sessionDate).format("ddd MMM D")} · ${moment(e.startTime, "HH:mm").format("h:mm A")}`
   const isCompleted = e.status === "completed"
@@ -56,7 +63,7 @@ export function EngagementDetail({
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Overdue alert — step 1: not yet confirmed */}
-      {isOverdue && !e.iViewerConfirmed && (
+      {isOverdue && !e.isViewerConfirmed && (
         <div className="flex items-start gap-2 rounded-lg bg-red-500/10 text-red-600 px-3 py-2.5 text-xs font-medium">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           Session passed on {moment(e.sessionDate).format("MMM D")}. Please
@@ -65,7 +72,7 @@ export function EngagementDetail({
       )}
 
       {/* Overdue alert — step 2: confirmed, feedback still pending */}
-      {isOverdue && e.iViewerConfirmed && !e.feedbackSubmittedByViewer && (
+      {isOverdue && e.isViewerConfirmed && !e.feedbackSubmittedByViewer && (
         <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 text-amber-600 px-3 py-2.5 text-xs font-medium">
           <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
           Attendance confirmed. Please submit your feedback to complete this
@@ -75,24 +82,59 @@ export function EngagementDetail({
 
       {/* Counterpart header */}
       <div className="flex items-center gap-3">
+        {/* Avatar */}
         <div
           className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0",
+            "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
             isCompleted
               ? "bg-emerald-500/15 text-emerald-600"
               : isOverdue
                 ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
+                : "bg-blue-100 text-blue-700",
+            e.sessionType !== "group" || !e.isMentor
+              ? "text-sm font-semibold"
+              : ""
           )}
         >
-          {e.counterpart.initials}
+          {e.sessionType === "group" && e.isMentor ? (
+            <Users className="h-5 w-5" />
+          ) : (
+            e.counterpart.initials
+          )}
         </div>
+
+        {/* Name + subtitle */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">{e.counterpart.name}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {e.counterpart.role} · {e.sessionType === "1:1" ? "1:1" : "Group"}
-          </p>
+          {e.sessionType === "group" && e.isMentor ? (
+            <>
+              <p className="text-sm font-semibold">Group Session</p>
+              <p className="text-xs text-muted-foreground truncate">
+                Group
+                {e.attendeeCount !== undefined && (
+                  <span className="ml-1">
+                    · {e.attendeeCount} participant
+                    {e.attendeeCount !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </p>
+            </>
+          ) : e.sessionType === "group" && !e.isMentor ? (
+            <>
+              <p className="text-sm font-semibold">{e.counterpart.name}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                Mentor · Group
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold">{e.counterpart.name}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {e.counterpart.role} · 1:1
+              </p>
+            </>
+          )}
         </div>
+
         <StatusPill status={e.status} size="md" />
       </div>
 
@@ -101,6 +143,14 @@ export function EngagementDetail({
         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
           <Field label="Topic">{e.topic}</Field>
           <Field label="Session date">{sessionLabel}</Field>
+          {e.attendeeCount !== undefined && (
+            <Field label="Participants">
+              <span className="flex items-center gap-1">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                {e.attendeeCount} mentee{e.attendeeCount !== 1 ? "s" : ""}
+              </span>
+            </Field>
+          )}
         </div>
       ) : (
         <>
@@ -132,7 +182,7 @@ export function EngagementDetail({
           {hasSpace && (
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-muted-foreground">Space</span>
-              <a
+              <Link
                 href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}`}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group"
               >
@@ -151,7 +201,7 @@ export function EngagementDetail({
                   Go to Space
                   <ExternalLink className="h-3.5 w-3.5" />
                 </div>
-              </a>
+              </Link>
             </div>
           )}
         </>
@@ -183,6 +233,31 @@ export function EngagementDetail({
         </div>
       )}
 
+      {/* Feedback section — completed only */}
+      {isCompleted && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Session Feedback
+          </span>
+          {feedbackLoading ? (
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          ) : feedbackItems.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {feedbackItems.map((item) => (
+                <FeedbackCard key={item.id} item={item} isMentor={e.isMentor} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground py-2">
+              No feedback available yet.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex flex-col gap-2 pt-1">
         {/* Completed */}
@@ -197,7 +272,7 @@ export function EngagementDetail({
             {e.isMentor &&
               hasSpace &&
               (e.isSpaceArchived ? (
-                <a
+                <Link
                   href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
                   className="w-full"
                 >
@@ -205,10 +280,10 @@ export function EngagementDetail({
                     <Archive className="h-4 w-4 mr-2" />
                     View archived space
                   </Button>
-                </a>
+                </Link>
               ) : (
                 <>
-                  <a
+                  <Link
                     href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}`}
                     className="w-full"
                   >
@@ -216,7 +291,7 @@ export function EngagementDetail({
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Go to Space
                     </Button>
-                  </a>
+                  </Link>
                   <Button
                     variant="outline"
                     onClick={onArchive}
@@ -235,7 +310,7 @@ export function EngagementDetail({
 
             {/* Mentee: Go to space button (always visible, space may be archived for this session) */}
             {!e.isMentor && hasSpace && (
-              <a
+              <Link
                 href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
                 className="w-full"
               >
@@ -243,13 +318,13 @@ export function EngagementDetail({
                   <ExternalLink className="h-4 w-4 mr-2" />
                   {e.isSpaceArchived ? "View archived space" : "Go to space"}
                 </Button>
-              </a>
+              </Link>
             )}
           </>
         )}
 
         {/* Overdue: step 1 — not yet confirmed */}
-        {isOverdue && !e.iViewerConfirmed && (
+        {isOverdue && !e.isViewerConfirmed && (
           <Button onClick={onComplete} className="w-full">
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Complete Session
@@ -257,7 +332,7 @@ export function EngagementDetail({
         )}
 
         {/* Overdue: step 2 — confirmed, feedback not yet submitted */}
-        {isOverdue && e.iViewerConfirmed && !e.feedbackSubmittedByViewer && (
+        {isOverdue && e.isViewerConfirmed && !e.feedbackSubmittedByViewer && (
           <Button onClick={onFeedback} className="w-full">
             <Star className="h-4 w-4 mr-2" />
             Give Feedback
