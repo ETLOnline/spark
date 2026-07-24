@@ -147,6 +147,30 @@ export default function MentorsListingPage() {
           </div>
         </div>
 
+        {/* Active skill/interest filters */}
+        {(drawerFilters.skills.length > 0 ||
+          drawerFilters.interests.length > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+            <span>Showing mentors matching:</span>
+            {drawerFilters.skills.map((skill) => (
+              <span
+                key={`skill-${skill}`}
+                className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
+              >
+                {skill}
+              </span>
+            ))}
+            {drawerFilters.interests.map((interest) => (
+              <span
+                key={`interest-${interest}`}
+                className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Results count */}
         {!loading && (
           <p className="text-sm text-muted-foreground ">
