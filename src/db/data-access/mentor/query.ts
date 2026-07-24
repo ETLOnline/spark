@@ -550,8 +550,12 @@ export async function HasAcceptedOverlap(
   startMins: number,
   endMins: number,
   repeatType: string = "none",
-  repeatEndDate?: string | null
+  repeatEndDate?: string | null,
+  sessionType: string = "1:1",
+  menteeId?: string
 ) {
+  const isGroup = sessionType === "group"
+
   const accepted = await db
     .select({
       session_date: sessionRequestsTable.session_date,
@@ -564,7 +568,10 @@ export async function HasAcceptedOverlap(
     .where(
       and(
         eq(sessionRequestsTable.mentor_id, mentorId),
-        eq(sessionRequestsTable.status, "accepted")
+        eq(sessionRequestsTable.status, "accepted"),
+        ...(isGroup && menteeId
+          ? [eq(sessionRequestsTable.mentee_id, menteeId)]
+          : [])
       )
     )
 

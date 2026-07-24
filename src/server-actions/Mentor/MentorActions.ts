@@ -394,7 +394,9 @@ export const CreateSessionRequestAction = CreateServerAction(
         requestedStart,
         requestedEnd,
         repeatType,
-        repeatEndDate
+        repeatEndDate,
+        slot.session_type,
+        authUser.unique_id
       )
       if (alreadyBooked) {
         return { error: "This time has already been booked" }
