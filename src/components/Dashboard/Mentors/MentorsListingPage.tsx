@@ -15,6 +15,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
 import type { SelectUser } from "@/src/db/schema"
 import type { GetMentorFilters } from "@/src/db/data-access/mentor/query"
+import { Badge } from "../../ui/badge"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
@@ -153,20 +154,10 @@ export default function MentorsListingPage() {
           <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
             <span>Showing mentors matching:</span>
             {drawerFilters.skills.map((skill) => (
-              <span
-                key={`skill-${skill}`}
-                className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
-              >
-                {skill}
-              </span>
+              <Badge key={skill}>{skill}</Badge>
             ))}
             {drawerFilters.interests.map((interest) => (
-              <span
-                key={`interest-${interest}`}
-                className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
-              >
-                {interest}
-              </span>
+              <Badge key={interest}>{interest}</Badge>
             ))}
           </div>
         )}
