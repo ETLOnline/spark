@@ -321,6 +321,7 @@ export function MentorCalendar({
     })
     if (addSlotRes?.success) {
       await loadSlots()
+      setIsPopupOpen(false)
       toast({ title: "Slot added", duration: 2000 })
     } else {
       toast({
