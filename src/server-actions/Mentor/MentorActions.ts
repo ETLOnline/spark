@@ -2,6 +2,8 @@
 
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
+import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import {
   CreateSessionRequest,
   DeletePendingSessionRequestsForSlot,
@@ -249,6 +251,22 @@ export const CreateSessionRequestAction = CreateServerAction(
     try {
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
+
+      // Super admins can view mentor availability but never submit a request
+      // themselves — the platform's usual "admins bypass everything" rule is
+      // intentionally NOT applied here, so isSuperAdmin is forced to false.
+      const permsResponse = await GetUserPermissionsParsedAction(
+        authUser.unique_id
+      )
+      if (!permsResponse.success) return { error: permsResponse.error }
+      const permissionChecker = new PermissionChecker(
+        "global",
+        permsResponse.data,
+        false
+      )
+      if (!permissionChecker.canAccess("session.request")) {
+        return { error: "You do not have permission to request a session" }
+      }
 
       if (!payload.topic?.trim()) {
         return { error: "Topic is required" }

@@ -18,6 +18,7 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { RP_THRESHOLD } from "@/src/utils/constants"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import {
   countOverlappingRequests,
@@ -71,6 +72,10 @@ export function SlotListItem({
   isConfirming,
   onConfirmSuggestedSlot
 }: SlotListItemProps) {
+  const { permissionChecker, canAccess } = usePermissionChecker("global")
+  // Super admins can view slots but must never see the actual request action
+  const canRequestSession =
+    canAccess("session.request") && !permissionChecker?.isSuperAdmin
   const mentorPendingCount = isMyProfile
     ? countOverlappingRequests(slot, selectedDate, mentorPendingRequests)
     : 0
@@ -165,8 +170,9 @@ export function SlotListItem({
           </div>
         ))}
 
-      {/* Request action — viewer only */}
+      {/* Request action — viewer only, and only if permitted to request sessions */}
       {!isMyProfile &&
+        canRequestSession &&
         (myAcceptedRequestsFor(slot, selectedDate, myRequests).length >
         0 ? null : isSlotFullyBooked(slot, selectedDate, bookedRequests) ? (
           <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">

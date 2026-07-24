@@ -2,6 +2,7 @@ import Link from "next/link"
 import { CalendarDays } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { RP_THRESHOLD } from "@/src/utils/constants"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type Props = {
   mentorId: string
@@ -9,6 +10,9 @@ type Props = {
 }
 
 export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
+  const { canAccess } = usePermissionChecker("global")
+  if (!canAccess("session.request")) return null
+
   return (
     <>
       <p className="text-xs text-muted-foreground mt-2">

@@ -223,6 +223,10 @@ export const permissions = {
     settingsView: "settings.view",
     DetailView: "details.view",
     ChatView: "chat.view"
+  },
+
+  session: {
+    request: "request"
   }
 }
 
