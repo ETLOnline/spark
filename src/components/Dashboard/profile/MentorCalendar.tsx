@@ -329,6 +329,7 @@ export function MentorCalendar({
     if (res?.success) {
       setSlotError("")
       await loadSlots()
+      setIsPopupOpen(false)
       toast({ title: "Slot added", duration: 2000 })
     } else {
       toast({
@@ -714,7 +715,7 @@ export function MentorCalendar({
                 loading={saving}
                 className="h-9 px-5 text-sm rounded-lg"
               >
-                Add Slot
+                Save
               </Button>
             )}
             {requestFormSlot && (
