@@ -409,9 +409,6 @@ export default function ProfileScreen({
               handleCopyUrl={handleCopyUrl}
               onFileChange={handleFileChange}
               isMyProfile={isMyProfile}
-              sessionRating={
-                isMentor ? (user.profile?.total_average_rating ?? null) : null
-              }
             />
 
             {/* Trust Engine Section  */}
