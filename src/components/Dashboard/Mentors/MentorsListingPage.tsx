@@ -154,10 +154,14 @@ export default function MentorsListingPage() {
           <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
             <span>Showing mentors matching:</span>
             {drawerFilters.skills.map((skill) => (
-              <Badge key={skill}>{skill}</Badge>
+              <Badge key={skill} variant={"outline"}>
+                {skill}
+              </Badge>
             ))}
             {drawerFilters.interests.map((interest) => (
-              <Badge key={interest}>{interest}</Badge>
+              <Badge key={interest} variant={"outline"}>
+                {interest}
+              </Badge>
             ))}
           </div>
         )}
