@@ -68,7 +68,7 @@ function EditMentorModal({ user, profile, setProfile }: Props) {
     form.reset({
       professional_title: profile?.professional_title || "",
       company: profile?.company || "",
-      engagement_type: profile?.engagement_type || "both"
+      engagement_type: profile?.engagement_type || ""
     })
   }, [isDialogOpen])
 
