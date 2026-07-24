@@ -32,7 +32,7 @@ const emailTemplates = [
   },
   {
     value: "accept_connection",
-    label: "Accpect Connection Email",
+    label: "Accept Connection Email",
     file: "accept_connection.html"
   },
   {
@@ -46,14 +46,69 @@ const emailTemplates = [
     file: "chat_invite.html"
   },
   {
+    value: "community_request",
+    label: "Community Request Submitted (User)",
+    file: "submit_community_request.html"
+  },
+  {
+    value: "admin_new_community_request",
+    label: "New Community Request (Admin)",
+    file: "admin-community-request-notification.html"
+  },
+  {
+    value: "community_request_accepted",
+    label: "Community Request Approved",
+    file: "community_creation_request_approved.html"
+  },
+  {
+    value: "community_request_rejected",
+    label: "Community Request Declined",
+    file: "community_creation_request_decline.html"
+  },
+  {
+    value: "join_invite_email",
+    label: "Join Invite Email",
+    file: "join_invite_email.html"
+  },
+  {
     value: "feedback_submitted",
     label: "Feedback Submitted (User)",
-    file: "feedback_submitted.html"
+    file: "user_message_received.html"
   },
   {
     value: "new_feedback_admin",
     label: "New Feedback (Admin)",
-    file: "new_feedback_admin.html"
+    file: "admin_message_received.html"
+  },
+  {
+    value: "contact_us_submitted",
+    label: "Contact Us Submitted (User)",
+    file: "user_message_received.html"
+  },
+  {
+    value: "new_contact_us_admin",
+    label: "New Contact Us (Admin)",
+    file: "admin_message_received.html"
+  },
+  {
+    value: "new_session_request",
+    label: "New Session Request Email",
+    file: "new_session_request.html"
+  },
+  {
+    value: "session_slot_suggested",
+    label: "Session Slot Suggested (Mentee)",
+    file: "session_slot_suggested.html"
+  },
+  {
+    value: "session_request_accepted",
+    label: "Session Request Accepted Email",
+    file: "session_request_response.html"
+  },
+  {
+    value: "session_request_rejected",
+    label: "Session Request Rejected Email",
+    file: "session_request_response.html"
   }
 ]
 

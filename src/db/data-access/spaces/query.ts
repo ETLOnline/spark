@@ -1,4 +1,4 @@
-import { and, eq, inArray, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, isNull, or, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -18,6 +18,9 @@ export type spaceQueryFilters = {
   limit?: number
   channel_id?: string
   channel_slug?: string
+  created_by?: string
+  isIndependent?: boolean
+  forUserId?: string
 }
 
 export async function CreateSpace(spaceData: InsertSpace) {
@@ -74,6 +77,37 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
       if (filters.channel_id) {
         whereClauses.push(eq(spacesTable.channel_id, filters.channel_id))
       }
+
+      if (filters.created_by) {
+        whereClauses.push(eq(spacesTable.created_by, filters.created_by))
+      }
+
+      if (filters.isIndependent) {
+        whereClauses.push(isNull(spacesTable.channel_id))
+      }
+
+      if (filters.forUserId) {
+        const memberSpaceRows = await db
+          .select({ space_id: SpaceUsersTable.space_id })
+          .from(SpaceUsersTable)
+          .where(
+            and(
+              eq(SpaceUsersTable.user_id, filters.forUserId),
+              eq(SpaceUsersTable.status, "active")
+            )
+          )
+        const memberSpaceIds = memberSpaceRows.map((row) => row.space_id)
+
+        // Spaces the user created, or was added to as a member
+        whereClauses.push(
+          memberSpaceIds.length
+            ? or(
+                eq(spacesTable.created_by, filters.forUserId),
+                inArray(spacesTable.id, memberSpaceIds)
+              )
+            : eq(spacesTable.created_by, filters.forUserId)
+        )
+      }
     }
 
     const spaces = await db.query.spacesTable.findMany({
@@ -113,10 +147,36 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
 
 export async function GetSpaceBySlug(
   spaceSlug: string,
-  channelSlug: string,
+  channelSlug?: string | null,
   withSpaceUsers?: boolean
 ) {
   try {
+    if (!channelSlug) {
+      // Independent space (no channel) - look it up directly by slug.
+      const space = await db.query.spacesTable.findFirst({
+        where: and(
+          eq(spacesTable.space_slug, spaceSlug),
+          isNull(spacesTable.channel_id)
+        ),
+        with: {
+          features: {
+            with: {
+              feature: true
+            }
+          },
+          owner: true,
+          users: withSpaceUsers
+            ? {
+                with: {
+                  user: true
+                }
+              }
+            : undefined
+        }
+      })
+      return space ?? null
+    }
+
     const channel = await db.query.channelsTable.findFirst({
       where: eq(channelsTable.channel_slug, channelSlug),
       with: {
@@ -197,6 +257,22 @@ export async function IsSlugAvailable(
   }
 }
 
+export async function IsIndependentSpaceSlugAvailable(
+  slug: string
+): Promise<boolean> {
+  try {
+    const searchedSlug = await db
+      .select()
+      .from(spacesTable)
+      .where(
+        and(eq(spacesTable.space_slug, slug), isNull(spacesTable.channel_id))
+      )
+    return !searchedSlug.length
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function UpdateSpace(
   spaceID: string,
   updatedSpaceData: Partial<SelectSpace>
@@ -256,7 +332,7 @@ export async function attachSpaceFeatures(
 export async function attachSpaceUser(
   spaceId: string,
   userId: string,
-  channel_user_id: number,
+  channel_user_id: number | null,
   spaceRole?: string
 ) {
   try {

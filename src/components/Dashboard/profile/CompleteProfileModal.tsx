@@ -355,8 +355,8 @@ export default function CompleteProfileModal({
                   <div className="space-y-2">
                     <Label className="font-semibold">Availability</Label>
                     <p className="text-sm text-muted-foreground">
-                      Set your mentor availability so mentees know when they can
-                      book sessions with you.
+                      Set your availability so mentees know when they can book
+                      sessions with you.
                     </p>
                     <Link href="/profile/availability">
                       <Button

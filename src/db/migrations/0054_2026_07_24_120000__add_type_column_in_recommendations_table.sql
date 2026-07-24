@@ -1,0 +1,1 @@
+ALTER TABLE "recommendations" ADD COLUMN "type" varchar DEFAULT 'manual' NOT NULL;
