@@ -195,6 +195,23 @@ export default function AcceptSessionRequestDialog({
             duration: 4000
           })
         }
+
+        const res = await respondToRequest(
+          request.id,
+          "accepted",
+          created.data.id
+        )
+        if (res?.success) {
+          onAccepted(request.id)
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: res?.error ?? "Please try again.",
+            duration: 3000
+          })
+        }
+        return
       } else if (option === "existing") {
         if (!selectedSpaceId) {
           toast({
@@ -225,6 +242,23 @@ export default function AcceptSessionRequestDialog({
             return
           }
         }
+
+        const res = await respondToRequest(
+          request.id,
+          "accepted",
+          selectedSpaceId
+        )
+        if (res?.success) {
+          onAccepted(request.id)
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: res?.error ?? "Please try again.",
+            duration: 3000
+          })
+        }
+        return
       }
 
       const res = await respondToRequest(request.id, "accepted", spaceIdToLink)

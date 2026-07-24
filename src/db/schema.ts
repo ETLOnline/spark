@@ -261,6 +261,10 @@ export const sessionRequestsTable = pgTable("session_requests", {
   // Populated when mentor suggests alternative slots
   suggestion_message: text("suggestion_message"),
   suggested_slot_ids: jsonb("suggested_slot_ids").$type<number[]>(),
+  attendee_confirmations: jsonb("attendee_confirmations")
+    .$type<Record<string, string>>()
+    .default({}),
+  is_space_archived: boolean("is_space_archived").default(false),
   ...timestamps
 })
 
@@ -300,6 +304,38 @@ export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect & {
   mentor?: SelectUser
   mentee?: SelectUser
 }
+
+export const mentorshipFeedbackTable = pgTable("mentorship_feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  session_request_id: integer("session_request_id")
+    .notNull()
+    .references(() => sessionRequestsTable.id, { onDelete: "cascade" }),
+  submitted_by: varchar("submitted_by")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  ...timestamps
+})
+
+export const mentorshipFeedbackRelations = relations(
+  mentorshipFeedbackTable,
+  ({ one }) => ({
+    sessionRequest: one(sessionRequestsTable, {
+      fields: [mentorshipFeedbackTable.session_request_id],
+      references: [sessionRequestsTable.id]
+    }),
+    submittedBy: one(usersTable, {
+      fields: [mentorshipFeedbackTable.submitted_by],
+      references: [usersTable.unique_id]
+    })
+  })
+)
+
+export type InsertMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferInsert
+export type SelectMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferSelect
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

@@ -20,9 +20,12 @@ import { db } from "../.."
 import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
+  mentorshipFeedbackTable,
   profileTable,
   rolesTable,
   sessionRequestsTable,
+  spacesTable,
+  SpaceUsersTable,
   tagsTable,
   userRolesTable,
   userTagsTable,
@@ -631,6 +634,174 @@ export async function DeletePendingSessionRequestsForSlot(
     .delete(sessionRequestsTable)
     .where(inArray(sessionRequestsTable.id, idsToDelete))
     .returning()
+}
+
+// ── Engagements ─────────────────────────────────────────────────────────────────
+
+export async function GetEngagementsForUser(userId: string) {
+  return db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.status, "accepted"),
+      or(
+        eq(sessionRequestsTable.mentor_id, userId),
+        eq(sessionRequestsTable.mentee_id, userId)
+      )
+    ),
+    orderBy: desc(sessionRequestsTable.session_date),
+    with: {
+      mentor: { with: { profile: true } },
+      mentee: { with: { profile: true } },
+      space: true
+    }
+  })
+}
+
+/** Record that a user confirmed they attended a session (jsonb patch). */
+export async function ConfirmSessionAttendance(
+  sessionId: number,
+  userId: string
+) {
+  const [updated] = await db
+    .update(sessionRequestsTable)
+    .set({
+      attendee_confirmations: sql`jsonb_set(
+        COALESCE(${sessionRequestsTable.attendee_confirmations}, '{}'),
+        ${`{${userId}}`},
+        to_jsonb(now()::text)
+      )`
+    })
+    .where(eq(sessionRequestsTable.id, sessionId))
+    .returning()
+  return updated
+}
+
+/** Insert a feedback row. Returns null if this user already submitted for this session. */
+export async function SubmitMentorshipFeedback(
+  sessionId: number,
+  userId: string,
+  rating: number,
+  comment?: string
+) {
+  const existing = await db
+    .select({ id: mentorshipFeedbackTable.id })
+    .from(mentorshipFeedbackTable)
+    .where(
+      and(
+        eq(mentorshipFeedbackTable.session_request_id, sessionId),
+        eq(mentorshipFeedbackTable.submitted_by, userId)
+      )
+    )
+    .limit(1)
+
+  if (existing.length > 0) return null
+
+  const [row] = await db
+    .insert(mentorshipFeedbackTable)
+    .values({
+      session_request_id: sessionId,
+      submitted_by: userId,
+      rating,
+      comment: comment?.trim() || null
+    })
+    .returning()
+  return row
+}
+
+/** Returns a map of sessionRequestId → [user_ids who submitted feedback].
+ *  Used to derive feedbackSubmittedByViewer / feedbackSubmittedByCounterpart. */
+export async function GetFeedbackSubmittersForSessions(
+  sessionIds: number[]
+): Promise<Record<number, string[]>> {
+  if (!sessionIds.length) return {}
+
+  const rows = await db
+    .select({
+      session_request_id: mentorshipFeedbackTable.session_request_id,
+      submitted_by: mentorshipFeedbackTable.submitted_by
+    })
+    .from(mentorshipFeedbackTable)
+    .where(inArray(mentorshipFeedbackTable.session_request_id, sessionIds))
+
+  const map: Record<number, string[]> = {}
+  for (const row of rows) {
+    if (!map[row.session_request_id]) map[row.session_request_id] = []
+    map[row.session_request_id].push(row.submitted_by)
+  }
+  return map
+}
+
+export async function ArchiveSessionSpace(sessionId: number) {
+  const [updated] = await db
+    .update(sessionRequestsTable)
+    .set({ is_space_archived: true })
+    .where(eq(sessionRequestsTable.id, sessionId))
+    .returning()
+  return updated
+}
+
+export type SpaceBasic = {
+  id: string
+  space_name: string
+  space_slug: string
+  created_by: string
+}
+
+export async function GetSharedSpacesForSessions(
+  pairs: Array<{ sessionId: number; mentorId: string; menteeId: string }>
+): Promise<Record<number, SpaceBasic | null>> {
+  if (!pairs.length) return {}
+
+  const menteeIds = [...new Set(pairs.map((p) => p.menteeId))]
+
+  // Step 1 — which space IDs is each mentee an active member of?
+  const memberRows = await db
+    .select({
+      space_id: SpaceUsersTable.space_id,
+      user_id: SpaceUsersTable.user_id
+    })
+    .from(SpaceUsersTable)
+    .where(
+      and(
+        inArray(SpaceUsersTable.user_id, menteeIds),
+        eq(SpaceUsersTable.status, "active")
+      )
+    )
+
+  const menteeToSpaceIds: Record<string, string[]> = {}
+  for (const row of memberRows) {
+    if (!menteeToSpaceIds[row.user_id]) menteeToSpaceIds[row.user_id] = []
+    menteeToSpaceIds[row.user_id].push(row.space_id)
+  }
+
+  const allSpaceIds = [...new Set(Object.values(menteeToSpaceIds).flat())]
+  if (!allSpaceIds.length) {
+    return Object.fromEntries(pairs.map((p) => [p.sessionId, null]))
+  }
+
+  // Step 2 — fetch those independent spaces
+  const spaces = await db
+    .select({
+      id: spacesTable.id,
+      space_name: spacesTable.space_name,
+      space_slug: spacesTable.space_slug,
+      created_by: spacesTable.created_by
+    })
+    .from(spacesTable)
+    .where(
+      and(inArray(spacesTable.id, allSpaceIds), isNull(spacesTable.channel_id))
+    )
+
+  // Step 3 — match each session pair to its space
+  const result: Record<number, SpaceBasic | null> = {}
+  for (const pair of pairs) {
+    const menteeMemberIds = menteeToSpaceIds[pair.menteeId] ?? []
+    const space =
+      spaces.find(
+        (s) => s.created_by === pair.mentorId && menteeMemberIds.includes(s.id)
+      ) ?? null
+    result[pair.sessionId] = space
+  }
+  return result
 }
 
 export async function ResubmitSessionRequest(
