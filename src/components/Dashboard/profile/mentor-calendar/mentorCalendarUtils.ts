@@ -239,6 +239,10 @@ export function othersBookedRequestsFor(
   myRequests: SelectSessionRequest[],
   bookedRequests: SelectSessionRequest[]
 ) {
+  // Group slots hold many mentees at once — another mentee's accepted hour
+  // isn't "taken" the way it would be in a 1:1 slot, so nothing to show here.
+  if (slot.session_type === "group") return []
+
   const dateStr = moment(date).format("YYYY-MM-DD")
   const slotStart = toMins(slot.start_time)
   const slotEnd = toMins(slot.end_time)
@@ -259,6 +263,11 @@ export function getBookedRangesForSlot(
   date: Date,
   bookedRequests: SelectSessionRequest[]
 ): TimeRange[] {
+  // Group slots can hold many mentees at once — another mentee's accepted
+  // booking shouldn't block the window for anyone else. Only 1:1 slots have
+  // a single occupant, so only they treat an accepted booking as "taken."
+  if (slot.session_type === "group") return []
+
   const dateStr = moment(date).format("YYYY-MM-DD")
   const slotStart = toMins(slot.start_time)
   const slotEnd = toMins(slot.end_time)
