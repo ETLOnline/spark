@@ -643,7 +643,7 @@ export function MentorCalendar({
                 loading={saving}
                 className="h-9 px-5 text-sm rounded-lg"
               >
-                {slotsForSelected.length > 0 ? "Save" : "Add Slot"}
+                Save
               </Button>
             )}
             {requestFormSlot && (
