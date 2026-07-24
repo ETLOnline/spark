@@ -39,7 +39,6 @@ function EngagementRow({ e }: { e: Engagement }) {
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <StatusPill status={e.status} />
-        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
     </div>
   )

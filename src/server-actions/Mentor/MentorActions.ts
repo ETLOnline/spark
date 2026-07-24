@@ -941,36 +941,38 @@ export const SubmitMentorshipFeedbackAction = CreateServerAction(
       )
       if (!row) return { error: "Feedback already submitted" }
 
-      // Feedback also becomes a recommendation on the recipient's profile —
-      // one entry per mentee when a mentor rates a group session, otherwise
-      // a single entry for whichever side (mentor or mentee) is rated.
-      const receiverIds =
-        isMentor && isGroup && session.availability_slot_id
-          ? (
-              await GetSessionRequestsBySlot(
-                session.availability_slot_id,
-                session.mentor_id,
-                session.session_date,
-                session.start_time
-              )
-            ).map((s) => s.mentee_id)
-          : [recipientId]
+      // Public feedback also becomes a recommendation on the recipient's
+      // profile — one entry per mentee when a mentor rates a group session,
+      // otherwise a single entry for whichever side (mentor or mentee) is rated.
+      if (visibility === "public") {
+        const receiverIds =
+          isMentor && isGroup && session.availability_slot_id
+            ? (
+                await GetSessionRequestsBySlot(
+                  session.availability_slot_id,
+                  session.mentor_id,
+                  session.session_date,
+                  session.start_time
+                )
+              ).map((s) => s.mentee_id)
+            : [recipientId]
 
-      await Promise.all(
-        receiverIds
-          .filter((receiverId): receiverId is string => !!receiverId)
-          .map((receiverId) =>
-            AddRecommendationAction({
-              recommender_id: authUser.unique_id,
-              receiver_id: receiverId,
-              rating,
-              content:
-                comment?.trim() ||
-                "Recommended based on mentorship session feedback.",
-              type: "mentorship"
-            } as SelectRecommendation)
-          )
-      )
+        await Promise.all(
+          receiverIds
+            .filter((receiverId): receiverId is string => !!receiverId)
+            .map((receiverId) =>
+              AddRecommendationAction({
+                recommender_id: authUser.unique_id,
+                receiver_id: receiverId,
+                rating,
+                content:
+                  comment?.trim() ||
+                  "Recommended based on mentorship session feedback.",
+                type: "mentorship"
+              } as SelectRecommendation)
+            )
+        )
+      }
 
       return { success: true }
     } catch (error) {
