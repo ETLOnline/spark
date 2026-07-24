@@ -16,6 +16,7 @@ import { Button } from "@/src/components/ui/button"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import { cn } from "@/src/lib/utils"
 import moment from "moment"
+import Link from "next/link"
 import { Engagement, FeedbackItem } from "./types"
 import { StatusPill } from "./StatusPill"
 import { FeedbackCard } from "./FeedbackCard"
@@ -62,7 +63,7 @@ export function EngagementDetail({
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Overdue alert — step 1: not yet confirmed */}
-      {isOverdue && !e.iViewerConfirmed && (
+      {isOverdue && !e.isViewerConfirmed && (
         <div className="flex items-start gap-2 rounded-lg bg-red-500/10 text-red-600 px-3 py-2.5 text-xs font-medium">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           Session passed on {moment(e.sessionDate).format("MMM D")}. Please
@@ -71,7 +72,7 @@ export function EngagementDetail({
       )}
 
       {/* Overdue alert — step 2: confirmed, feedback still pending */}
-      {isOverdue && e.iViewerConfirmed && !e.feedbackSubmittedByViewer && (
+      {isOverdue && e.isViewerConfirmed && !e.feedbackSubmittedByViewer && (
         <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 text-amber-600 px-3 py-2.5 text-xs font-medium">
           <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
           Attendance confirmed. Please submit your feedback to complete this
@@ -181,7 +182,7 @@ export function EngagementDetail({
           {hasSpace && (
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-muted-foreground">Space</span>
-              <a
+              <Link
                 href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}`}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group"
               >
@@ -200,7 +201,7 @@ export function EngagementDetail({
                   Go to Space
                   <ExternalLink className="h-3.5 w-3.5" />
                 </div>
-              </a>
+              </Link>
             </div>
           )}
         </>
@@ -271,7 +272,7 @@ export function EngagementDetail({
             {e.isMentor &&
               hasSpace &&
               (e.isSpaceArchived ? (
-                <a
+                <Link
                   href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
                   className="w-full"
                 >
@@ -279,10 +280,10 @@ export function EngagementDetail({
                     <Archive className="h-4 w-4 mr-2" />
                     View archived space
                   </Button>
-                </a>
+                </Link>
               ) : (
                 <>
-                  <a
+                  <Link
                     href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}`}
                     className="w-full"
                   >
@@ -290,7 +291,7 @@ export function EngagementDetail({
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Go to Space
                     </Button>
-                  </a>
+                  </Link>
                   <Button
                     variant="outline"
                     onClick={onArchive}
@@ -309,7 +310,7 @@ export function EngagementDetail({
 
             {/* Mentee: Go to space button (always visible, space may be archived for this session) */}
             {!e.isMentor && hasSpace && (
-              <a
+              <Link
                 href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
                 className="w-full"
               >
@@ -317,13 +318,13 @@ export function EngagementDetail({
                   <ExternalLink className="h-4 w-4 mr-2" />
                   {e.isSpaceArchived ? "View archived space" : "Go to space"}
                 </Button>
-              </a>
+              </Link>
             )}
           </>
         )}
 
         {/* Overdue: step 1 — not yet confirmed */}
-        {isOverdue && !e.iViewerConfirmed && (
+        {isOverdue && !e.isViewerConfirmed && (
           <Button onClick={onComplete} className="w-full">
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Complete Session
@@ -331,7 +332,7 @@ export function EngagementDetail({
         )}
 
         {/* Overdue: step 2 — confirmed, feedback not yet submitted */}
-        {isOverdue && e.iViewerConfirmed && !e.feedbackSubmittedByViewer && (
+        {isOverdue && e.isViewerConfirmed && !e.feedbackSubmittedByViewer && (
           <Button onClick={onFeedback} className="w-full">
             <Star className="h-4 w-4 mr-2" />
             Give Feedback

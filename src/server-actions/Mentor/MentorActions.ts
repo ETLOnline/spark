@@ -714,7 +714,7 @@ function buildEngagement(
     spaceCreatedBy: space?.created_by ?? undefined,
     isSpaceArchived: req.is_space_archived ?? false,
     isMentor,
-    iViewerConfirmed: !!confirmations[viewerId],
+    isViewerConfirmed: !!confirmations[viewerId],
     feedbackSubmittedByViewer: feedbackSubmitters.includes(viewerId)
   }
 }
@@ -768,8 +768,8 @@ export const GetEngagementsAction = CreateServerAction(true, async () => {
       const rep = rows[0] // representative row
       const allIds = rows.map((r) => r.id)
       // Mentor has confirmed if they appear in the representative row's confirmations
-      // Mentor is considered to have submitted feedback if they submitted for the rep row
-      const repSubmitters = feedbackMap[rep.id] ?? []
+      // Mentor is considered to have submitted feedback if they submitted for
+      const repSubmitters = allIds.flatMap((id) => feedbackMap[id] ?? [])
       const eng = buildEngagement(
         rep,
         authUser.unique_id,

@@ -1,8 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 import { ArrowLeft, ArrowRight, Users } from "lucide-react"
 import { cn } from "@/src/lib/utils"
+import { Button } from "@/src/components/ui/button"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import { Engagement, EngagementStatus, FeedbackItem } from "./types"
 import { StatusPill } from "./StatusPill"
@@ -48,11 +51,15 @@ function EngagementListItem({
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onSelect}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-3 border-b border-foreground/5 last:border-b-0 text-left transition-colors",
-        selected ? "bg-foreground/[0.04]" : "hover:bg-foreground/[0.02]",
+        "w-full flex items-center gap-3 px-4 py-3 border-b border-foreground/5 last:border-b-0 text-left transition-colors h-auto rounded-none justify-start",
+        "hover:!text-foreground",
+        selected
+          ? "bg-foreground/[0.04] hover:!bg-foreground/[0.04]"
+          : "hover:!bg-foreground/[0.02]",
         e.status === "overdue" && !selected && "bg-red-500/[0.02]"
       )}
     >
@@ -76,7 +83,7 @@ function EngagementListItem({
         <StatusPill status={e.status} />
         <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
-    </button>
+    </Button>
   )
 }
 
@@ -115,6 +122,7 @@ function SkeletonRows() {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export function EngagementListingScreen() {
+  const authUser = useAtomValue(userStore.AuthUser)
   const [tab, setTab] = useState<Tab>("all")
   const [engagements, setEngagements] = useState<Engagement[]>([])
   const [selected, setSelected] = useState<Engagement | null>(null)
@@ -201,6 +209,14 @@ export function EngagementListingScreen() {
 
   const handleArchiveSpace = async () => {
     if (!selected?.spaceId) return
+    if (selected.spaceCreatedBy !== authUser?.unique_id) {
+      toast({
+        title: "Not allowed",
+        description: "Only the space creator can archive this space.",
+        variant: "destructive"
+      })
+      return
+    }
     const res = await archiveSpace(selected.id)
     if (res?.success) {
       toast({
@@ -259,11 +275,12 @@ export function EngagementListingScreen() {
         {/* Tabs */}
         <div className="flex border-b border-foreground/5 shrink-0">
           {tabs.map((t) => (
-            <button
+            <Button
               key={t.key}
+              variant="ghost"
               onClick={() => setTab(t.key)}
               className={cn(
-                "relative flex-1 py-2.5 text-xs font-medium transition-colors",
+                "relative flex-1 py-2.5 text-xs font-medium transition-colors h-auto rounded-none",
                 tab === t.key
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -273,7 +290,7 @@ export function EngagementListingScreen() {
               {tab === t.key && (
                 <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-foreground rounded-full" />
               )}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -329,13 +346,14 @@ export function EngagementListingScreen() {
         )}
       >
         {/* Back button — mobile only */}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setShowDetail(false)}
-          className="lg:hidden flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground border-b border-foreground/5 shrink-0 hover:text-foreground transition-colors"
+          className="lg:hidden flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground border-b border-foreground/5 shrink-0 hover:text-foreground transition-colors h-auto rounded-none justify-start"
         >
           <ArrowLeft className="h-4 w-4" />
           All engagements
-        </button>
+        </Button>
 
         <div className="flex-1 overflow-y-auto">
           {selected ? (
