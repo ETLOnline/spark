@@ -59,10 +59,14 @@ export const getProjectCrumbsMapped = (
   pathname: string,
   currSpace?: SelectSpace
 ) => {
+  const projectsCrumbUrl = currSpace?.channel?.channel_slug
+    ? `/channels/${currSpace.channel.channel_slug}/spaces/${currSpace?.space_slug}?page-type=project-management`
+    : `/mentorship/${currSpace?.created_by}/spaces/${currSpace?.space_slug}?page-type=project-management`
+
   return projects.flatMap((p) => [
     {
       title: "Projects",
-      url: `/channels/${currSpace?.channel?.channel_slug}/spaces/${currSpace?.space_slug}?page-type=project-management`,
+      url: projectsCrumbUrl,
       description: "Projects",
       id: "project"
     },

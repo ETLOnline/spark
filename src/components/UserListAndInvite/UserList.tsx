@@ -433,7 +433,9 @@ export default function ChannelUserList({
                 ? `/communities/${(entity as CommunityDetailData).slug}`
                 : entityType === "channel"
                   ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
-                  : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
+                  : (entity as SelectSpace).channel?.channel_slug
+                    ? `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
+                    : `/mentorship/${(entity as SelectSpace).created_by}/spaces/${(entity as SelectSpace).space_slug}`
             }
             className="truncate max-w-full"
           >

@@ -557,15 +557,6 @@ export default function HomePage() {
               <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 Where Tech Dreams
               </span>
-              <br />
-              <span className="inline-block">
-                <Image
-                  src="/logo/spark-logo-animated-themed.gif"
-                  width={100}
-                  height={100}
-                  alt="Spark logo"
-                />
-              </span>
             </motion.h1>
 
             <motion.p
@@ -948,7 +939,7 @@ export default function HomePage() {
 
         {/* Featured Mentors Section */}
 
-        <section id="mentors" className="py-24 px-6  relative overflow-hidden">
+        <section className="py-24 px-6  relative overflow-hidden">
           <div className="absolute inset-0 bg-secondary/10 dark:bg-secondary/20" />
           <div className="container mx-auto relative z-10">
             <motion.div
@@ -1158,74 +1149,6 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             </motion.div> */}
-            </div>
-          </div>
-        </section>
-
-        {/* Find a Mentor Section */}
-        <section>
-          <div className="bg-gradient-to-br from-background to-primary/5">
-            <div className="container mx-auto px-4 py-16">
-              <div className="max-w-3xl mx-auto text-center">
-                {/* Animated Badge */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  viewport={{ once: true }}
-                >
-                  <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-                    <Search className="w-4 h-4 mr-2" />
-                    Find Your Mentor
-                  </Badge>
-                </motion.div>
-
-                {/* Animated Heading */}
-                <motion.h1
-                  className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  viewport={{ once: true }}
-                >
-                  <div className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
-                    Find a Mentor Who
-                    <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
-                      {" "}
-                      Inspires You
-                    </span>
-                  </div>
-                </motion.h1>
-
-                {/* Animated Paragraph */}
-                <motion.p
-                  className="text-xl text-muted-foreground mb-8 text-balance"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  viewport={{ once: true }}
-                >
-                  Discover experienced mentors who can help you build technical
-                  skills, navigate your career, prepare for interviews, review
-                  projects, and achieve your professional goals. Start learning
-                  from industry experts who are invested in your success.
-                </motion.p>
-
-                {/* Animated Button */}
-                <motion.div
-                  className="flex flex-col sm:flex-row gap-4 justify-center"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                  viewport={{ once: true }}
-                >
-                  <Link href="/mentors">
-                    <Button className="bg-primary  hover:bg-primary/90 px-8 py-6 text-lg shadow-lg hover:scale-105 transition-transform duration-300">
-                      Find a Mentor
-                    </Button>
-                  </Link>
-                </motion.div>
-              </div>
             </div>
           </div>
         </section>

@@ -10,10 +10,10 @@ import {
   MessageSquare,
   Network,
   Newspaper,
+  SearchCheck,
   Send,
   User,
-  Group,
-  GraduationCap
+  Group
 } from "lucide-react"
 
 export const siteRoutes: SiteRoutes = {
@@ -77,9 +77,9 @@ export const siteRoutes: SiteRoutes = {
       icon: Group
     },
     {
-      title: "Mentors",
+      title: "Find a Mentor",
       url: "/mentors",
-      icon: GraduationCap
+      icon: SearchCheck
     }
   ],
   testNav: [

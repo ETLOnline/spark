@@ -17,6 +17,8 @@ import {
 import { processJoinInviteEmailNotification } from "./processors/join_invite"
 import { processProjectInviteNotification } from "./processors/project"
 import { processTaskUpdateNotification } from "./processors/task"
+import { processMentorSessionNotification } from "./processors/mentor-session"
+import { processSessionRequestEmailNotification } from "./processors/sessionRequest"
 
 interface EventJob {
   sendingTo: string[]
@@ -40,5 +42,9 @@ export const eventsList: Record<string, EventProcessor> = {
   feedback_submitted: processFeedbackSubmittedNotification,
   new_feedback_admin: processNewFeedbackAdminNotification,
   contact_us_submitted: processContactUsSubmittedNotification,
-  new_contact_us_admin: processNewContactUsAdminNotification
+  new_contact_us_admin: processNewContactUsAdminNotification,
+  session_slot_suggested: processMentorSessionNotification,
+  new_session_request: processSessionRequestEmailNotification,
+  session_request_accepted: processSessionRequestEmailNotification,
+  session_request_rejected: processSessionRequestEmailNotification
 }

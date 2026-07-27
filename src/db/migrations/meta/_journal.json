@@ -337,6 +337,55 @@
       "when": 1783509522854,
       "tag": "0047_2026_07_08_161839__add_engagement_field_to_profile_table",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1784017318610,
+      "tag": "0048_2026_07_14_132157__create_session_requests_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1784194897227,
+      "tag": "0049_2026_07_16_144133__make_channel_id_nullable_in_space_and_proect_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784287434219,
+      "tag": "0050_2026_07_17_162351__add_suggestion_fields_to_session_req_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1784645832269,
+      "tag": "0051_2026_07_21_195711__add_sapce_id_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1784715864211,
+      "tag": "0052_2026_07_22_152422__add_mentorship_feedback_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1784732642169,
+      "tag": "0053_2026_07_22_200400__add_visibility_field",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1784878227144,
+      "tag": "0054_2026_07_24_120000__add_type_column_in_recommendations_table",
+      "breakpoints": true
     }
   ]
 }

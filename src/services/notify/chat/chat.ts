@@ -15,7 +15,7 @@ export async function createChatEmailNotification(
   let linkUrl = "/chat"
   if (space_id) {
     const space = await GetSpaceById(space_id)
-    linkUrl = `/channels/${space?.channel.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
+    linkUrl = `/channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
   }
   const sendingTo = [
     ...new Set(

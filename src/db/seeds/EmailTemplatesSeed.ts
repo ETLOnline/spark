@@ -84,6 +84,26 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.NEW_CONTACT_US_ADMIN,
     subject: "New Contact Us Message: {{subject}}",
     body: loadTemplate("admin_message_received.html")
+  },
+  {
+    name: NotificationEvent.SESSION_SLOT_SUGGESTED,
+    subject: "{{mentorName}} suggested new session slots for {{topic}}",
+    body: loadTemplate("session_slot_suggested.html")
+  },
+  {
+    name: NotificationEvent.NEW_SESSION_REQUEST,
+    subject: "New Session Request from {{menteeName}}",
+    body: loadTemplate("new_session_request.html")
+  },
+  {
+    name: NotificationEvent.SESSION_REQUEST_ACCEPTED,
+    subject: "{{mentorName}} accepted your session request",
+    body: loadTemplate("session_request_response.html")
+  },
+  {
+    name: NotificationEvent.SESSION_REQUEST_REJECTED,
+    subject: "{{mentorName}} declined your session request",
+    body: loadTemplate("session_request_response.html")
   }
 ]
 
