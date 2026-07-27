@@ -877,6 +877,75 @@ export default function HomePage() {
             </div>
           </section>
         ) : null}
+        {/* Find a Mentor Section */}
+        <section id="mentors" className="scroll-mt-16">
+          <div className="bg-gradient-to-br from-primary/30 via-primary/10 to-secondary/20 border-y-2 border-primary/30 shadow-inner dark:from-background dark:via-background dark:to-primary/5 dark:border-none dark:shadow-none">
+            <div className="container mx-auto px-4 py-16">
+              {/* Animated Badge */}
+              <motion.div
+                className="flex justify-center pb-8"
+                initial={{ opacity: 0, y: -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <Badge className="mb-4 bg-secondary/10 text-secondary-foreground border-primary/20">
+                  <Search className="w-4 h-4 mr-2" />
+                  Find Your Mentor
+                </Badge>
+              </motion.div>
+              <div className="max-w-3xl mx-auto text-center">
+                {/* Animated Heading */}
+                <motion.h1
+                  className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
+                    Find a Mentor Who
+                    <span className="bg-gradient-to-r from-violet-500 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                      {" "}
+                      Inspires You
+                    </span>
+                  </div>
+                </motion.h1>
+
+                {/* Animated Paragraph */}
+                <motion.p
+                  className="text-xl text-muted-foreground mb-8 text-balance"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  viewport={{ once: true }}
+                >
+                  Discover experienced mentors who can help you build technical
+                  skills, navigate your career, prepare for interviews, review
+                  projects, and achieve your professional goals. Start learning
+                  from industry experts who are invested in your success.
+                </motion.p>
+
+                {/* Animated Button */}
+                <motion.div
+                  className="flex flex-col sm:flex-row gap-4 justify-center"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                  viewport={{ once: true }}
+                >
+                  <Link href="/mentors">
+                    <Button className="bg-primary  hover:bg-primary/90 px-8 py-6 text-lg shadow-lg hover:scale-105 transition-transform duration-300">
+                      Find a Mentor
+                      <ArrowRight className="ml-3 w-6 h-6" />
+                    </Button>
+                  </Link>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Featured Mentors Section */}
 
         <section id="mentors" className="py-24 px-6  relative overflow-hidden">
