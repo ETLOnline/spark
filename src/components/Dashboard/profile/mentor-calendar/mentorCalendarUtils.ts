@@ -1,7 +1,7 @@
 import moment from "moment-timezone"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import { DAYS } from "@/src/utils/constants"
-import { recurrencesOverlap, toMins } from "@/src/utils/time"
+import { MIN_DURATION_MINS, recurrencesOverlap, toMins } from "@/src/utils/time"
 import { cn } from "@/src/lib/utils"
 
 /** True if a session request's own recurrence (one-time/daily/weekly) includes `dateStr`. */
@@ -38,7 +38,7 @@ export function formatDuration(mins: number) {
   return `${hours % 1 === 0 ? hours : hours.toFixed(1)} hr`
 }
 
-/** Start times a mentee can pick, stepped every hour — excludes any hour that overlaps an already-booked range. */
+/** Start times a mentee can pick, stepped every MIN_DURATION_MINS — excludes any step that overlaps an already-booked range. */
 export function getStartTimeOptions(
   slot: SelectMentorAvailability,
   bookedRanges: TimeRange[] = []
@@ -46,16 +46,20 @@ export function getStartTimeOptions(
   const options: string[] = []
   const startMin = toMins(slot.start_time)
   const endMin = toMins(slot.end_time)
-  for (let t = startMin; t <= endMin - 60; t += 60) {
+  for (
+    let t = startMin;
+    t <= endMin - MIN_DURATION_MINS;
+    t += MIN_DURATION_MINS
+  ) {
     const overlapsBooked = bookedRanges.some(
-      (b) => t < b.end && b.start < t + 60
+      (b) => t < b.end && b.start < t + MIN_DURATION_MINS
     )
     if (!overlapsBooked) options.push(minsToTime(t))
   }
   return options
 }
 
-/** Durations that fit between `startTime` and the slot's end (or the next booked range, whichever comes first), in clean 1-hour steps. */
+/** Durations that fit between `startTime` and the slot's end (or the next booked range, whichever comes first), in MIN_DURATION_MINS steps. */
 export function getDurationOptions(
   slot: SelectMentorAvailability,
   startTime: string,
@@ -68,7 +72,7 @@ export function getDurationOptions(
   }
   const remaining = cappedEnd - start
   const options: number[] = []
-  for (let d = 60; d <= remaining; d += 60) {
+  for (let d = MIN_DURATION_MINS; d <= remaining; d += MIN_DURATION_MINS) {
     options.push(d)
   }
   return options
