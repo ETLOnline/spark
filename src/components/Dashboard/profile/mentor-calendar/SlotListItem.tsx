@@ -235,7 +235,7 @@ export function SlotListItem({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    Earn {RP_THRESHOLD - viewerRp} more RP to request a session
+                    Earn {RP_THRESHOLD - viewerRp} more RP to request this slot
                   </p>
                 </TooltipContent>
               </Tooltip>
