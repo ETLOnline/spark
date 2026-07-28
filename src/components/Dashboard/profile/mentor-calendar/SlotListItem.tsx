@@ -25,7 +25,6 @@ import {
   formatTime,
   getStartTimeOptions,
   getUnavailableRangesForRequest,
-  hasSlotStartPassed,
   isSlotFullyBooked,
   myAcceptedRequestsFor,
   myPendingRequestFor,
@@ -202,8 +201,7 @@ export function SlotListItem({
             <Clock className="h-3 w-3" />
             Request pending
           </div>
-        ) : hasSlotStartPassed(slot, selectedDate) ||
-          getStartTimeOptions(
+        ) : getStartTimeOptions(
             slot,
             getUnavailableRangesForRequest(
               slot,

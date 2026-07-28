@@ -111,15 +111,6 @@ export function minAllowedStartMinsFor(date: Date): number {
   return moment().hours() * 60 + moment().minutes()
 }
 
-/** True once the slot's own listed start time is at/past "now" on `date` — the whole slot should read as passed, even if a later start within the window would still fit. */
-export function hasSlotStartPassed(
-  slot: SelectMentorAvailability,
-  date: Date
-): boolean {
-  if (!moment(date).isSame(moment(), "day")) return false
-  return toMins(slot.start_time) <= minAllowedStartMinsFor(date)
-}
-
 export function repeatLabel(slot: SelectMentorAvailability) {
   if (slot.repeat_type === "weekly")
     return `Every ${DAYS[moment(slot.date, "YYYY-MM-DD").day()]}`
