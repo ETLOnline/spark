@@ -110,6 +110,11 @@
                         >
                         {{slotText}}
                       </p>
+                      {{#if rejectReason}}
+                      <p style="margin: 8px 0 0">
+                        <strong>Reason:</strong> {{rejectReason}}
+                      </p>
+                      {{/if}}
                     </td>
                   </tr>
                 </table>

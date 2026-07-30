@@ -386,6 +386,13 @@
       "when": 1784878227144,
       "tag": "0054_2026_07_24_120000__add_type_column_in_recommendations_table",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1785402877307,
+      "tag": "0055_2026_07_30_141436__add_reject_reason",
+      "breakpoints": true
     }
   ]
 }

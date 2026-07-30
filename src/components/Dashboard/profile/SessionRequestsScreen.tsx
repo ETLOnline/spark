@@ -1,15 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import Link from "next/link"
 import moment from "moment-timezone"
-import {
-  CalendarDays,
-  MessageSquare,
-  RefreshCw,
-  Users,
-  Video
-} from "lucide-react"
+import { CalendarDays, RefreshCw, Users, Video } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -125,6 +118,11 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   >([])
   const [suggestionMessage, setSuggestionMessage] = useState("")
 
+  // Reject — inline reason field directly on the list row
+  const [rejectingRequest, setRejectingRequest] =
+    useState<SessionRequestWithMentee | null>(null)
+  const [rejectReason, setRejectReason] = useState("")
+
   const [, , , getRequestsByStatus] = useServerAction(
     GetSessionRequestsForMentorByStatusAction
   )
@@ -160,16 +158,29 @@ export function SessionRequestsScreen({ mentorId }: Props) {
     setCurrentPage(1)
   }
 
-  const handleRespond = async (status: "accepted" | "rejected") => {
-    if (!selectedRequest) return
-    const res = await respondToRequest(selectedRequest.id, status)
+  const handleRejectClick = (request: SessionRequestWithMentee) => {
+    setRejectReason("")
+    setRejectingRequest(request)
+  }
+
+  const handleRejectCancel = () => {
+    setRejectingRequest(null)
+    setRejectReason("")
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!rejectingRequest) return
+    const res = await respondToRequest(
+      rejectingRequest.id,
+      "rejected",
+      undefined,
+      rejectReason.trim() || undefined
+    )
     if (res?.success) {
-      setSelectedRequest(null)
+      setRejectingRequest(null)
+      setRejectReason("")
       await loadRequests()
-      toast({
-        title: status === "accepted" ? "Request accepted" : "Request rejected",
-        duration: 3000
-      })
+      toast({ title: "Request rejected", duration: 3000 })
     } else {
       toast({
         variant: "destructive",
@@ -180,13 +191,15 @@ export function SessionRequestsScreen({ mentorId }: Props) {
     }
   }
 
-  const handleSuggestClick = async () => {
-    if (!selectedRequest) return
+  const handleSuggestClick = async (request?: SessionRequestWithMentee) => {
+    const target = request ?? selectedRequest
+    if (!target) return
+    setSelectedRequest(target)
     setLoadingSlots(true)
     setSuggestDialogOpen(true)
     const res = await getSuggestableSlots({
       mentorId,
-      afterDate: selectedRequest.session_date
+      afterDate: target.session_date
     })
     if (res?.success && res.data) {
       setSlotOccurrences(res.data as SlotOccurrence[])
@@ -224,14 +237,6 @@ export function SessionRequestsScreen({ mentorId }: Props) {
     }
   }
 
-  const handleDialogClose = (open: boolean) => {
-    if (!open) {
-      setSelectedRequest(null)
-      setSelectedOccurrenceKeys([])
-      setSuggestionMessage("")
-    }
-  }
-
   const emptyMessage =
     activeStatus === "pending"
       ? "No pending session requests"
@@ -265,10 +270,9 @@ export function SessionRequestsScreen({ mentorId }: Props) {
           )}
 
           {requests.map((request) => (
-            <button
+            <div
               key={request.id}
-              onClick={() => setSelectedRequest(request)}
-              className="text-left rounded-lg border border-foreground/8 p-4 hover:bg-foreground/[0.02] transition-colors"
+              className="text-left rounded-lg border border-foreground/8 p-4"
             >
               <div className="flex items-start gap-3">
                 <Avatar className="h-10 w-10 shrink-0">
@@ -312,9 +316,74 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                       Resubmitted
                     </span>
                   )}
+                  {request.status === "rejected" && request.reject_reason && (
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Reason: {request.reject_reason}
+                    </p>
+                  )}
                 </div>
               </div>
-            </button>
+
+              {(request.status === "pending" ||
+                request.status === "resubmitted") &&
+                (rejectingRequest?.id === request.id ? (
+                  <div className="space-y-2 mt-3 pt-3 border-t border-foreground/8">
+                    <Textarea
+                      placeholder="Reason for rejecting (optional)"
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      rows={2}
+                      className="resize-none text-sm"
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={responding}
+                        onClick={handleRejectCancel}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        loading={responding}
+                        onClick={handleRejectConfirm}
+                      >
+                        Confirm Reject
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-foreground/8">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRejectClick(request)}
+                    >
+                      Reject
+                    </Button>
+                    {request.status === "pending" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSuggestClick(request)}
+                      >
+                        Suggest New Slot
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setSelectedRequest(request)
+                        setShowWorkspaceDialog(true)
+                      }}
+                    >
+                      Accept
+                    </Button>
+                  </div>
+                ))}
+            </div>
           ))}
 
           {!loading && pagination.totalPages > 1 && (
@@ -327,148 +396,6 @@ export function SessionRequestsScreen({ mentorId }: Props) {
           )}
         </TabsContent>
       </Tabs>
-
-      {/* ── Request detail dialog ── */}
-      <Dialog open={!!selectedRequest} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-[440px] max-h-[90dvh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Session Request</DialogTitle>
-          </DialogHeader>
-
-          {selectedRequest && (
-            <div className="space-y-4">
-              {/* Mentee mini profile */}
-              <Link
-                href={`/profile/${selectedRequest.mentee.unique_id}`}
-                className="flex items-center gap-3 rounded-lg border border-foreground/8 p-3 hover:bg-foreground/[0.02] transition-colors"
-              >
-                <Avatar className="h-11 w-11 shrink-0">
-                  <AvatarImage src={selectedRequest.mentee.profile_url || ""} />
-                  <AvatarFallback>
-                    {selectedRequest.mentee.first_name}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="font-medium truncate">
-                    {selectedRequest.mentee.first_name}{" "}
-                    {selectedRequest.mentee.last_name}
-                  </p>
-                  {selectedRequest.mentee.profile?.institute && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {selectedRequest.mentee.profile.institute}
-                    </p>
-                  )}
-                </div>
-              </Link>
-
-              {/* Topic */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Topic</p>
-                <p className="text-sm flex items-start gap-1.5">
-                  <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
-                  {selectedRequest.topic}
-                </p>
-              </div>
-
-              {/* Description */}
-              {selectedRequest.description && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Description
-                  </p>
-                  <p className="text-sm text-foreground/90 whitespace-pre-wrap">
-                    {selectedRequest.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Slot info */}
-              <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-foreground/10 bg-muted/40">
-                {selectedRequest.session_type === "group" ? (
-                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                ) : (
-                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
-                {selectedRequest.session_type === "group" ? "Group" : "1-on-1"}
-                <span className="text-muted-foreground ml-auto">
-                  {formatSlot(selectedRequest)}
-                </span>
-              </div>
-
-              {formatRecurrence(selectedRequest) && (
-                <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-primary/20 bg-primary/5 text-primary">
-                  <RefreshCw className="h-3.5 w-3.5 shrink-0" />
-                  {formatRecurrence(selectedRequest)}
-                </div>
-              )}
-
-              {/* Actions based on status */}
-              {selectedRequest.status === "pending" && (
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    loading={responding}
-                    onClick={() => handleRespond("rejected")}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={responding}
-                    onClick={handleSuggestClick}
-                  >
-                    Suggest New Slot
-                  </Button>
-                  <Button
-                    size="sm"
-                    loading={responding}
-                    onClick={() => setShowWorkspaceDialog(true)}
-                  >
-                    Accept
-                  </Button>
-                </div>
-              )}
-
-              {selectedRequest.status === "resubmitted" && (
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    loading={responding}
-                    onClick={() => handleRespond("rejected")}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowWorkspaceDialog(true)}
-                  >
-                    Accept
-                  </Button>
-                </div>
-              )}
-
-              {(selectedRequest.status === "accepted" ||
-                selectedRequest.status === "rejected") && (
-                <p
-                  className={cn(
-                    "text-sm font-medium text-right pt-2",
-                    selectedRequest.status === "accepted"
-                      ? "text-emerald-500"
-                      : "text-destructive"
-                  )}
-                >
-                  {selectedRequest.status === "accepted"
-                    ? "Accepted"
-                    : "Rejected"}
-                </p>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* ── Suggest New Slot dialog (separate) ── */}
       <Dialog

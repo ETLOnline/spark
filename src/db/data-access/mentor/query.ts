@@ -476,11 +476,16 @@ export async function GetSessionRequestById(requestId: number) {
 export async function UpdateSessionRequestStatus(
   requestId: number,
   status: "accepted" | "rejected",
-  spaceId?: string | null
+  spaceId?: string | null,
+  rejectReason?: string
 ) {
   const [request] = await db
     .update(sessionRequestsTable)
-    .set({ status, ...(spaceId !== undefined ? { space_id: spaceId } : {}) })
+    .set({
+      status,
+      ...(spaceId !== undefined ? { space_id: spaceId } : {}),
+      ...(status === "rejected" ? { reject_reason: rejectReason || null } : {})
+    })
     .where(eq(sessionRequestsTable.id, requestId))
     .returning()
 

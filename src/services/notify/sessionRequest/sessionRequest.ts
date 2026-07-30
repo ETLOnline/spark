@@ -57,7 +57,8 @@ export async function createSessionResponseEmailNotification(
     topic: request.topic,
     slotText: formatSlotText(request),
     ctaLink: createAbsoluteUrl(`/profile/${request.mentor_id}/availability`),
-    accepted: status === "accepted"
+    accepted: status === "accepted",
+    rejectReason: status === "rejected" ? request.reject_reason : null
   }
 
   await AddToQueue({

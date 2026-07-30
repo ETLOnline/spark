@@ -8,7 +8,8 @@ import {
   Sparkles,
   Users,
   Video,
-  X
+  X,
+  XCircle
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
@@ -22,12 +23,15 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import {
   countOverlappingRequests,
+  formatSuggestedSlotDates,
   formatTime,
   getStartTimeOptions,
   getUnavailableRangesForRequest,
   isSlotFullyBooked,
   myAcceptedRequestsFor,
   myPendingRequestFor,
+  myRejectedRequestFor,
+  myRescheduledRequestFor,
   othersBookedRequestsFor,
   repeatLabel
 } from "./mentorCalendarUtils"
@@ -82,6 +86,12 @@ export function SlotListItem({
   const mentorAcceptedCount = isMyProfile
     ? countOverlappingRequests(slot, selectedDate, mentorAcceptedRequests)
     : 0
+  const rescheduledRequest = !isMyProfile
+    ? myRescheduledRequestFor(slot, selectedDate, myRequests)
+    : undefined
+  const rejectedRequest = !isMyProfile
+    ? myRejectedRequestFor(slot, selectedDate, myRequests)
+    : undefined
   return (
     <div className="rounded-lg border border-foreground/8 text-sm overflow-hidden">
       {/* Slot info row */}
@@ -196,10 +206,28 @@ export function SlotListItem({
               Confirm Suggested Slot
             </Button>
           </div>
+        ) : rescheduledRequest ? (
+          <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-purple-500 font-medium">
+            <Sparkles className="h-3 w-3" />
+            New slot suggested for{" "}
+            {formatSuggestedSlotDates(rescheduledRequest)} — check below
+          </div>
         ) : myPendingRequestFor(slot, selectedDate, myRequests) ? (
           <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
             <Clock className="h-3 w-3" />
             Request pending
+          </div>
+        ) : rejectedRequest ? (
+          <div className="flex flex-col gap-0.5 px-3 py-2 border-t border-foreground/8 text-xs text-destructive font-medium">
+            <span className="flex items-center gap-1.5">
+              <XCircle className="h-3 w-3" />
+              Request rejected
+            </span>
+            {rejectedRequest.reject_reason && (
+              <span className="text-muted-foreground font-normal pl-[18px]">
+                {rejectedRequest.reject_reason}
+              </span>
+            )}
           </div>
         ) : getStartTimeOptions(
             slot,
