@@ -123,9 +123,15 @@ export default function EmailPreviewPage() {
     setLoading(true)
     setError("")
     try {
-      const response = await fetch(`/email-templates/${templateName}.html`)
+      const fileName = emailTemplates.find(
+        (t) => t.value === templateName
+      )?.file
+      if (!fileName) {
+        throw new Error(`No file mapped for template ${templateName}`)
+      }
+      const response = await fetch(`/email-templates/${fileName}`)
       if (!response.ok) {
-        throw new Error(`Template ${templateName} not found`)
+        throw new Error(`Template ${fileName} not found`)
       }
       const html = await response.text()
       setTemplateHTML(html)

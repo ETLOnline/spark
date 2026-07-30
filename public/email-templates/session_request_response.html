@@ -3,9 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      Session Request {{#if accepted}}Accepted{{else}}Declined{{/if}}
-    </title>
+    <title>Session Request {{statusLabel}}</title>
   </head>
   <body
     style="
@@ -55,15 +53,15 @@
             <tr>
               <td
                 align="center"
+                bgcolor="{{headerBgColor}}"
                 style="
-                  background-color: {{#if accepted}}#51ecdc{{else}}#f1f5f9{{/if}};
                   padding: 20px;
                   color: #0f172a;
                   font-size: 20px;
                   font-weight: bold;
                 "
               >
-                Session Request {{#if accepted}}Accepted{{else}}Declined{{/if}}
+                Session Request {{statusLabel}}
               </td>
             </tr>
 
@@ -81,9 +79,8 @@
                   Hi <strong>{{menteeName}}</strong>,
                 </p>
                 <p style="margin: 0 0 24px">
-                  <strong>{{mentorName}}</strong> has {{#if
-                  accepted}}accepted{{else}}declined{{/if}} your session
-                  request.
+                  <strong>{{mentorName}}</strong> has {{actionVerb}} your
+                  session request.
                 </p>
 
                 <table
@@ -104,10 +101,7 @@
                         <strong>Topic:</strong> {{topic}}
                       </p>
                       <p style="margin: 0">
-                        <strong
-                          >{{#if accepted}}Confirmed{{else}}Requested{{/if}}
-                          slot:</strong
-                        >
+                        <strong>{{slotLabel}} slot:</strong>
                         {{slotText}}
                       </p>
                       {{#if rejectReason}}
@@ -146,17 +140,14 @@
                           text-decoration: none;
                         "
                       >
-                        {{#if accepted}}View Session{{else}}Find Another
-                        Slot{{/if}}
+                        {{ctaText}}
                       </a>
                     </td>
                   </tr>
                 </table>
 
                 <p style="margin: 0; font-size: 14px; color: #6b7280">
-                  {{#if accepted}} Log in to see the full details. {{else}} Feel
-                  free to browse this mentor's availability and pick a different
-                  time. {{/if}}
+                  {{footerText}}
                 </p>
               </td>
             </tr>
