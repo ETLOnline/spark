@@ -661,13 +661,6 @@ export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
 
 // ── Engagements ─────────────────────────────────────────────────────────────────
 
-/** Whether the session is "upcoming" vs "overdue" depends on the current
- * time, which the server can't correctly evaluate for every viewer's intended
- * timezone — the frontend recomputes this (see deriveEngagementStatus in
- * profile/engagements/types.ts) using its Asia/Karachi default. This only
- * determines the time-independent piece: fully confirmed + submitted means
- * "completed" regardless of timezone; everything else is a placeholder the
- * client corrects. */
 function deriveEngagementStatus(
   viewerId: string,
   confirmations: Record<string, string>,
