@@ -552,20 +552,18 @@ export function SessionRequestsScreen({ mentorId }: Props) {
               })}
             </div>
 
-            {slotOccurrences.length > 0 && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-1.5">
-                  Message <span className="text-foreground/40">(optional)</span>
-                </p>
-                <Textarea
-                  placeholder="e.g. This slot is taken, please choose from the options below."
-                  value={suggestionMessage}
-                  onChange={(e) => setSuggestionMessage(e.target.value)}
-                  rows={3}
-                  className="resize-none text-sm"
-                />
-              </div>
-            )}
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">
+                Message <span className="text-foreground/40">(optional)</span>
+              </p>
+              <Textarea
+                placeholder="e.g. This slot is taken, please choose from the options below."
+                value={suggestionMessage}
+                onChange={(e) => setSuggestionMessage(e.target.value)}
+                rows={3}
+                className="resize-none text-sm"
+              />
+            </div>
 
             <div className="flex items-center justify-end gap-2 pt-1">
               <Button
