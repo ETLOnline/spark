@@ -183,7 +183,7 @@ export function EngagementDetail({
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-muted-foreground">Space</span>
               <Link
-                href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}`}
+                href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}`}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group"
               >
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -273,7 +273,7 @@ export function EngagementDetail({
               hasSpace &&
               (e.isSpaceArchived ? (
                 <Link
-                  href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
+                  href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
                   className="w-full"
                 >
                   <Button variant="outline" className="w-full">
@@ -284,7 +284,7 @@ export function EngagementDetail({
               ) : (
                 <>
                   <Link
-                    href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}`}
+                    href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}`}
                     className="w-full"
                   >
                     <Button variant="outline" className="w-full">
@@ -311,7 +311,7 @@ export function EngagementDetail({
             {/* Mentee: Go to space button (always visible, space may be archived for this session) */}
             {!e.isMentor && hasSpace && (
               <Link
-                href={`/mentorship/${e.spaceCreatedBy}/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
+                href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
                 className="w-full"
               >
                 <Button variant="outline" className="w-full">

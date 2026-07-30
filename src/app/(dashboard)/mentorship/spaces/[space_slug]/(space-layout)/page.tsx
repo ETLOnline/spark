@@ -8,7 +8,6 @@ import SpaceFeatures from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/
 
 interface Props {
   params: Promise<{
-    userId: string
     space_slug: string
   }>
   searchParams: Promise<{ session?: string }>

@@ -123,7 +123,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   )
   const spaceBasePath = space.channel?.channel_slug
     ? `./spaces/${encodedSpaceSlug}`
-    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
+    : `/mentorship/spaces/${encodedSpaceSlug}`
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",

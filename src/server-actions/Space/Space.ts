@@ -99,9 +99,7 @@ export const CreateSpaceAction = CreateServerAction(
 
       const spaceURL = GetSpaceURL(
         spaceWithRelations?.channel?.channel_slug || "",
-        spaceWithRelations?.space_slug || "",
-        undefined,
-        spaceWithRelations?.created_by
+        spaceWithRelations?.space_slug || ""
       )
 
       await AddRewardAction(

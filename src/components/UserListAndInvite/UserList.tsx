@@ -435,7 +435,7 @@ export default function ChannelUserList({
                   ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
                   : (entity as SelectSpace).channel?.channel_slug
                     ? `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
-                    : `/mentorship/${(entity as SelectSpace).created_by}/spaces/${(entity as SelectSpace).space_slug}`
+                    : `/mentorship/spaces/${(entity as SelectSpace).space_slug}`
             }
             className="truncate max-w-full"
           >

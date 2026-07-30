@@ -103,8 +103,7 @@ export const CreateNewFileAction = CreateServerAction(
       const URL = GetSpaceURL(
         space?.channel?.channel_slug || "",
         space?.space_slug || "",
-        "file-sharing",
-        space?.created_by
+        "file-sharing"
       )
       await AddRewardAction(ActivityTypes.SpaceFileShare, user.unique_id, URL)
 

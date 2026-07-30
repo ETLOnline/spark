@@ -77,9 +77,7 @@ function SpaceOverview({
         if (response?.success && response?.data) {
           const spaceURL = GetSpaceURL(
             space.channel?.channel_slug || "",
-            space.space_slug,
-            undefined,
-            space.created_by
+            space.space_slug
           )
 
           await AddRewardAction(
@@ -113,6 +111,10 @@ function SpaceOverview({
     }
   }
 
+  const slugForShortcut = space.channel?.channel_slug
+    ? `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
+    : `mentorship/spaces/${encodedSpaceSlug}`
+
   return (
     <div className="w-full">
       <div className="bg-background border-b px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
@@ -126,7 +128,7 @@ function SpaceOverview({
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
+              slug: slugForShortcut,
               title: `${space?.space_name}`,
               entity_id: space?.id
             }}

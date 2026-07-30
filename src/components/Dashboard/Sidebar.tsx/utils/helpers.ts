@@ -61,7 +61,7 @@ export const getProjectCrumbsMapped = (
 ) => {
   const projectsCrumbUrl = currSpace?.channel?.channel_slug
     ? `/channels/${currSpace.channel.channel_slug}/spaces/${currSpace?.space_slug}?page-type=project-management`
-    : `/mentorship/${currSpace?.created_by}/spaces/${currSpace?.space_slug}?page-type=project-management`
+    : `/mentorship/spaces/${currSpace?.space_slug}?page-type=project-management`
 
   return projects.flatMap((p) => [
     {

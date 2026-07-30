@@ -442,12 +442,11 @@ export const isValidInviteLink = (link: string) => {
 export function GetSpaceURL(
   channel_slug: string,
   space_slug: string,
-  page?: string,
-  createdBy?: string
+  page?: string
 ) {
   let path = channel_slug
     ? `/channels/${channel_slug}/spaces/${space_slug}`
-    : `/mentorship/${createdBy}/spaces/${space_slug}`
+    : `/mentorship/spaces/${space_slug}`
 
   if (page) {
     path += `?page-type=${page}`
