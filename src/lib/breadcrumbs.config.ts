@@ -4,7 +4,6 @@ import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
-import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 
 /**
  * Defines the structure for a single breadcrumb configuration item.
@@ -234,40 +233,19 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
     href: "/mentors",
     children: [
       {
-        path: "/[userId]",
-        dynamicLabelFetcher: async (userId: string) => {
-          try {
-            const res = await FindUserByUniqueIdAction(userId)
-            const user = res?.data
-            const label = user
-              ? `${user.first_name} ${user.last_name}`.trim() || userId
-              : userId
-            return [{ label, href: `/profile/${userId}` }]
-          } catch {
-            return [{ label: userId, href: `/profile/${userId}` }]
-          }
-        },
+        path: "/spaces",
+        label: "Spaces",
         children: [
           {
-            path: "/spaces",
-            label: "Spaces",
-            children: [
-              {
-                path: "/[space_slug]",
-                dynamicLabelFetcher: async (spaceSlug: string) => {
-                  try {
-                    const space = await GetSpaceBySlugAction(
-                      spaceSlug,
-                      "",
-                      true
-                    )
-                    return space?.data?.space_name || spaceSlug
-                  } catch {
-                    return spaceSlug
-                  }
-                }
+            path: "/[space_slug]",
+            dynamicLabelFetcher: async (spaceSlug: string) => {
+              try {
+                const space = await GetSpaceBySlugAction(spaceSlug, "", true)
+                return space?.data?.space_name || spaceSlug
+              } catch {
+                return spaceSlug
               }
-            ]
+            }
           }
         ]
       }

@@ -6,7 +6,6 @@ import React from "react"
 
 interface Props {
   params: Promise<{
-    userId: string
     space_slug: string
   }>
 }

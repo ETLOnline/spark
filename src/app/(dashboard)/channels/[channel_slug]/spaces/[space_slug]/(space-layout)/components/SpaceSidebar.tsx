@@ -161,7 +161,7 @@ function SpaceSidebar({ space }: Props) {
   )
   const basePath = space.channel?.channel_slug
     ? `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
-    : `/mentorship/${authUser?.unique_id}/spaces/${encodedSpaceSlug}`
+    : `/mentorship/spaces/${encodedSpaceSlug}`
 
   const canViewChat = permissionChecker?.canAccess("space.chat.view") ?? false
   const canViewPost =

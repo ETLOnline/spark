@@ -31,9 +31,7 @@ export const attachSpaceFeaturesAction = CreateServerAction(
 
       const spaceURL = GetSpaceURL(
         space?.channel?.channel_slug || "",
-        space?.space_slug || "",
-        undefined,
-        space?.created_by
+        space?.space_slug || ""
       )
 
       await AddRewardAction(

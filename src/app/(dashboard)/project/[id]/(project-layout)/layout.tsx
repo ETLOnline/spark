@@ -69,7 +69,7 @@ async function layout({ children, params }: Props) {
           pageHref={
             currSpace.data?.channel?.channel_slug
               ? `/channels/${currSpace.data.channel.channel_slug}/spaces/${currSpace.data?.space_slug}?page-type=project-management`
-              : `/mentorship/${currSpace.data?.created_by}/spaces/${currSpace.data?.space_slug}?page-type=project-management`
+              : `/mentorship/spaces/${currSpace.data?.space_slug}?page-type=project-management`
           }
         />
       )}

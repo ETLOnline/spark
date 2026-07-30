@@ -740,7 +740,7 @@ export default function ProfileScreen({
                   {activeSpaces.slice(0, 3).map((space) => (
                     <Link
                       key={space.id}
-                      href={`/mentorship/${space.created_by}/spaces/${encodeURIComponent(space.space_slug)}`}
+                      href={`/mentorship/spaces/${encodeURIComponent(space.space_slug)}`}
                       className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <span className="truncate">{space.space_name}</span>
@@ -748,10 +748,7 @@ export default function ProfileScreen({
                     </Link>
                   ))}
 
-                  <Link
-                    href={`/mentorship/${user.unique_id}/spaces`}
-                    className="w-full"
-                  >
+                  <Link href="/mentorship/spaces" className="w-full">
                     <Button variant="outline" className="w-full mt-2" size="sm">
                       Show All Spaces
                     </Button>
