@@ -7,7 +7,12 @@ import { ArrowLeft, ArrowRight, Users } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { Button } from "@/src/components/ui/button"
 import { Skeleton } from "@/src/components/ui/skeleton"
-import { Engagement, EngagementStatus, FeedbackItem } from "./types"
+import {
+  deriveEngagementStatus,
+  Engagement,
+  EngagementStatus,
+  FeedbackItem
+} from "./types"
 import { StatusPill } from "./StatusPill"
 import { EngagementDetail } from "./EngagementDetail"
 import { CompletionDialog } from "./CompletionDialog"
@@ -145,10 +150,14 @@ export function EngagementListingScreen() {
   const reload = async (keepId?: number) => {
     const res = await fetchEngagements()
     if (res?.success && res.data) {
-      setEngagements(res.data)
+      const data = res.data.map((e) => ({
+        ...e,
+        status: deriveEngagementStatus(e)
+      }))
+      setEngagements(data)
       const keep = keepId
-        ? (res.data.find((e) => e.id === keepId) ?? res.data[0])
-        : (res.data.find((e) => e.status === "overdue") ?? res.data[0])
+        ? (data.find((e) => e.id === keepId) ?? data[0])
+        : (data.find((e) => e.status === "overdue") ?? data[0])
       setSelected(keep ?? null)
     }
   }

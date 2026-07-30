@@ -1,4 +1,22 @@
+import moment from "moment-timezone"
+
 export type EngagementStatus = "upcoming" | "overdue" | "completed"
+
+export function deriveEngagementStatus(
+  e: Pick<
+    Engagement,
+    | "sessionDate"
+    | "endTime"
+    | "isViewerConfirmed"
+    | "feedbackSubmittedByViewer"
+  >
+): EngagementStatus {
+  const end = moment(`${e.sessionDate} ${e.endTime}`, "YYYY-MM-DD HH:mm")
+  if (end.isAfter(moment())) return "upcoming"
+  return e.isViewerConfirmed && e.feedbackSubmittedByViewer
+    ? "completed"
+    : "overdue"
+}
 
 export interface FeedbackItem {
   id: number

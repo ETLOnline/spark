@@ -662,19 +662,14 @@ export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
 // ── Engagements ─────────────────────────────────────────────────────────────────
 
 function deriveEngagementStatus(
-  sessionDate: string,
-  endTime: string,
   viewerId: string,
   confirmations: Record<string, string>,
   submitters: string[]
 ): EngagementStatus {
-  const end = moment(`${sessionDate} ${endTime}`, "YYYY-MM-DD HH:mm")
-  if (end.isAfter(moment())) return "upcoming"
-
   const viewerConfirmed = !!confirmations[viewerId]
   const viewerSubmitted = submitters.includes(viewerId)
 
-  return viewerConfirmed && viewerSubmitted ? "completed" : "overdue"
+  return viewerConfirmed && viewerSubmitted ? "completed" : "upcoming"
 }
 
 type SessionRequestRow = Awaited<
@@ -716,13 +711,7 @@ function buildEngagement(
     startTime: req.start_time,
     endTime: req.end_time,
     sessionType: req.session_type as "1:1" | "group",
-    status: deriveEngagementStatus(
-      req.session_date,
-      req.end_time,
-      viewerId,
-      confirmations,
-      feedbackSubmitters
-    ),
+    status: deriveEngagementStatus(viewerId, confirmations, feedbackSubmitters),
     counterpart: {
       name: `${firstName} ${lastName}`.trim() || "Unknown",
       role: roleParts.join(" · ") || (isMentor ? "Mentee" : "Mentor"),
