@@ -11,6 +11,7 @@ import NotificationProvider from "../services/notifications/NotificationProvider
 import { Suspense } from "react"
 import ReferralHandler from "../components/common/GetReferral"
 import RewardNotification from "../components/common/rewards/RewardNotification"
+import TimezoneInitializer from "../components/common/TimezoneInitializer"
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
       <AuthInitializer />
+      <TimezoneInitializer />
       <Suspense>
         <ReferralHandler />
       </Suspense>
