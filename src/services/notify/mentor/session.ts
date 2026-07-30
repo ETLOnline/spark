@@ -11,7 +11,9 @@ export async function notifySessionSlotSuggested(
   if (!request.mentee) return
 
   const siteLogo = getSiteLogoUrl()
-  const sessionLink = createAbsoluteUrl(`/mentors`)
+  const sessionLink = createAbsoluteUrl(
+    `/profile/${request.mentor_id}/availability`
+  )
   const mentorName = request.mentor
     ? `${request.mentor.first_name} ${request.mentor.last_name}`
     : "Your mentor"
