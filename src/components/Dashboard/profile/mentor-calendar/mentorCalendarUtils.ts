@@ -215,6 +215,34 @@ export function myRescheduledRequestFor(
   )
 }
 
+/** Human-readable dates from a slot_suggested request's suggested_slot_ids
+ * ("slotId-YYYY-MM-DD" occurrence keys) — e.g. "Aug 7, 2026" or "Aug 7 or Aug 14, 2026". */
+export function formatSuggestedSlotDates(request: SelectSessionRequest) {
+  const keys = (request.suggested_slot_ids ?? []) as unknown as string[]
+  const dates = Array.from(new Set(keys.map((key) => key.slice(-10)))).sort()
+  return dates
+    .map((d) => moment(d, "YYYY-MM-DD").format("MMM D, YYYY"))
+    .join(" or ")
+}
+
+/** The viewer's own rejected request overlapping this slot's window on this date. */
+export function myRejectedRequestFor(
+  slot: SelectMentorAvailability,
+  date: Date,
+  myRequests: SelectSessionRequest[]
+) {
+  const dateStr = moment(date).format("YYYY-MM-DD")
+  const slotStart = toMins(slot.start_time)
+  const slotEnd = toMins(slot.end_time)
+  return myRequests.find(
+    (r) =>
+      requestAppliesToDate(r, dateStr) &&
+      r.status === "rejected" &&
+      toMins(r.start_time) < slotEnd &&
+      slotStart < toMins(r.end_time)
+  )
+}
+
 /** Every accepted booking THIS mentee has within the slot's window on this
  * date — a mentee can hold more than one confirmed hour in a longer slot. */
 export function myAcceptedRequestsFor(

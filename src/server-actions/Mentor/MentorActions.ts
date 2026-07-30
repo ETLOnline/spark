@@ -560,7 +560,8 @@ export const RespondToSessionRequestAction = CreateServerAction(
   async (
     requestId: number,
     status: "accepted" | "rejected",
-    spaceId?: string | null
+    spaceId?: string | null,
+    rejectReason?: string
   ) => {
     try {
       const authUser = await AuthUserAction()
@@ -577,7 +578,8 @@ export const RespondToSessionRequestAction = CreateServerAction(
       const updated = await UpdateSessionRequestStatus(
         requestId,
         status,
-        spaceId
+        spaceId,
+        rejectReason
       )
 
       const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
@@ -589,7 +591,9 @@ export const RespondToSessionRequestAction = CreateServerAction(
         body:
           status === "accepted"
             ? `${mentorName} accepted your session request: "${request.topic}"`
-            : `${mentorName} declined your session request: "${request.topic}"`,
+            : rejectReason
+              ? `${mentorName} declined your session request: "${request.topic}" — ${rejectReason}`
+              : `${mentorName} declined your session request: "${request.topic}"`,
         deep_link: createAbsoluteUrl(
           `/profile/${request.mentor_id}/availability`
         ),
@@ -607,7 +611,11 @@ export const RespondToSessionRequestAction = CreateServerAction(
         template: responseTemplate
       })
 
-      await createSessionResponseEmailNotification(request, mentorName, status)
+      await createSessionResponseEmailNotification(
+        updated ?? request,
+        mentorName,
+        status
+      )
 
       return { success: true, data: updated }
     } catch (error) {
