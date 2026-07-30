@@ -19,7 +19,11 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import StarterKit from "@tiptap/starter-kit"
 import { Editor } from "@tiptap/react"
-import { GetSpaceURL, normalizeHTML } from "@/src/utils/helpers"
+import {
+  getSpaceBasePath,
+  GetSpaceURL,
+  normalizeHTML
+} from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
@@ -46,11 +50,6 @@ function SpaceOverview({
 
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
-
-  const encodedChannelSlug = encodeURIComponent(
-    space.channel?.channel_slug ?? ""
-  )
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
 
   useEffect(() => {
     if (space.overview) {
@@ -111,9 +110,10 @@ function SpaceOverview({
     }
   }
 
-  const slugForShortcut = space.channel?.channel_slug
-    ? `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
-    : `mentorship/spaces/${encodedSpaceSlug}`
+  const slugForShortcut = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
+  )
 
   return (
     <div className="w-full">
