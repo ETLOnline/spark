@@ -661,20 +661,22 @@ export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
 
 // ── Engagements ─────────────────────────────────────────────────────────────────
 
+/** Whether the session is "upcoming" vs "overdue" depends on the current
+ * time, which the server can't correctly evaluate for every viewer's intended
+ * timezone — the frontend recomputes this (see deriveEngagementStatus in
+ * profile/engagements/types.ts) using its Asia/Karachi default. This only
+ * determines the time-independent piece: fully confirmed + submitted means
+ * "completed" regardless of timezone; everything else is a placeholder the
+ * client corrects. */
 function deriveEngagementStatus(
-  sessionDate: string,
-  endTime: string,
   viewerId: string,
   confirmations: Record<string, string>,
   submitters: string[]
 ): EngagementStatus {
-  const end = moment(`${sessionDate} ${endTime}`, "YYYY-MM-DD HH:mm")
-  if (end.isAfter(moment())) return "upcoming"
-
   const viewerConfirmed = !!confirmations[viewerId]
   const viewerSubmitted = submitters.includes(viewerId)
 
-  return viewerConfirmed && viewerSubmitted ? "completed" : "overdue"
+  return viewerConfirmed && viewerSubmitted ? "completed" : "upcoming"
 }
 
 type SessionRequestRow = Awaited<
@@ -716,13 +718,7 @@ function buildEngagement(
     startTime: req.start_time,
     endTime: req.end_time,
     sessionType: req.session_type as "1:1" | "group",
-    status: deriveEngagementStatus(
-      req.session_date,
-      req.end_time,
-      viewerId,
-      confirmations,
-      feedbackSubmitters
-    ),
+    status: deriveEngagementStatus(viewerId, confirmations, feedbackSubmitters),
     counterpart: {
       name: `${firstName} ${lastName}`.trim() || "Unknown",
       role: roleParts.join(" · ") || (isMentor ? "Mentee" : "Mentor"),
