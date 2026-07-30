@@ -113,6 +113,10 @@ function SpaceOverview({
     }
   }
 
+  const slugForShortcut = space.channel?.channel_slug
+    ? `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
+    : `mentorship/${authUser?.unique_id}/spaces/${encodedSpaceSlug}`
+
   return (
     <div className="w-full">
       <div className="bg-background border-b px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
@@ -126,7 +130,7 @@ function SpaceOverview({
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
+              slug: slugForShortcut,
               title: `${space?.space_name}`,
               entity_id: space?.id
             }}

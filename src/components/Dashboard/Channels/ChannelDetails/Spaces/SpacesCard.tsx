@@ -32,7 +32,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
   const encodedSpaceSlug = encodeURIComponent(space.space_slug)
   const spaceHref = space.channel?.channel_slug
     ? `./spaces/${encodedSpaceSlug}`
-    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
+    : `/mentorship/${user?.unique_id}/spaces/${encodedSpaceSlug}`
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
