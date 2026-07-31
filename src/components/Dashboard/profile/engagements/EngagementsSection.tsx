@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, CalendarDays } from "lucide-react"
 import { cn } from "@/src/lib/utils"
-import { Engagement } from "./types"
+import { deriveEngagementStatus, Engagement } from "./types"
 import { StatusPill } from "./StatusPill"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetEngagementsAction } from "@/src/server-actions/Mentor/MentorActions"
@@ -55,8 +55,12 @@ export function EngagementsSection() {
     const load = async () => {
       const res = await fetchEngagements()
       if (res?.success && res.data) {
-        setTotal(res.data.length)
-        setEngagements(res.data.slice(0, 2))
+        const data = res.data.map((e) => ({
+          ...e,
+          status: deriveEngagementStatus(e)
+        }))
+        setTotal(data.length)
+        setEngagements(data.slice(0, 2))
       }
     }
     load()

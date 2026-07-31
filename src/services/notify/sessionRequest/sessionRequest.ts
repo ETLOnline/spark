@@ -49,6 +49,7 @@ export async function createSessionResponseEmailNotification(
   const menteeRes = await FindUserByUniqueIdAction(request.mentee_id)
   if (!menteeRes.data?.email) return
 
+  const accepted = status === "accepted"
   const payload = {
     logoUrl: getSiteLogoUrl(),
     mentorName,
@@ -57,7 +58,15 @@ export async function createSessionResponseEmailNotification(
     topic: request.topic,
     slotText: formatSlotText(request),
     ctaLink: createAbsoluteUrl(`/profile/${request.mentor_id}/availability`),
-    accepted: status === "accepted"
+    statusLabel: accepted ? "Accepted" : "Declined",
+    headerBgColor: accepted ? "#51ecdc" : "#f1f5f9",
+    actionVerb: accepted ? "accepted" : "declined",
+    slotLabel: accepted ? "Confirmed" : "Requested",
+    ctaText: accepted ? "View Session" : "Find Another Slot",
+    footerText: accepted
+      ? "Log in to see the full details."
+      : "Feel free to browse this mentor's availability and pick a different time.",
+    rejectReason: status === "rejected" ? request.reject_reason : null
   }
 
   await AddToQueue({
