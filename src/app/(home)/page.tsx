@@ -869,9 +869,9 @@ export default function HomePage() {
           </section>
         ) : null}
         {/* Find a Mentor Section */}
-        <section id="mentors" className="scroll-mt-16">
+        <section id="mentors">
           <div className="bg-gradient-to-br from-primary/30 via-primary/10 to-secondary/20 border-y-2 border-primary/30 shadow-inner dark:from-background dark:via-background dark:to-primary/5 dark:border-none dark:shadow-none">
-            <div className="container mx-auto px-4 py-16">
+            <div className="container mx-auto px-4 py-24">
               {/* Animated Badge */}
               <motion.div
                 className="flex justify-center pb-8"
