@@ -560,7 +560,8 @@ export const RespondToSessionRequestAction = CreateServerAction(
   async (
     requestId: number,
     status: "accepted" | "rejected",
-    spaceId?: string | null
+    spaceId?: string | null,
+    rejectReason?: string
   ) => {
     try {
       const authUser = await AuthUserAction()
@@ -577,7 +578,8 @@ export const RespondToSessionRequestAction = CreateServerAction(
       const updated = await UpdateSessionRequestStatus(
         requestId,
         status,
-        spaceId
+        spaceId,
+        rejectReason
       )
 
       const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
@@ -589,7 +591,9 @@ export const RespondToSessionRequestAction = CreateServerAction(
         body:
           status === "accepted"
             ? `${mentorName} accepted your session request: "${request.topic}"`
-            : `${mentorName} declined your session request: "${request.topic}"`,
+            : rejectReason
+              ? `${mentorName} declined your session request: "${request.topic}" — ${rejectReason}`
+              : `${mentorName} declined your session request: "${request.topic}"`,
         deep_link: createAbsoluteUrl(
           `/profile/${request.mentor_id}/availability`
         ),
@@ -607,7 +611,11 @@ export const RespondToSessionRequestAction = CreateServerAction(
         template: responseTemplate
       })
 
-      await createSessionResponseEmailNotification(request, mentorName, status)
+      await createSessionResponseEmailNotification(
+        updated ?? request,
+        mentorName,
+        status
+      )
 
       return { success: true, data: updated }
     } catch (error) {
@@ -654,19 +662,14 @@ export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
 // ── Engagements ─────────────────────────────────────────────────────────────────
 
 function deriveEngagementStatus(
-  sessionDate: string,
-  endTime: string,
   viewerId: string,
   confirmations: Record<string, string>,
   submitters: string[]
 ): EngagementStatus {
-  const end = moment(`${sessionDate} ${endTime}`, "YYYY-MM-DD HH:mm")
-  if (end.isAfter(moment())) return "upcoming"
-
   const viewerConfirmed = !!confirmations[viewerId]
   const viewerSubmitted = submitters.includes(viewerId)
 
-  return viewerConfirmed && viewerSubmitted ? "completed" : "overdue"
+  return viewerConfirmed && viewerSubmitted ? "completed" : "upcoming"
 }
 
 type SessionRequestRow = Awaited<
@@ -708,13 +711,7 @@ function buildEngagement(
     startTime: req.start_time,
     endTime: req.end_time,
     sessionType: req.session_type as "1:1" | "group",
-    status: deriveEngagementStatus(
-      req.session_date,
-      req.end_time,
-      viewerId,
-      confirmations,
-      feedbackSubmitters
-    ),
+    status: deriveEngagementStatus(viewerId, confirmations, feedbackSubmitters),
     counterpart: {
       name: `${firstName} ${lastName}`.trim() || "Unknown",
       role: roleParts.join(" · ") || (isMentor ? "Mentee" : "Mentor"),

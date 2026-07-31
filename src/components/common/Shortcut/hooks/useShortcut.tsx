@@ -192,6 +192,12 @@ const useShortcut = () => {
         s.space.channel?.channel_slug
       ) {
         slugToUse = `${s.space.channel.channel_slug}/spaces/${s.space.space_slug}`
+      } else if (
+        shortcut.type === "space" &&
+        s.space?.space_slug &&
+        !s.space.channel?.channel_slug
+      ) {
+        slugToUse = shortcut.url
       } else if (shortcut.type === "project" && s.project?.project_slug) {
         slugToUse = s.project.id
       }
@@ -199,7 +205,9 @@ const useShortcut = () => {
       const encodedUrl = encodeURIComponent(slugToUse)
       switch (shortcut.type) {
         case "space":
-          shortcut.url = `/channels/${slugToUse}`
+          shortcut.url = s.space?.channel?.channel_slug
+            ? `channels/${slugToUse}`
+            : `/${slugToUse}`
           break
         case "channel":
           shortcut.url = `/channels/${encodedUrl}/spaces`

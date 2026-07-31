@@ -258,6 +258,8 @@ export const sessionRequestsTable = pgTable("session_requests", {
   space_id: varchar("space_id", { length: 36 }).references(
     () => spacesTable.id
   ),
+  // Populated when mentor rejects the request
+  reject_reason: varchar("reject_reason"),
   // Populated when mentor suggests alternative slots
   suggestion_message: text("suggestion_message"),
   suggested_slot_ids: jsonb("suggested_slot_ids").$type<number[]>(),

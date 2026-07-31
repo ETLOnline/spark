@@ -34,6 +34,7 @@ import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
+import { getSpaceBasePath } from "@/src/utils/helpers"
 import {
   Sheet,
   SheetContent,
@@ -155,13 +156,10 @@ function SpaceSidebar({ space }: Props) {
     space?.id
   )
 
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
-  const encodedChannelSlug = encodeURIComponent(
-    space.channel?.channel_slug ?? ""
+  const basePath = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
   )
-  const basePath = space.channel?.channel_slug
-    ? `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
-    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
 
   const canViewChat = permissionChecker?.canAccess("space.chat.view") ?? false
   const canViewPost =

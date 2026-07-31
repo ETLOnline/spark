@@ -360,7 +360,7 @@ export function MentorCalendar({
     const firstStart = startOptions[0] ?? slot.start_time
     setRequestStartTime(firstStart)
     const fitting = getDurationOptions(slot, firstStart, unavailable)
-    setRequestDuration(fitting[0] ?? 60)
+    setRequestDuration(fitting[0] ?? MIN_DURATION_MINS)
   }
 
   const confirmSuggestedSlot = async (
@@ -408,7 +408,7 @@ export function MentorCalendar({
     )
     const fitting = getDurationOptions(requestFormSlot, value, unavailable)
     if (!fitting.includes(requestDuration)) {
-      setRequestDuration(fitting[0] ?? 60)
+      setRequestDuration(fitting[0] ?? MIN_DURATION_MINS)
     }
   }
 

@@ -8,7 +8,7 @@ import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import { getProjectUsers } from "@/src/db/data-access/project-management/query"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { GetSpaceByIdAction } from "@/src/server-actions/Space/Space"
-import { isSuperAdmin } from "@/src/utils/helpers"
+import { getSpaceBasePath, isSuperAdmin } from "@/src/utils/helpers"
 import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 
 interface Props {
@@ -66,11 +66,10 @@ async function layout({ children, params }: Props) {
       ) : (
         <PrivatePage
           page="project"
-          pageHref={
-            currSpace.data?.channel?.channel_slug
-              ? `/channels/${currSpace.data.channel.channel_slug}/spaces/${currSpace.data?.space_slug}?page-type=project-management`
-              : `/mentorship/${currSpace.data?.created_by}/spaces/${currSpace.data?.space_slug}?page-type=project-management`
-          }
+          pageHref={`${getSpaceBasePath(
+            currSpace.data?.channel?.channel_slug,
+            currSpace.data?.space_slug ?? ""
+          )}?page-type=project-management`}
         />
       )}
     </div>

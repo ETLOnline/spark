@@ -2,25 +2,11 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { isSuperAdmin } from "@/src/utils/helpers"
 import MentorSpacesList from "./components/MentorSpacesList"
 
-interface Props {
-  params: Promise<{
-    userId: string
-  }>
-}
-
-export default async function MentorSpacesPage({ params }: Props) {
-  const { userId } = await params
-
+export default async function MentorSpacesPage() {
   const authUser = await AuthUserAction()
   if (!authUser) redirect("/sign-in")
-
-  const superAdmin = await isSuperAdmin(authUser)
-  if (authUser.unique_id !== userId && !superAdmin) {
-    redirect("/profile")
-  }
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -40,7 +26,7 @@ export default async function MentorSpacesPage({ params }: Props) {
       </div>
 
       <div className="flex-1 p-4">
-        <MentorSpacesList userId={userId} />
+        <MentorSpacesList userId={authUser.unique_id} />
       </div>
     </div>
   )

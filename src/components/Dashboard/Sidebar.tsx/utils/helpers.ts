@@ -1,5 +1,5 @@
 import { SelectChannel, SelectProject, SelectSpace } from "@/src/db/schema"
-import { ToUpperCase } from "@/src/utils/helpers"
+import { getSpaceBasePath, ToUpperCase } from "@/src/utils/helpers"
 import { GanttChart, Hash } from "lucide-react"
 
 export const getSpaceNavMapped = (
@@ -59,9 +59,10 @@ export const getProjectCrumbsMapped = (
   pathname: string,
   currSpace?: SelectSpace
 ) => {
-  const projectsCrumbUrl = currSpace?.channel?.channel_slug
-    ? `/channels/${currSpace.channel.channel_slug}/spaces/${currSpace?.space_slug}?page-type=project-management`
-    : `/mentorship/${currSpace?.created_by}/spaces/${currSpace?.space_slug}?page-type=project-management`
+  const projectsCrumbUrl = `${getSpaceBasePath(
+    currSpace?.channel?.channel_slug,
+    currSpace?.space_slug ?? ""
+  )}?page-type=project-management`
 
   return projects.flatMap((p) => [
     {

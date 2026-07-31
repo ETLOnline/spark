@@ -31,7 +31,7 @@ function SessionRow({
   occurrence: SessionOccurrence["occurrence"]
 }) {
   const spaceHref = request.space
-    ? `/mentorship/${request.mentor_id}/spaces/${request.space.space_slug}`
+    ? `/mentorship/spaces/${request.space.space_slug}`
     : null
 
   return (

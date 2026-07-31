@@ -12,7 +12,6 @@ import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/U
 
 interface Props {
   params: Promise<{
-    userId: string
     space_slug: string
   }>
 }

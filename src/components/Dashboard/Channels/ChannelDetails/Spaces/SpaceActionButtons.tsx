@@ -1,4 +1,5 @@
 import { Button } from "@/src/components/ui/button"
+import { getSpaceBasePath } from "@/src/utils/helpers"
 import {
   Edit,
   ExternalLink,
@@ -117,13 +118,14 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
     }
   }
 
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
-  const encodeChannelSlug = encodeURIComponent(
-    space.channel?.channel_slug ?? ""
+  const spaceBasePath = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
   )
-  const spaceBasePath = space.channel?.channel_slug
-    ? `./spaces/${encodedSpaceSlug}`
-    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
+  const shortcutSlug = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
+  )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -238,7 +240,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
+              slug: shortcutSlug,
               title: `${space?.space_name}`,
               entity_id: space?.id
             }}

@@ -8,9 +8,8 @@ import {
 } from "@/src/components/ui/card"
 import { SelectSpace } from "@/src/db/schema"
 import SpacesActionButtons from "./SpaceActionButtons"
-import { userStore } from "@/src/store/user/userStore"
-import { useAtomValue } from "jotai"
 import { Badge } from "@/src/components/ui/badge"
+import { getSpaceBasePath } from "@/src/utils/helpers"
 import { Button } from "@/src/components/ui/button"
 import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
 import {
@@ -28,11 +27,10 @@ interface Props {
 }
 
 function SpacesCard({ space, setIsChannelMember }: Props) {
-  const user = useAtomValue(userStore.AuthUser)
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
-  const spaceHref = space.channel?.channel_slug
-    ? `./spaces/${encodedSpaceSlug}`
-    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
+  const spaceHref = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
+  )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",

@@ -9,7 +9,6 @@ import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 
 interface Props {
   params: Promise<{
-    userId: string
     space_slug: string
   }>
   children: React.ReactNode
@@ -20,7 +19,7 @@ async function Layout({ params, children }: Props) {
   const currentUserId = authUser?.unique_id
   const superAdmin = await isSuperAdmin(authUser)
 
-  const { userId, space_slug } = await params
+  const { space_slug } = await params
   const decodedSpaceSlug = decodeURIComponent(space_slug)
 
   const currentSpace = await GetSpaceBySlugAction(decodedSpaceSlug, "", true)
@@ -36,7 +35,12 @@ async function Layout({ params, children }: Props) {
   const showAccessDeniedOverlay =
     currentSpace.data?.space_type === "private" && !isUserMember && !superAdmin
   if (showAccessDeniedOverlay) {
-    return <PrivatePage page="space" pageHref={`/profile/${userId}`} />
+    return (
+      <PrivatePage
+        page="space"
+        pageHref={`/profile/${currentSpace.data.created_by}`}
+      />
+    )
   }
   return (
     <div className="min-h-[calc(100vh-6rem)] bg-background">

@@ -78,6 +78,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import { DetachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import { getSpaceBasePath, getSpacesListPath } from "@/src/utils/helpers"
 
 interface Props {
   entityType: "channel" | "space" | "community"
@@ -432,10 +433,11 @@ export default function ChannelUserList({
               entityType === "community"
                 ? `/communities/${(entity as CommunityDetailData).slug}`
                 : entityType === "channel"
-                  ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
-                  : (entity as SelectSpace).channel?.channel_slug
-                    ? `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
-                    : `/mentorship/${(entity as SelectSpace).created_by}/spaces/${(entity as SelectSpace).space_slug}`
+                  ? getSpacesListPath((entity as SelectChannel).channel_slug)
+                  : getSpaceBasePath(
+                      (entity as SelectSpace).channel?.channel_slug,
+                      (entity as SelectSpace).space_slug
+                    )
             }
             className="truncate max-w-full"
           >

@@ -475,7 +475,7 @@ export default function AcceptSessionRequestDialog({
                               {space.space_name}
                             </span>
                             {space.description && (
-                              <p className="text-sm text-muted-foreground truncate">
+                              <p className="text-sm text-muted-foreground ">
                                 {space.description}
                               </p>
                             )}

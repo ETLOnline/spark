@@ -19,7 +19,11 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import StarterKit from "@tiptap/starter-kit"
 import { Editor } from "@tiptap/react"
-import { GetSpaceURL, normalizeHTML } from "@/src/utils/helpers"
+import {
+  getSpaceBasePath,
+  GetSpaceURL,
+  normalizeHTML
+} from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
@@ -47,11 +51,6 @@ function SpaceOverview({
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
 
-  const encodedChannelSlug = encodeURIComponent(
-    space.channel?.channel_slug ?? ""
-  )
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
-
   useEffect(() => {
     if (space.overview) {
       setContent(space.overview)
@@ -77,9 +76,7 @@ function SpaceOverview({
         if (response?.success && response?.data) {
           const spaceURL = GetSpaceURL(
             space.channel?.channel_slug || "",
-            space.space_slug,
-            undefined,
-            space.created_by
+            space.space_slug
           )
 
           await AddRewardAction(
@@ -113,6 +110,11 @@ function SpaceOverview({
     }
   }
 
+  const slugForShortcut = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
+  )
+
   return (
     <div className="w-full">
       <div className="bg-background border-b px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
@@ -126,7 +128,7 @@ function SpaceOverview({
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
+              slug: slugForShortcut,
               title: `${space?.space_name}`,
               entity_id: space?.id
             }}
