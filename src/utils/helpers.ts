@@ -329,7 +329,11 @@ export const formatRelativeTime = (
     .fromNow()
 }
 
-export const getUserRole = (user: SelectUser, entity_id?: string) => {
+export const getUserRole = (
+  user: SelectUser | null | undefined,
+  entity_id?: string
+) => {
+  if (!user) return undefined
   if (user.roles && user.roles.length > 0) {
     if (user.roles.some((ur) => ur.role?.role_type === "SYSTEM")) {
       return user.roles.flatMap((ur) =>
@@ -435,17 +439,37 @@ export const isValidInviteLink = (link: string) => {
   }
 }
 
+/**
+ * Single source of truth for a space's base path. If `channel_slug` is
+ * present the space belongs to a channel, otherwise it's a mentorship
+ * space — every caller should go through this instead of re-deriving the URL.
+ * Anything beyond the base path (page-type query, relative form, trailing
+ * segments) is built by the caller on top of this.
+ */
+export function getSpaceBasePath(
+  channel_slug: string | null | undefined,
+  space_slug: string
+) {
+  const encodedSpaceSlug = encodeURIComponent(space_slug)
+  return channel_slug
+    ? `/channels/${encodeURIComponent(channel_slug)}/spaces/${encodedSpaceSlug}`
+    : `/mentorship/spaces/${encodedSpaceSlug}`
+}
+
+export function getSpacesListPath(channel_slug?: string | null) {
+  return channel_slug
+    ? `/channels/${encodeURIComponent(channel_slug)}/spaces`
+    : "/mentorship/spaces"
+}
+
 export function GetSpaceURL(
   channel_slug: string,
   space_slug: string,
   page?: string
 ) {
-  let path = `/channels/${channel_slug}/spaces/${space_slug}`
-
+  let path = getSpaceBasePath(channel_slug, space_slug)
   if (page) {
-    path = `/channels/${channel_slug}/spaces/${space_slug}?page-type=${page}`
+    path += `?page-type=${page}`
   }
-
-  const URL = createAbsoluteUrl(path)
-  return URL
+  return createAbsoluteUrl(path)
 }

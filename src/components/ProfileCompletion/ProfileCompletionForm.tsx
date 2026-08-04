@@ -14,6 +14,7 @@ import { StepThree } from "./StepThree"
 import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
+import { getUserRole } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { useRouter } from "next/navigation"
@@ -22,6 +23,9 @@ export default function ProfileCompletionForm() {
   const [step, setStep] = useState(1)
   const [user, setUser] = useState<SelectUser>()
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
+
+  const userIsMentor = !!getUserRole(user!)?.includes("Mentor")
+  const totalSteps = 4
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -45,32 +49,21 @@ export default function ProfileCompletionForm() {
   }, [])
 
   const steps = [
-    {
-      title: "Personal Info",
-      icon: "user"
-    },
-    {
-      title: "Education",
-      icon: "graduation-cap"
-    },
-    {
-      title: "Social Links",
-      icon: "link-2"
-    },
-    {
-      title: "Complete",
-      icon: "check-circle"
-    }
+    { title: "Personal Info", icon: "user" },
+    { title: "Education", icon: "graduation-cap" },
+    { title: "Social Links", icon: "link-2" },
+    { title: "Complete", icon: "check-circle" }
   ]
-  const progress = ((step - 1) / 3) * 100
+
+  const progress = ((step - 1) / (totalSteps - 1)) * 100
 
   const router = useRouter()
 
   useEffect(() => {
-    if (step === 4 && !isTrustEngineEnabled) {
+    if (step === totalSteps && !isTrustEngineEnabled) {
       router.push("/profile")
     }
-  }, [step, isTrustEngineEnabled, router])
+  }, [step, totalSteps, isTrustEngineEnabled, router])
 
   return (
     <Card className="w-full">
@@ -112,6 +105,7 @@ export default function ProfileCompletionForm() {
             setStep={setStep}
             user={user}
             setUser={setUser}
+            isMentor={userIsMentor}
           />
         )}
         {step === 2 && user && (
@@ -128,9 +122,13 @@ export default function ProfileCompletionForm() {
             setStep={setStep}
             user={user}
             setUser={setUser}
+            totalSteps={totalSteps}
+            isMentor={userIsMentor}
           />
         )}
-        {step === 4 && isTrustEngineEnabled && (
+
+        {/* Completion step */}
+        {step === totalSteps && isTrustEngineEnabled && (
           <OnboardingCompletion
             redirectTo="/profile"
             buttonLabel="Go to Profile"

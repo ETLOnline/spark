@@ -1,4 +1,5 @@
 import { Button } from "@/src/components/ui/button"
+import { getSpaceBasePath } from "@/src/utils/helpers"
 import {
   Edit,
   ExternalLink,
@@ -117,9 +118,13 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
     }
   }
 
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
-  const encodeChannelSlug = encodeURIComponent(
-    space.channel?.channel_slug ?? ""
+  const spaceBasePath = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
+  )
+  const shortcutSlug = getSpaceBasePath(
+    space.channel?.channel_slug,
+    space.space_slug
   )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -184,9 +189,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => router.push(`./spaces/${encodedSpaceSlug}`)}
-          >
+          <DropdownMenuItem onClick={() => router.push(spaceBasePath)}>
             <ExternalLink className="mr-2 h-4 w-4" />
             Open Space
           </DropdownMenuItem>
@@ -219,7 +222,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           )}
           {canViewSpaceUsers && (
             <DropdownMenuItem
-              onClick={() => router.push(`./spaces/${encodedSpaceSlug}/users`)}
+              onClick={() => router.push(`${spaceBasePath}/users`)}
             >
               <User className="mr-2 h-4 w-4" />
               Users
@@ -227,9 +230,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           )}
           {canSetSpaceSetting && (
             <DropdownMenuItem
-              onClick={() =>
-                router.push(`./spaces/${encodedSpaceSlug}/settings`)
-              }
+              onClick={() => router.push(`${spaceBasePath}/settings`)}
             >
               <Settings className="mr-2 h-4 w-4" />
               Settings
@@ -239,7 +240,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
+              slug: shortcutSlug,
               title: `${space?.space_name}`,
               entity_id: space?.id
             }}

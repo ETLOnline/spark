@@ -1,0 +1,1 @@
+ALTER TABLE "session_requests" ADD COLUMN "reject_reason" varchar;

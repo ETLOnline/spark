@@ -98,7 +98,7 @@ const buildBreadcrumbsFromConfig = async (
     } else if (typeof displayLabelOrLabels === "string") {
       crumbs.push({
         label: displayLabelOrLabels,
-        href: segmentHref,
+        href: matchedConfigItem.href || segmentHref,
         isCurrent: false
       })
     }

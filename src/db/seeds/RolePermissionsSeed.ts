@@ -23,6 +23,10 @@ const userRolePermissions = [
       {
         namespace: "events",
         actions: [permissions.events.view]
+      },
+      {
+        namespace: "session",
+        actions: [permissions.session.request]
       }
     ]
   },
