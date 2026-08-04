@@ -11,8 +11,8 @@ import {
   Plus,
   RefreshCw,
   Sparkles,
-  Users,
-  Video
+  User,
+  Users
 } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
@@ -258,7 +258,7 @@ export function MentorCalendarGrid({
               ) : slot.session_type === "group" ? (
                 <Users className="h-2.5 w-2.5 shrink-0" />
               ) : (
-                <Video className="h-2.5 w-2.5 shrink-0" />
+                <User className="h-2.5 w-2.5 shrink-0" />
               )}
               <span className="truncate">
                 {suggested

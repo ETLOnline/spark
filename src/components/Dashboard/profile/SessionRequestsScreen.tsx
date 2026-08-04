@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import moment from "moment-timezone"
-import { CalendarDays, RefreshCw, Users, Video } from "lucide-react"
+import { CalendarDays, RefreshCw, User, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -288,7 +288,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                       {request.session_type === "group" ? (
                         <Users className="h-3 w-3" />
                       ) : (
-                        <Video className="h-3 w-3" />
+                        <User className="h-3 w-3" />
                       )}
                       {request.session_type === "group" ? "Group" : "1-on-1"}
                     </span>

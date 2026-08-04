@@ -1,7 +1,7 @@
 "use client"
 
 import moment from "moment-timezone"
-import { RefreshCw, Users, Video } from "lucide-react"
+import { RefreshCw, User, Users } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { cn } from "@/src/lib/utils"
@@ -76,7 +76,7 @@ export function AvailabilitySlotForm({
               {t === "group" ? (
                 <Users className="h-3.5 w-3.5" />
               ) : (
-                <Video className="h-3.5 w-3.5" />
+                <User className="h-3.5 w-3.5" />
               )}
               {t === "1:1" ? "1-on-1" : "Group"}
             </button>

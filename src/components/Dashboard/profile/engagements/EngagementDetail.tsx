@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
   Loader2,
   Star,
-  Video,
+  User,
   Users
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
@@ -161,7 +161,7 @@ export function EngagementDetail({
                 {e.sessionType === "group" ? (
                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
                 ) : (
-                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
+                  <User className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
                 {e.sessionType === "1:1" ? "1:1" : "Group"}
               </span>
