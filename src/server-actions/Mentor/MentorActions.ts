@@ -808,8 +808,9 @@ export const GetEngagementsAction = CreateServerAction(true, async () => {
     // Re-sort: overdue first, then upcoming, then completed (mirrors original desc date sort)
     const statusOrder: Record<EngagementStatus, number> = {
       overdue: 0,
-      upcoming: 1,
-      completed: 2
+      open: 1,
+      upcoming: 2,
+      completed: 3
     }
     engagements.sort(
       (a, b) =>

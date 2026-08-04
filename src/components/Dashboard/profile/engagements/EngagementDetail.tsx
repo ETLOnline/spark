@@ -55,7 +55,7 @@ export function EngagementDetail({
   feedbackItems = [],
   feedbackLoading = false
 }: EngagementDetailProps) {
-  const sessionLabel = `${moment(e.sessionDate).format("ddd MMM D")} · ${moment(e.startTime, "HH:mm").format("h:mm A")}`
+  const sessionLabel = `${moment(e.sessionDate).format("ddd MMM D")}, ${moment(e.startTime, "HH:mm").format("h:mm A")}-${moment(e.endTime, "HH:mm").format("h:mm A")}`
   const isCompleted = e.status === "completed"
   const isOverdue = e.status === "overdue"
   const hasSpace = !!(e.spaceId && e.spaceSlug && e.spaceCreatedBy)
