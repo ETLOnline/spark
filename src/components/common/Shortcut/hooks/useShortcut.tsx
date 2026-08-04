@@ -10,6 +10,7 @@ import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtom } from "jotai"
 import { useEffect } from "react"
+import { getSpaceBasePath } from "@/src/utils/helpers"
 
 const useShortcut = () => {
   const [shortcutList, setShortcutList] = useAtom(userStore.shortcuts)
@@ -186,13 +187,6 @@ const useShortcut = () => {
         slugToUse = s.community.slug
       } else if (shortcut.type === "channel" && s.channel?.channel_slug) {
         slugToUse = s.channel.channel_slug
-      } else if (
-        shortcut.type === "space" &&
-        s.space?.space_slug &&
-        s.space.channel?.channel_slug
-      ) {
-        slugToUse = `${s.space.channel.channel_slug}/spaces/${s.space.space_slug}`
-        console.log(s.space, "slugToUse")
       } else if (shortcut.type === "project" && s.project?.project_slug) {
         slugToUse = s.project.id
       }
@@ -200,7 +194,12 @@ const useShortcut = () => {
       const encodedUrl = encodeURIComponent(slugToUse)
       switch (shortcut.type) {
         case "space":
-          shortcut.url = `/channels/${slugToUse}`
+          shortcut.url = s.space?.space_slug
+            ? getSpaceBasePath(
+                s.space.channel?.channel_slug,
+                s.space.space_slug
+              )
+            : shortcut.url
           break
         case "channel":
           shortcut.url = `/channels/${encodedUrl}/spaces`

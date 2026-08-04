@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Network,
   Newspaper,
+  SearchCheck,
   Send,
   User,
   Group
@@ -74,6 +75,11 @@ export const siteRoutes: SiteRoutes = {
       title: "Communities",
       url: "/communities",
       icon: Group
+    },
+    {
+      title: "Find a Mentor",
+      url: "/mentors",
+      icon: SearchCheck
     }
   ],
   testNav: [

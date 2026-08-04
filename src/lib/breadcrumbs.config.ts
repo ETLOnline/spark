@@ -16,6 +16,12 @@ import { GetEventByIdAction } from "@/src/server-actions/events/event"
 export interface BreadcrumbConfigItem {
   path: string
   label?: string
+  /**
+   * Optional override for the breadcrumb link target when this segment's
+   * own URL path doesn't resolve to a real page (e.g. a static segment
+   * that should link elsewhere instead of its own non-existent route).
+   */
+  href?: string
   dynamicLabelFetcher?: (
     slugOrId: string,
     allParams?: Record<string, string | string[]>,
@@ -215,6 +221,31 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
           {
             path: "/task",
             label: "Task"
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    path: "/mentorship",
+    label: "Mentorship",
+    href: "/mentors",
+    children: [
+      {
+        path: "/spaces",
+        label: "Spaces",
+        children: [
+          {
+            path: "/[space_slug]",
+            dynamicLabelFetcher: async (spaceSlug: string) => {
+              try {
+                const space = await GetSpaceBySlugAction(spaceSlug, "", true)
+                return space?.data?.space_name || spaceSlug
+              } catch {
+                return spaceSlug
+              }
+            }
           }
         ]
       }

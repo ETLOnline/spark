@@ -131,6 +131,12 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   testedTasks: many(taskTable, {
     relationName: "taskTester"
+  }),
+  mentorSessionRequests: many(sessionRequestsTable, {
+    relationName: "sessionRequestToMentor"
+  }),
+  menteeSessionRequests: many(sessionRequestsTable, {
+    relationName: "sessionRequestToMentee"
   })
 }))
 
@@ -176,6 +182,16 @@ export const profileTable = pgTable("profile", {
   number_of_ratings: integer().default(0),
   total_average_rating: varchar().default("0"),
   is_profile_completed: integer().notNull().default(0),
+  fyp_status: varchar("fyp_status"),
+  learning_goals: text("learning_goals"),
+
+  professional_title: varchar("professional_title"),
+  company: varchar("company"),
+  engagement_type: varchar("engagement_type"),
+  is_mentor_active: boolean("is_mentor_active").notNull().default(false),
+  total_completed_sessions: integer("total_completed_sessions")
+    .notNull()
+    .default(0),
   ...timestamps
 })
 
@@ -191,6 +207,143 @@ export type InsertProfile = typeof profileTable.$inferInsert
 export type SelectProfile = typeof profileTable.$inferSelect & {
   user?: SelectUser
 }
+
+export const mentorAvailabilityTable = pgTable("mentor_availability", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  date: varchar("date").notNull(), // YYYY-MM-DD  (the anchor / start date)
+  start_time: varchar("start_time").notNull(),
+  end_time: varchar("end_time").notNull(),
+  session_type: varchar("session_type").notNull().default("1:1"),
+  repeat_type: varchar("repeat_type").notNull().default("none"), // "none" | "daily" | "weekly"
+  repeat_end_date: varchar("repeat_end_date"), // YYYY-MM-DD, nullable
+  is_active: boolean("is_active").notNull().default(true),
+  ...timestamps
+})
+
+export type InsertMentorAvailability =
+  typeof mentorAvailabilityTable.$inferInsert
+export type SelectMentorAvailability =
+  typeof mentorAvailabilityTable.$inferSelect
+
+export const mentorAvailabilityRelations = relations(
+  mentorAvailabilityTable,
+  ({ many }) => ({
+    sessionRequests: many(sessionRequestsTable, {
+      relationName: "mentorAvailabilityToRequests"
+    })
+  })
+)
+
+export const sessionRequestsTable = pgTable("session_requests", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  mentee_id: varchar("mentee_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  availability_slot_id: integer("availability_slot_id"),
+  session_date: varchar("session_date").notNull(), // YYYY-MM-DD (the anchor / first occurrence)
+  start_time: varchar("start_time").notNull(),
+  end_time: varchar("end_time").notNull(),
+  session_type: varchar("session_type").notNull(),
+  topic: varchar("topic").notNull(),
+  description: varchar("description"),
+  status: varchar("status").notNull().default("pending"),
+  repeat_type: varchar("repeat_type").notNull().default("none"), // "none" | "daily" | "weekly"
+  repeat_end_date: varchar("repeat_end_date"),
+  space_id: varchar("space_id", { length: 36 }).references(
+    () => spacesTable.id
+  ),
+  // Populated when mentor rejects the request
+  reject_reason: varchar("reject_reason"),
+  // Populated when mentor suggests alternative slots
+  suggestion_message: text("suggestion_message"),
+  suggested_slot_ids: jsonb("suggested_slot_ids").$type<number[]>(),
+  attendee_confirmations: jsonb("attendee_confirmations")
+    .$type<Record<string, string>>()
+    .default({}),
+  is_space_archived: boolean("is_space_archived").default(false),
+  ...timestamps
+})
+
+export const sessionRequestsRelations = relations(
+  sessionRequestsTable,
+  ({ one }) => ({
+    mentor: one(usersTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentor"
+    }),
+    mentee: one(usersTable, {
+      fields: [sessionRequestsTable.mentee_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentee"
+    }),
+    space: one(spacesTable, {
+      fields: [sessionRequestsTable.space_id],
+      references: [spacesTable.id],
+      relationName: "sessionRequestToSpace"
+    }),
+    availabilitySlot: one(mentorAvailabilityTable, {
+      fields: [sessionRequestsTable.availability_slot_id],
+      references: [mentorAvailabilityTable.id],
+      relationName: "sessionRequestToSlot"
+    }),
+    mentorAvailability: one(mentorAvailabilityTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [mentorAvailabilityTable.mentor_id],
+      relationName: "mentorAvailabilityToRequests"
+    })
+  })
+)
+
+export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect & {
+  mentor?: SelectUser
+  mentee?: SelectUser
+}
+
+export const mentorshipFeedbackTable = pgTable("mentorship_feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  session_request_id: integer("session_request_id")
+    .notNull()
+    .references(() => sessionRequestsTable.id, { onDelete: "cascade" }),
+  submitted_by: varchar("submitted_by")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  // Who this feedback is addressed to. null = group-wide (mentor's group session feedback)
+  recipient_id: varchar("recipient_id").references(() => usersTable.unique_id, {
+    onDelete: "cascade"
+  }),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  // "public" = visible to all session participants; "private" = only author + recipient
+  visibility: varchar("visibility").notNull().default("public"),
+  ...timestamps
+})
+
+export const mentorshipFeedbackRelations = relations(
+  mentorshipFeedbackTable,
+  ({ one }) => ({
+    sessionRequest: one(sessionRequestsTable, {
+      fields: [mentorshipFeedbackTable.session_request_id],
+      references: [sessionRequestsTable.id]
+    }),
+    submittedBy: one(usersTable, {
+      fields: [mentorshipFeedbackTable.submitted_by],
+      references: [usersTable.unique_id]
+    })
+  })
+)
+
+export type InsertMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferInsert
+export type SelectMentorshipFeedback =
+  typeof mentorshipFeedbackTable.$inferSelect
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -489,6 +642,7 @@ export const recommendationsTable = pgTable("recommendations", {
   rating: integer().notNull(),
   recommender_id: varchar(),
   receiver_id: varchar(),
+  type: varchar().default("manual").notNull(),
   ...timestamps
 })
 
@@ -837,9 +991,10 @@ export const spacesTable = pgTable("spaces", {
   space_slug: varchar().notNull(),
   space_name: varchar().notNull(),
   description: varchar(),
-  channel_id: varchar("channel_id", { length: 36 })
-    .references(() => channelsTable.id, { onDelete: "cascade" })
-    .notNull(),
+  channel_id: varchar("channel_id", { length: 36 }).references(
+    () => channelsTable.id,
+    { onDelete: "cascade" }
+  ),
   created_by: varchar().notNull(),
   ownerId: varchar(),
   space_type: varchar(),
@@ -876,7 +1031,7 @@ export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   posts?: SelectPost[]
   features?: SelectSpaceFeature[]
   owner?: SelectUser | null
-  channel?: SelectChannel
+  channel?: SelectChannel | null
   users?: SelectSpaceUser[]
 }
 
@@ -1033,7 +1188,7 @@ export const projectTable = pgTable("project", {
   description: varchar(),
   project_startDate: varchar().notNull(),
   project_targetDate: varchar().notNull(),
-  channel_id: varchar().notNull(),
+  channel_id: varchar(),
   space_id: varchar("space_id", { length: 36 }).references(
     () => spacesTable.id,
     { onDelete: "cascade" }

@@ -1,11 +1,4 @@
-import {
-  MapPin,
-  Briefcase,
-  Calendar,
-  LinkIcon,
-  PencilIcon,
-  MailIcon
-} from "lucide-react"
+import { LinkIcon, PencilIcon, MailIcon, Star } from "lucide-react"
 import EditProfileModal from "./edit-profile-modal"
 import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip"

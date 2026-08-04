@@ -22,9 +22,18 @@ interface StepThreeProps {
   setStep: Dispatch<SetStateAction<number>>
   user: SelectUser
   setUser: Dispatch<SetStateAction<SelectUser | undefined>>
+  totalSteps?: number
+  isMentor?: boolean
 }
 
-export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
+export function StepThree({
+  step,
+  setStep,
+  user,
+  setUser,
+  totalSteps = 4,
+  isMentor = false
+}: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     userProfileCompletionAction
   )
@@ -74,7 +83,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         })
 
         if (!submitDataLoading) {
-          setStep(4) // Go to completion step
+          setStep((prev) => prev + 1)
         }
       } else {
         setIsTransitioning(false)
@@ -133,7 +142,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
               </Card>
             )
           })}
-          {step < 4 && (
+          {step < totalSteps && (
             <div className="flex justify-between pt-6 border-t">
               <Button
                 variant="outline"
