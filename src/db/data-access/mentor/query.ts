@@ -533,17 +533,26 @@ export async function GetAcceptedSessionRequestsForMentee(menteeId: string) {
   })
 }
 
-/** All pending + resubmitted requests for a mentor — used for calendar badge counts. */
+/** All pending + resubmitted requests for a mentor — used for calendar badge
+ * counts, and (with the mentee join) so the mentor can see whose request
+ * they're suggesting an alternative slot for when deleting a booked slot. */
 export async function GetPendingSessionRequestsForMentor(mentorId: string) {
-  return await db
-    .select()
-    .from(sessionRequestsTable)
-    .where(
-      and(
-        eq(sessionRequestsTable.mentor_id, mentorId),
-        inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
-      )
-    )
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
+    ),
+    with: {
+      mentee: {
+        columns: {
+          unique_id: true,
+          first_name: true,
+          last_name: true,
+          profile_url: true
+        }
+      }
+    }
+  })
 }
 
 /** True if an accepted booking already overlaps this occurrence for the mentor —

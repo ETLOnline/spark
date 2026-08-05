@@ -112,7 +112,21 @@ export function SlotListItem({
             {slot.session_type === "group" ? "Group" : "1-on-1"}
           </span>
         </div>
-        {isMyProfile && (
+        {isMyProfile && mentorAcceptedCount > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-muted-foreground/40 cursor-not-allowed ml-2">
+                  <X className="h-3.5 w-3.5" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                Can't delete — this slot has a confirmed session
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        {isMyProfile && mentorAcceptedCount === 0 && (
           <button
             onClick={() => {
               if (slot.repeat_type === "none") {

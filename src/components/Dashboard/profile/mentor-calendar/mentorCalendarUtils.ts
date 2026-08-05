@@ -331,6 +331,26 @@ export function countOverlappingRequests(
   ).length
 }
 
+/** Actual "pending"-status requests (not "resubmitted") overlapping this
+ * slot's window on this date — used to gate deletion, since only a plain
+ * pending request can be routed through the suggest-new-slot action. */
+export function pendingOnlyRequestsFor<T extends SelectSessionRequest>(
+  slot: SelectMentorAvailability,
+  date: Date,
+  requests: T[]
+): T[] {
+  const dateStr = moment(date).format("YYYY-MM-DD")
+  const slotStart = toMins(slot.start_time)
+  const slotEnd = toMins(slot.end_time)
+  return requests.filter(
+    (r) =>
+      r.status === "pending" &&
+      requestAppliesToDate(r, dateStr) &&
+      toMins(r.start_time) < slotEnd &&
+      slotStart < toMins(r.end_time)
+  )
+}
+
 /** A slot only counts as "fully booked" once every hour in it is taken — a
  * single accepted hour inside a longer window shouldn't block the rest of it. */
 export function isSlotFullyBooked(
