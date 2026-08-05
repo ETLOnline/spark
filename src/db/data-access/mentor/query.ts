@@ -2,7 +2,6 @@ import {
   and,
   asc,
   count,
-  countDistinct,
   desc,
   eq,
   exists,
@@ -183,19 +182,28 @@ const buildAvailabilityCondition = (
   )
 }
 
+let mentorRoleId: number | null | undefined
+
+const getMentorRoleId = async () => {
+  if (mentorRoleId !== undefined) return mentorRoleId
+
+  const mentorRole = await db.query.rolesTable.findFirst({
+    where: eq(rolesTable.name, "Mentor"),
+    columns: { id: true }
+  })
+  mentorRoleId = mentorRole?.id ?? null
+  return mentorRoleId
+}
+
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    // Get Mentor role ID
-    const mentorRole = await db.query.rolesTable.findFirst({
-      where: eq(rolesTable.name, "Mentor"),
-      columns: { id: true }
-    })
+    const roleId = await getMentorRoleId()
 
-    if (!mentorRole) {
+    if (!roleId) {
       return {
         mentors: [],
         pagination: { total: 0, page, limit, totalPages: 0 }
@@ -203,7 +211,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     }
 
     const where = and(
-      eq(userRolesTable.role_id, mentorRole.id),
+      eq(userRolesTable.role_id, roleId),
       ...([
         filters?.isActive !== undefined
           ? eq(profileTable.is_mentor_active, filters.isActive)
@@ -224,35 +232,22 @@ export async function GetMentors(filters?: GetMentorFilters) {
       ].filter(Boolean) as SQL[])
     )
 
-    // Mentor <-> profile is one-to-one, but a mentor could in theory hold more
-    // than one "Mentor" row in userRolesTable, so group by user id to keep
-    // counts and pagination accurate.
-    const [mentorRows, totalCountResult] = await Promise.all([
-      db
-        .select({ user: usersTable, profile: profileTable })
-        .from(userRolesTable)
-        .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
-        .innerJoin(
-          profileTable,
-          eq(profileTable.user_id, userRolesTable.user_id)
-        )
-        .where(where)
-        .groupBy(userRolesTable.user_id, usersTable.unique_id, profileTable.id)
-        .orderBy(asc(userRolesTable.user_id))
-        .limit(limit)
-        .offset(offset),
-      db
-        .select({ value: countDistinct(userRolesTable.user_id) })
-        .from(userRolesTable)
-        .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
-        .innerJoin(
-          profileTable,
-          eq(profileTable.user_id, userRolesTable.user_id)
-        )
-        .where(where)
-    ])
+    const mentorRows = await db
+      .select({
+        user: usersTable,
+        profile: profileTable,
+        totalCount: sql<number>`count(*) over()`
+      })
+      .from(userRolesTable)
+      .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
+      .innerJoin(profileTable, eq(profileTable.user_id, userRolesTable.user_id))
+      .where(where)
+      .groupBy(userRolesTable.user_id, usersTable.unique_id, profileTable.id)
+      .orderBy(asc(userRolesTable.user_id))
+      .limit(limit)
+      .offset(offset)
 
-    const totalCount = totalCountResult[0]?.value ?? 0
+    const totalCount = Number(mentorRows[0]?.totalCount ?? 0)
     const userIds = mentorRows.map((row) => row.user.unique_id)
 
     // userTags is one-to-many, so it's loaded separately for just this page
@@ -267,6 +262,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     const mentors = mentorRows.map((row) => ({
       ...row.user,
       profile: row.profile,
+      completedSessionsCount: row.profile.total_completed_sessions ?? 0,
       userTags: userTags.filter((ut) => ut.user_id === row.user.unique_id)
     }))
 
@@ -714,11 +710,54 @@ export async function ArchiveGroupSessionSpace(sessionIds: number[]) {
     .returning()
 }
 
+async function incrementCompletedSessionsIfNowComplete(
+  sessionId: number,
+  userId: string
+) {
+  const session = await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, sessionId),
+    columns: { mentor_id: true, attendee_confirmations: true }
+  })
+  if (!session || session.mentor_id !== userId) return
+
+  const mentorConfirmed = !!(
+    session.attendee_confirmations as Record<string, string> | null
+  )?.[userId]
+  if (!mentorConfirmed) return
+
+  const feedback = await db
+    .select({ id: mentorshipFeedbackTable.id })
+    .from(mentorshipFeedbackTable)
+    .where(
+      and(
+        eq(mentorshipFeedbackTable.session_request_id, sessionId),
+        eq(mentorshipFeedbackTable.submitted_by, userId)
+      )
+    )
+    .limit(1)
+  if (feedback.length === 0) return
+
+  await db
+    .update(profileTable)
+    .set({
+      total_completed_sessions: sql`${profileTable.total_completed_sessions} + 1`
+    })
+    .where(eq(profileTable.user_id, userId))
+}
+
 /** Record that a user confirmed they attended a session (jsonb patch). */
 export async function ConfirmSessionAttendance(
   sessionId: number,
   userId: string
 ) {
+  const before = await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, sessionId),
+    columns: { attendee_confirmations: true }
+  })
+  const alreadyConfirmed = !!(
+    before?.attendee_confirmations as Record<string, string> | null
+  )?.[userId]
+
   const [updated] = await db
     .update(sessionRequestsTable)
     .set({
@@ -730,6 +769,11 @@ export async function ConfirmSessionAttendance(
     })
     .where(eq(sessionRequestsTable.id, sessionId))
     .returning()
+
+  if (!alreadyConfirmed) {
+    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+  }
+
   return updated
 }
 
@@ -766,6 +810,11 @@ export async function SubmitMentorshipFeedback(
       visibility
     })
     .returning()
+
+  if (row) {
+    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+  }
+
   return row
 }
 
