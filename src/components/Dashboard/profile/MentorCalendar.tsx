@@ -656,9 +656,9 @@ export function MentorCalendar({
                                 ) !== null
                             )
                           ? "Suggested Slots"
-                          : "Available Slots"}
-                      {slotsForSelected.length > 2 && (
-                        <span className="ml-1.5 normal-case font-normal opacity-60">
+                          : `Available Slot${slotsForSelected.length > 1 ? "s" : ""}`}
+                      {slotsForSelected.length > 0 && (
+                        <span className="ml-1.5 normal-case font-normal text-foreground">
                           ({slotsForSelected.length})
                         </span>
                       )}

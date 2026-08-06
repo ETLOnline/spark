@@ -163,7 +163,7 @@ export function MentorCalendarGrid({
           clickable
             ? "cursor-pointer hover:bg-foreground/[0.02]"
             : "cursor-default",
-          !inMonth && "opacity-40"
+          !inMonth && "opacity-7 Fifty-fifty.0"
         )}
       >
         <div className="flex items-center justify-start">
@@ -233,7 +233,7 @@ export function MentorCalendarGrid({
               className={cn(
                 "text-[10px] leading-tight rounded px-1 py-0.5 font-medium flex items-center gap-1",
                 suggested
-                  ? "bg-purple-500/20 text-purple-600"
+                  ? "bg-purple-500/20 dark:text-purple-400 text-purple-600"
                   : myAccepted
                     ? "bg-emerald-500/15 text-emerald-600"
                     : booked
@@ -242,7 +242,7 @@ export function MentorCalendarGrid({
                         ? "bg-orange-500/20 text-orange-600"
                         : pending
                           ? "bg-amber-500/20 text-amber-600"
-                          : "bg-primary/20 text-primary"
+                          : "bg-primary/20 dark:text-primary text-primary-foreground"
               )}
             >
               {suggested ? (
