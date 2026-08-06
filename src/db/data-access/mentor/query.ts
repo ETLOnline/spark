@@ -11,6 +11,7 @@ import {
   inArray,
   isNull,
   lte,
+  ne,
   or,
   SQL,
   sql,
@@ -494,7 +495,8 @@ export async function UpdateSessionRequestStatus(
 
 /** All accepted bookings for a mentor — used to grey out already-booked times
  * on the calendar, and (via the joined space) to link the mentor's session
- * card straight into the workspace created for it, if any. */
+ * card straight into the workspace created for it, if any. Shown publicly on
+ * the mentor's profile, so this must never join mentee PII. */
 export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
   return await db.query.sessionRequestsTable.findMany({
     where: and(
@@ -507,6 +509,56 @@ export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
       }
     }
   })
+}
+
+/** A mentor's accepted bookings that fall on one specific date — powers the
+ * day-by-day "Booked Slots" navigator. Narrows at the DB level to requests
+ * whose recurrence window could possibly cover `date`, then resolves the
+ * exact day-of-week match for weekly recurrences in memory, so we never pull
+ * (or expand) a mentor's entire booking history just to render a single day. */
+export async function GetAcceptedSessionRequestsForMentorOnDate(
+  mentorId: string,
+  date: string
+) {
+  const candidates = await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      eq(sessionRequestsTable.status, "accepted"),
+      // One-time bookings can only ever match `date` exactly; only recurring
+      // ones need the open-below range, so a one-time booking from years ago
+      // never gets pulled just to be filtered back out below.
+      or(
+        eq(sessionRequestsTable.session_date, date),
+        and(
+          ne(sessionRequestsTable.repeat_type, "none"),
+          lte(sessionRequestsTable.session_date, date)
+        )
+      ),
+      or(
+        isNull(sessionRequestsTable.repeat_end_date),
+        gte(sessionRequestsTable.repeat_end_date, date)
+      )
+    ),
+    with: {
+      space: {
+        columns: { id: true, space_slug: true }
+      },
+      mentee: true
+    }
+  })
+
+  return candidates
+    .filter((r) =>
+      recurrencesOverlap(
+        {
+          date: r.session_date,
+          repeat_type: r.repeat_type,
+          repeat_end_date: r.repeat_end_date
+        },
+        { date, repeat_type: "none" }
+      )
+    )
+    .sort((a, b) => a.start_time.localeCompare(b.start_time))
 }
 
 /** A mentee's own accepted bookings across every mentor — used to show their

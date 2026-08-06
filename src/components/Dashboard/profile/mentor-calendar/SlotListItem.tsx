@@ -6,8 +6,8 @@ import {
   Clock,
   Lock,
   Sparkles,
+  User,
   Users,
-  Video,
   X,
   XCircle
 } from "lucide-react"
@@ -100,7 +100,7 @@ export function SlotListItem({
           {slot.session_type === "group" ? (
             <Users className="h-4 w-4 text-muted-foreground shrink-0" />
           ) : (
-            <Video className="h-4 w-4 text-muted-foreground shrink-0" />
+            <User className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
           <div className="min-w-0">
             <p className="truncate">
