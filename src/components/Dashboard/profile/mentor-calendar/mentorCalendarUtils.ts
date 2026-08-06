@@ -313,6 +313,44 @@ export function getBookedRangesForSlot(
     .map((r) => ({ start: toMins(r.start_time), end: toMins(r.end_time) }))
 }
 
+/** Every occurrence date (within the slot's own recurrence range) that has at
+ * least one accepted booking overlapping the slot's time window — used to
+ * keep booked dates alive when the mentor deletes the whole series, since a
+ * group slot's other accepted mentees also depend on it staying bookable. */
+export function getAcceptedOccurrenceDatesForSlot(
+  slot: SelectMentorAvailability,
+  acceptedRequests: SelectSessionRequest[]
+): string[] {
+  const isBooked = (dateStr: string) => {
+    const slotStart = toMins(slot.start_time)
+    const slotEnd = toMins(slot.end_time)
+    return acceptedRequests.some(
+      (r) =>
+        requestAppliesToDate(r, dateStr) &&
+        toMins(r.start_time) < slotEnd &&
+        slotStart < toMins(r.end_time)
+    )
+  }
+
+  if (slot.repeat_type === "none") {
+    return isBooked(slot.date) ? [slot.date] : []
+  }
+
+  const step = slot.repeat_type === "daily" ? 1 : 7
+  const end = slot.repeat_end_date
+    ? moment(slot.repeat_end_date, "YYYY-MM-DD")
+    : moment(slot.date, "YYYY-MM-DD").add(1, "year")
+
+  const dates: string[] = []
+  let cursor = moment(slot.date, "YYYY-MM-DD")
+  while (!cursor.isAfter(end)) {
+    const dateStr = cursor.format("YYYY-MM-DD")
+    if (isBooked(dateStr)) dates.push(dateStr)
+    cursor = cursor.clone().add(step, "days")
+  }
+  return dates
+}
+
 /** How many requests (of any mentee) overlap this slot's window on this date —
  * used on the mentor's own calendar so they can see activity at a glance. */
 export function countOverlappingRequests(

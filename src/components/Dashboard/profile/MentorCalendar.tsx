@@ -33,6 +33,7 @@ import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import {
   endOfMonth,
   getDurationOptions,
+  getAcceptedOccurrenceDatesForSlot,
   getSlotsForDate,
   getStartTimeOptions,
   getUnavailableRangesForRequest,
@@ -469,25 +470,51 @@ export function MentorCalendar({
       repeat_end_date: s.repeat_end_date ?? null
     }))
 
-  /** Remove the entire recurring series (or a one-time slot). */
+  /** Remove the entire recurring series (or a one-time slot) — any occurrence
+   * date that already has an accepted booking is kept alive as a standalone
+   * one-time slot so the mentee doesn't lose their confirmed session. */
   const performDeleteSeries = async (slotId: number) => {
     setPendingDeleteId(null)
     setSlotError("")
     const slot = slots.find((s) => s.id === slotId)
+    if (!slot) return
+
+    const bookedDates = getAcceptedOccurrenceDatesForSlot(
+      slot,
+      acceptedRequests
+    )
+    const preserved = bookedDates.map((date) => ({
+      date,
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      session_type: slot.session_type,
+      repeat_type: "none" as RepeatType,
+      repeat_end_date: null
+    }))
+
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
-    const res = await updateAvailability({ mentorId: userId, slots: remaining })
+    const res = await updateAvailability({
+      mentorId: userId,
+      slots: [...remaining, ...preserved]
+    })
     if (res?.success) {
-      if (slot) {
-        await deleteSessionRequestsForSlot({
-          mentorId: userId,
-          startTime: slot.start_time,
-          endTime: slot.end_time
-        })
-      }
+      await deleteSessionRequestsForSlot({
+        mentorId: userId,
+        startTime: slot.start_time,
+        endTime: slot.end_time
+      })
       setSlots([])
       await loadSlots()
       if (selectedDate) resetPopupForm(selectedDate)
-      toast({ title: "Slot removed", duration: 2000 })
+      toast({
+        title:
+          bookedDates.length > 0 ? "Unbooked slots removed" : "Slot removed",
+        description:
+          bookedDates.length > 0
+            ? "Dates with an accepted booking were kept."
+            : undefined,
+        duration: 2500
+      })
     }
   }
 
