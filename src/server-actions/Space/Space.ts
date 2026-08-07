@@ -172,6 +172,7 @@ export const GetSpacesByCreatorAction = CreateServerAction(
       const result = await GetSpaces({
         created_by: creatorId,
         isIndependent: true,
+        excludeArchivedFor: creatorId,
         page,
         limit
       })
