@@ -1,13 +1,4 @@
-import {
-  and,
-  eq,
-  exists,
-  inArray,
-  isNull,
-  not,
-  or,
-  SQLWrapper
-} from "drizzle-orm"
+import { and, eq, inArray, isNull, not, or, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -99,22 +90,23 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
 
       if (filters.excludeArchivedFor) {
         const mentorId = filters.excludeArchivedFor
-        whereClauses.push(
-          not(
-            exists(
-              db
-                .select({ id: sessionRequestsTable.id })
-                .from(sessionRequestsTable)
-                .where(
-                  and(
-                    eq(sessionRequestsTable.space_id, spacesTable.id),
-                    eq(sessionRequestsTable.mentor_id, mentorId),
-                    eq(sessionRequestsTable.is_space_archived, true)
-                  )
-                )
+
+        const archivedRows = await db
+          .selectDistinct({ space_id: sessionRequestsTable.space_id })
+          .from(sessionRequestsTable)
+          .where(
+            and(
+              eq(sessionRequestsTable.mentor_id, mentorId),
+              eq(sessionRequestsTable.is_space_archived, true)
             )
           )
-        )
+        const archivedSpaceIds = archivedRows
+          .map((row) => row.space_id)
+          .filter((id): id is string => id !== null)
+
+        if (archivedSpaceIds.length) {
+          whereClauses.push(not(inArray(spacesTable.id, archivedSpaceIds)))
+        }
       }
 
       if (filters.forUserId) {

@@ -190,6 +190,7 @@ export const GetSpacesForUserAction = CreateServerAction(
       const result = await GetSpaces({
         forUserId: userId,
         isIndependent: true,
+        excludeArchivedFor: userId,
         page,
         limit
       })
