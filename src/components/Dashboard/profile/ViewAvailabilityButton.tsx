@@ -19,9 +19,15 @@ export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
         Eligibility: {RP_THRESHOLD} RP required
       </p>
       <Link href={`/profile/${mentorId}/availability`} className="w-full">
-        <Button variant="outline" className="w-full mt-1" size="sm">
-          <CalendarDays className="h-4 w-4 mr-2" />
-          View Availability / Request Session
+        <Button
+          variant="outline"
+          className="w-full mt-1 h-auto min-h-8 whitespace-normal py-1.5"
+          size="sm"
+        >
+          <CalendarDays className="h-4 w-4 mr-2 shrink-0" />
+          <span className="text-center">
+            View Availability / Request Session
+          </span>
         </Button>
       </Link>
     </>
