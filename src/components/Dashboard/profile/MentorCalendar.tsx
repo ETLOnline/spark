@@ -33,12 +33,14 @@ import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import {
   endOfMonth,
   getDurationOptions,
+  getAcceptedOccurrenceDatesForSlot,
   getSlotsForDate,
   getStartTimeOptions,
   getUnavailableRangesForRequest,
   isPastDate,
   minsToTime,
   nextOccurrence,
+  pendingOnlyRequestsFor,
   RepeatType,
   SessionType
 } from "./mentor-calendar/mentorCalendarUtils"
@@ -46,6 +48,9 @@ import { MentorCalendarGrid } from "./mentor-calendar/MentorCalendarGrid"
 import { SlotListItem } from "./mentor-calendar/SlotListItem"
 import { SessionRequestForm } from "./mentor-calendar/SessionRequestForm"
 import { AvailabilitySlotForm } from "./mentor-calendar/AvailabilitySlotForm"
+import SuggestNewSlotDialog, {
+  type RequestWithOptionalMentee
+} from "./SuggestNewSlotDialog"
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -97,8 +102,19 @@ export function MentorCalendar({
     SelectSessionRequest[]
   >([])
   const [mentorPendingRequests, setMentorPendingRequests] = useState<
-    SelectSessionRequest[]
+    RequestWithOptionalMentee[]
   >([])
+
+  // Delete gating — a slot with pending requests can't be deleted until each
+  // one has been given an alternative slot suggestion.
+  const [deleteGate, setDeleteGate] = useState<{
+    mode: "series" | "occurrence"
+    slotId: number
+    date: Date
+    queue: RequestWithOptionalMentee[]
+  } | null>(null)
+  const [suggestTarget, setSuggestTarget] =
+    useState<RequestWithOptionalMentee | null>(null)
 
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
@@ -158,7 +174,7 @@ export function MentorCalendar({
   const loadMentorPendingRequests = useCallback(async () => {
     const res = await getMentorPendingRequests(userId)
     if (res?.success)
-      setMentorPendingRequests((res.data as SelectSessionRequest[]) ?? [])
+      setMentorPendingRequests((res.data as RequestWithOptionalMentee[]) ?? [])
   }, [userId])
 
   useEffect(() => {
@@ -454,30 +470,56 @@ export function MentorCalendar({
       repeat_end_date: s.repeat_end_date ?? null
     }))
 
-  /** Remove the entire recurring series (or a one-time slot). */
-  const handleDeleteSeries = async (slotId: number) => {
+  /** Remove the entire recurring series (or a one-time slot) — any occurrence
+   * date that already has an accepted booking is kept alive as a standalone
+   * one-time slot so the mentee doesn't lose their confirmed session. */
+  const performDeleteSeries = async (slotId: number) => {
     setPendingDeleteId(null)
     setSlotError("")
     const slot = slots.find((s) => s.id === slotId)
+    if (!slot) return
+
+    const bookedDates = getAcceptedOccurrenceDatesForSlot(
+      slot,
+      acceptedRequests
+    )
+    const preserved = bookedDates.map((date) => ({
+      date,
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      session_type: slot.session_type,
+      repeat_type: "none" as RepeatType,
+      repeat_end_date: null
+    }))
+
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
-    const res = await updateAvailability({ mentorId: userId, slots: remaining })
+    const res = await updateAvailability({
+      mentorId: userId,
+      slots: [...remaining, ...preserved]
+    })
     if (res?.success) {
-      if (slot) {
-        await deleteSessionRequestsForSlot({
-          mentorId: userId,
-          startTime: slot.start_time,
-          endTime: slot.end_time
-        })
-      }
+      await deleteSessionRequestsForSlot({
+        mentorId: userId,
+        startTime: slot.start_time,
+        endTime: slot.end_time
+      })
       setSlots([])
       await loadSlots()
       if (selectedDate) resetPopupForm(selectedDate)
-      toast({ title: "Slot removed", duration: 2000 })
+      toast({
+        title:
+          bookedDates.length > 0 ? "Unbooked slots removed" : "Slot removed",
+        description:
+          bookedDates.length > 0
+            ? "Dates with an accepted booking were kept."
+            : undefined,
+        duration: 2500
+      })
     }
   }
 
   /** Remove only the occurrence on `date`, keeping the rest of the series intact. */
-  const handleDeleteOccurrence = async (slotId: number, date: Date) => {
+  const performDeleteOccurrence = async (slotId: number, date: Date) => {
     setPendingDeleteId(null)
     setSlotError("")
     const slot = slots.find((s) => s.id === slotId)
@@ -538,6 +580,64 @@ export function MentorCalendar({
       if (selectedDate) resetPopupForm(selectedDate)
       toast({ title: "Occurrence removed", duration: 2000 })
     }
+  }
+
+  /** Entry point wired to SlotListItem — blocks deletion behind the
+   * suggest-new-slot flow if a pending request overlaps this occurrence. */
+  const handleDeleteSeries = (slotId: number) => {
+    const slot = slots.find((s) => s.id === slotId)
+    if (!slot || !selectedDate) return
+    const pending = pendingOnlyRequestsFor(
+      slot,
+      selectedDate,
+      mentorPendingRequests
+    )
+    if (pending.length > 0) {
+      setDeleteGate({
+        mode: "series",
+        slotId,
+        date: selectedDate,
+        queue: pending
+      })
+      return
+    }
+    performDeleteSeries(slotId)
+  }
+
+  /** Entry point wired to SlotListItem — same gating as handleDeleteSeries,
+   * scoped to a single occurrence date. */
+  const handleDeleteOccurrence = (slotId: number, date: Date) => {
+    const slot = slots.find((s) => s.id === slotId)
+    if (!slot) return
+    const pending = pendingOnlyRequestsFor(slot, date, mentorPendingRequests)
+    if (pending.length > 0) {
+      setDeleteGate({ mode: "occurrence", slotId, date, queue: pending })
+      return
+    }
+    performDeleteOccurrence(slotId, date)
+  }
+
+  /** A suggestion was sent for one of the gated requests — drop it from the
+   * list shown in the gate dialog. The slot itself is only deleted once the
+   * mentor explicitly clicks "Delete Slot" with an empty queue. */
+  const handleSuggestedForGatedDelete = async (requestId: number) => {
+    setSuggestTarget(null)
+    await loadMentorPendingRequests()
+    setDeleteGate((gate) =>
+      gate
+        ? { ...gate, queue: gate.queue.filter((r) => r.id !== requestId) }
+        : null
+    )
+  }
+
+  const handleConfirmGatedDelete = () => {
+    if (!deleteGate || deleteGate.queue.length > 0) return
+    if (deleteGate.mode === "series") {
+      performDeleteSeries(deleteGate.slotId)
+    } else {
+      performDeleteOccurrence(deleteGate.slotId, deleteGate.date)
+    }
+    setDeleteGate(null)
   }
 
   // ── Derived values ────────────────────────────────────────────────────────────
@@ -730,6 +830,76 @@ export function MentorCalendar({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Pending-request gate: mentor must suggest an alternative before deleting ── */}
+      <Dialog
+        open={!!deleteGate}
+        onOpenChange={(open) => !open && setDeleteGate(null)}
+      >
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Pending Session Requests</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            A mentee has already requested this availability slot. Please
+            suggest an alternative slot before deleting this availability to
+            avoid disrupting the session request.
+          </p>
+
+          <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+            {deleteGate && deleteGate.queue.length > 0 ? (
+              deleteGate.queue.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setSuggestTarget(r)}
+                  className="flex items-center gap-3 text-left px-3 py-2.5 rounded-md border border-foreground/10 hover:bg-foreground/[0.03] transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">
+                      {r.mentee
+                        ? `${r.mentee.first_name} ${r.mentee.last_name}`
+                        : "Pending request"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.topic} ·{" "}
+                      {moment(r.session_date, "YYYY-MM-DD").format("MMM D")} ·{" "}
+                      {moment(r.start_time, "HH:mm").format("h:mm A")}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 shrink-0">
+                    Pending
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No pending requests remaining.
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setDeleteGate(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!deleteGate || deleteGate.queue.length > 0}
+              onClick={handleConfirmGatedDelete}
+            >
+              Delete Slot
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <SuggestNewSlotDialog
+        open={!!suggestTarget}
+        onOpenChange={(open) => !open && setSuggestTarget(null)}
+        request={suggestTarget}
+        mentorId={userId}
+        onSuggested={handleSuggestedForGatedDelete}
+      />
     </div>
   )
 }
