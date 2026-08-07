@@ -272,15 +272,10 @@ export function EngagementDetail({
             {e.isMentor &&
               hasSpace &&
               (e.isSpaceArchived ? (
-                <Link
-                  href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
-                  className="w-full"
-                >
-                  <Button variant="outline" className="w-full">
-                    <Archive className="h-4 w-4 mr-2" />
-                    View archived space
-                  </Button>
-                </Link>
+                <Button variant="outline" disabled className="w-full">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Space archived
+                </Button>
               ) : (
                 <>
                   <Link
@@ -308,18 +303,25 @@ export function EngagementDetail({
                 </>
               ))}
 
-            {/* Mentee: Go to space button (always visible, space may be archived for this session) */}
-            {!e.isMentor && hasSpace && (
-              <Link
-                href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
-                className="w-full"
-              >
-                <Button variant="outline" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  {e.isSpaceArchived ? "View archived space" : "Go to space"}
+            {/* Mentee: Go to space button (hidden once the space is archived) */}
+            {!e.isMentor &&
+              hasSpace &&
+              (e.isSpaceArchived ? (
+                <Button variant="outline" disabled className="w-full">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Space archived
                 </Button>
-              </Link>
-            )}
+              ) : (
+                <Link
+                  href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
+                  className="w-full"
+                >
+                  <Button variant="outline" className="w-full">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Go to space
+                  </Button>
+                </Link>
+              ))}
           </>
         )}
 

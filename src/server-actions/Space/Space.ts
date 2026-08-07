@@ -172,7 +172,7 @@ export const GetSpacesByCreatorAction = CreateServerAction(
       const result = await GetSpaces({
         created_by: creatorId,
         isIndependent: true,
-        excludeArchivedFor: creatorId,
+        excludeArchived: true,
         page,
         limit
       })
@@ -190,7 +190,7 @@ export const GetSpacesForUserAction = CreateServerAction(
       const result = await GetSpaces({
         forUserId: userId,
         isIndependent: true,
-        excludeArchivedFor: userId,
+        excludeArchived: true,
         page,
         limit
       })
