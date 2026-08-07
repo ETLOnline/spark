@@ -393,6 +393,13 @@
       "when": 1785402877307,
       "tag": "0055_2026_07_30_141436__add_reject_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1785915399227,
+      "tag": "0056_remove_default_type_in_recommendations_table",
+      "breakpoints": true
     }
   ]
 }

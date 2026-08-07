@@ -508,7 +508,10 @@ export default function ProfileScreen({
             </Card>
 
             {isMentor && (
-              <MentorSessionsCard acceptedRequests={acceptedMentorSessions} />
+              <MentorSessionsCard
+                acceptedRequests={acceptedMentorSessions}
+                isMyProfile={!!isMyProfile}
+              />
             )}
           </div>
           {/* Right Column */}

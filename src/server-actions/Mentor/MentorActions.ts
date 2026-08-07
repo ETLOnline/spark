@@ -14,6 +14,7 @@ import {
   DeletePendingSessionRequestsForSlot,
   GetAcceptedSessionRequestsForMentee,
   GetAcceptedSessionRequestsForMentor,
+  GetAcceptedSessionRequestsForMentorOnDate,
   GetEngagementsForUser,
   GetFeedbackForSession,
   GetFeedbackSubmittersForSessions,
@@ -517,6 +518,31 @@ export const GetAcceptedSessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
+/** A mentor's accepted bookings for a single date (YYYY-MM-DD) — used by the
+ * "Booked Slots" day navigator so each day-click only fetches that day's
+ * sessions instead of the mentor's whole booking history. Private — includes
+ * mentee PII, so only the mentor themselves can fetch this. */
+export const GetAcceptedSessionRequestsForMentorOnDateAction =
+  CreateServerAction(true, async (mentorId: string, date: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== mentorId) {
+        return { error: "Unauthorised" }
+      }
+      const requests = await GetAcceptedSessionRequestsForMentorOnDate(
+        mentorId,
+        date
+      )
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error(
+        "GetAcceptedSessionRequestsForMentorOnDateAction error:",
+        error
+      )
+      return { error: "Failed to fetch booked sessions" }
+    }
+  })
+
 /** A mentee's own accepted bookings — private, only the mentee themselves can fetch this. */
 export const GetAcceptedSessionRequestsForMenteeAction = CreateServerAction(
   true,
@@ -808,8 +834,9 @@ export const GetEngagementsAction = CreateServerAction(true, async () => {
     // Re-sort: overdue first, then upcoming, then completed (mirrors original desc date sort)
     const statusOrder: Record<EngagementStatus, number> = {
       overdue: 0,
-      upcoming: 1,
-      completed: 2
+      open: 1,
+      upcoming: 2,
+      completed: 3
     }
     engagements.sort(
       (a, b) =>

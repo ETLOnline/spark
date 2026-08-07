@@ -31,7 +31,7 @@ export default function UserProfileCard({
 
   return (
     <div className="rounded-xl border bg-card backdrop-blur p-4 sm:p-6 shadow-lg">
-      <div className="flex flex-row gap-4 sm:gap-6 items-start">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-start">
         {/* Avatar Section */}
         <div className="flex flex-col items-center gap-3 shrink-0">
           <div className="relative">
@@ -67,43 +67,49 @@ export default function UserProfileCard({
             />
           </div>
 
-          <div>
-            {isMyProfile === undefined ? (
-              <Skeleton className="h-6 w-24" />
-            ) : isMyProfile ? (
+          {isMyProfile && (
+            <div>
               <EditProfileModal />
-            ) : (
-              <ProfileFollowActions user={userInfo} />
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Profile Info */}
         <div className="flex-1 min-w-0 text-left">
           <div className="mb-2">
-            <div className="flex flex-row items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
-              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
-                {userInfo.first_name} {userInfo.last_name}
-              </h1>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 sm:h-10 sm:w-10 shrink-0"
-                      onClick={handleCopyUrl}
-                    >
-                      <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy profile URL</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
+                  {userInfo.first_name} {userInfo.last_name}
+                </h1>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 sm:h-10 sm:w-10 shrink-0"
+                        onClick={handleCopyUrl}
+                      >
+                        <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy profile URL</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              <div className="shrink-0">
+                {isMyProfile === undefined ? (
+                  <Skeleton className="h-9 w-24" />
+                ) : !isMyProfile ? (
+                  <ProfileFollowActions user={userInfo} />
+                ) : null}
+              </div>
             </div>
 
             {userInfo.email && (
-              <p className="flex items-start sm:items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mt-1 break-all sm:break-normal">
+              <p className="flex items-start sm:items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mt-1 break-all lg:break-normal ">
                 <MailIcon className="h-3.5 w-3.5 flex-shrink-0" />
                 {userInfo.email}
               </p>

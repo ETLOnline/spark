@@ -642,7 +642,7 @@ export const recommendationsTable = pgTable("recommendations", {
   rating: integer().notNull(),
   recommender_id: varchar(),
   receiver_id: varchar(),
-  type: varchar().default("manual").notNull(),
+  type: varchar(),
   ...timestamps
 })
 

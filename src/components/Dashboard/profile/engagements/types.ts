@@ -1,18 +1,22 @@
 import moment from "moment-timezone"
 
-export type EngagementStatus = "upcoming" | "overdue" | "completed"
+export type EngagementStatus = "upcoming" | "open" | "overdue" | "completed"
 
 export function deriveEngagementStatus(
   e: Pick<
     Engagement,
     | "sessionDate"
+    | "startTime"
     | "endTime"
     | "isViewerConfirmed"
     | "feedbackSubmittedByViewer"
   >
 ): EngagementStatus {
+  const now = moment()
+  const start = moment(`${e.sessionDate} ${e.startTime}`, "YYYY-MM-DD HH:mm")
   const end = moment(`${e.sessionDate} ${e.endTime}`, "YYYY-MM-DD HH:mm")
-  if (end.isAfter(moment())) return "upcoming"
+  if (start.isAfter(now)) return "upcoming"
+  if (end.isAfter(now)) return "open"
   return e.isViewerConfirmed && e.feedbackSubmittedByViewer
     ? "completed"
     : "overdue"

@@ -28,8 +28,10 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
+export type MentorWithStats = SelectUser & { completedSessionsCount?: number }
+
 interface MentorCardProps {
-  mentor: SelectUser
+  mentor: MentorWithStats
 }
 
 export default function MentorCard({ mentor }: MentorCardProps) {
@@ -38,7 +40,7 @@ export default function MentorCard({ mentor }: MentorCardProps) {
     `${mentor.first_name?.[0] ?? ""}${mentor.last_name?.[0] ?? ""}`.toUpperCase()
   const rating = Number(mentor.profile?.total_average_rating) || 0
   const reviewCount = mentor.profile?.number_of_ratings ?? 0
-  const completedSessions = mentor.profile?.total_completed_sessions ?? 0
+  const completedSessions = mentor.completedSessionsCount ?? 0
 
   return (
     <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow border border-border rounded-2xl w-full">
