@@ -703,7 +703,7 @@ export async function DeletePendingSessionRequestsForSlot(
 // ── Engagements ─────────────────────────────────────────────────────────────────
 
 export async function GetEngagementsForUser(userId: string) {
-  return db.query.sessionRequestsTable.findMany({
+  const requests = await db.query.sessionRequestsTable.findMany({
     where: and(
       eq(sessionRequestsTable.status, "accepted"),
       or(
@@ -718,6 +718,43 @@ export async function GetEngagementsForUser(userId: string) {
       space: true
     }
   })
+
+  // A space can have several session_requests rows for the same mentor (e.g.
+  // two sessions with the same mentee, or several mentees sharing a space).
+  // Archiving happens per row, so a session's *own* is_space_archived can
+  // still read false even though the mentor archived the space via another
+  // one of its sessions. Resolve the space's real archived state up front so
+  // every engagement tied to that space reflects it consistently.
+  const spaceIds = [
+    ...new Set(
+      requests.map((r) => r.space_id).filter((id): id is string => !!id)
+    )
+  ]
+
+  let archivedSpaceIds = new Set<string>()
+  if (spaceIds.length) {
+    const archivedRows = await db
+      .selectDistinct({ space_id: sessionRequestsTable.space_id })
+      .from(sessionRequestsTable)
+      .innerJoin(spacesTable, eq(spacesTable.id, sessionRequestsTable.space_id))
+      .where(
+        and(
+          inArray(sessionRequestsTable.space_id, spaceIds),
+          eq(sessionRequestsTable.mentor_id, spacesTable.created_by),
+          eq(sessionRequestsTable.is_space_archived, true)
+        )
+      )
+    archivedSpaceIds = new Set(
+      archivedRows.map((row) => row.space_id).filter((id): id is string => !!id)
+    )
+  }
+
+  return requests.map((req) => ({
+    ...req,
+    is_space_archived: req.space_id
+      ? archivedSpaceIds.has(req.space_id)
+      : req.is_space_archived
+  }))
 }
 
 /** All session_requests that share the same availability slot, date, AND start time (same group session occurrence). */
