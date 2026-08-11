@@ -62,6 +62,7 @@ export function EmailVerificationDialog({
         <div className="flex-1 overflow-y-auto px-5 pb-5">
           {screen === "email" && (
             <EmailStep
+              userId={userId}
               onSubmitted={(submittedEmail) => {
                 setEmail(submittedEmail)
                 setScreen("otp")

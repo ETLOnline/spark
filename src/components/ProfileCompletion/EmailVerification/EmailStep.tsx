@@ -16,10 +16,11 @@ import {
 type EmailFormValues = VerificationEmailFormValues
 
 interface EmailStepProps {
+  userId: string
   onSubmitted: (email: string) => void
 }
 
-export function EmailStep({ onSubmitted }: EmailStepProps) {
+export function EmailStep({ userId, onSubmitted }: EmailStepProps) {
   const [isSending, setIsSending] = useState(false)
 
   const form = useForm<EmailFormValues>({
@@ -30,7 +31,7 @@ export function EmailStep({ onSubmitted }: EmailStepProps) {
   const handleSendCode = async (data: EmailFormValues) => {
     setIsSending(true)
     try {
-      const result = await SendEmailOtpAction(data.email)
+      const result = await SendEmailOtpAction(data.email, userId)
       if (!result?.success) {
         toast({
           title: "Couldn't send code",

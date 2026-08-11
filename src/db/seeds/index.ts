@@ -17,6 +17,7 @@ import { ShortcutEntityIdSyncSeed } from "./ShortcutEntityIdSyncSeed"
 import { EmailTemplatesForCommunityRequestSeed } from "./EmailTemplatesForCommunityRquest"
 import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 import { ContactUsEmailTemplatesSeed } from "./ContactUsEmailTemplatesSeed"
+import { IdentityVerificationEmailSeed } from "./IdentityVerificationEmail"
 import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
 import { RewardsSeed } from "./RewardsSeed"
 import { RewardLevelsSeed } from "./RewardLevelsSeed"
@@ -47,7 +48,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   RewardsSeed,
   RewardLevelsSeed,
   BackfillLedgerCommunityIdSeed,
-  DeduplicateUserRolesSeed
+  DeduplicateUserRolesSeed,
+  IdentityVerificationEmailSeed
 }
 
 async function runSeeders() {
@@ -67,7 +69,8 @@ async function runSeeders() {
       "EmailTemplatesForCommunityRequestSeed",
       "JoinInviteEmailSeed",
       "ContactUsEmailTemplatesSeed",
-      "BackfillLedgerCommunityIdSeed"
+      "BackfillLedgerCommunityIdSeed",
+      "IdentityVerificationEmailSeed"
     ]
 
     const seederNames =

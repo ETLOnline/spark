@@ -112,7 +112,7 @@ export function OtpStep({ email, userId, onBack, onVerified }: OtpStepProps) {
   const handleResend = async () => {
     setIsResending(true)
     try {
-      const result = await SendEmailOtpAction(email)
+      const result = await SendEmailOtpAction(email, userId)
       if (!result?.success) {
         toast({
           title: "Couldn't resend code",
