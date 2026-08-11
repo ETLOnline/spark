@@ -1,10 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { ChevronRight } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "../../ui/dialog"
@@ -839,11 +841,13 @@ export function MentorCalendar({
         <DialogContent className="sm:max-w-[440px]">
           <DialogHeader>
             <DialogTitle>Pending Session Requests</DialogTitle>
+            <DialogDescription>
+              This slot has pending session requests that need an alternative
+              before it can be deleted.
+            </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            A mentee has already requested this availability slot. Please
-            suggest an alternative slot before deleting this availability to
-            avoid disrupting the session request.
+            Select a request below to suggest a different time to the mentee.
           </p>
 
           <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
@@ -852,7 +856,7 @@ export function MentorCalendar({
                 <button
                   key={r.id}
                   onClick={() => setSuggestTarget(r)}
-                  className="flex items-center gap-3 text-left px-3 py-2.5 rounded-md border border-foreground/10 hover:bg-foreground/[0.03] transition-colors"
+                  className="flex items-center gap-3 text-left px-3 py-2.5 rounded-md border border-foreground/10 hover:bg-foreground/[0.03] hover:border-foreground/20 transition-colors group"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">
@@ -869,6 +873,7 @@ export function MentorCalendar({
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 shrink-0">
                     Pending
                   </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0 group-hover:text-muted-foreground transition-colors" />
                 </button>
               ))
             ) : (
