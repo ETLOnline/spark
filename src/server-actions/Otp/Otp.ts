@@ -8,7 +8,7 @@ import {
 } from "@/src/db/data-access/otp/query"
 import { updateUserProfile } from "@/src/db/data-access/profile/query"
 
-const OTP_TTL_MINUTES = 10
+const OTP_TTL_MINUTES = 5
 
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000))
