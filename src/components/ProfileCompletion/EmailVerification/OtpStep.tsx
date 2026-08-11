@@ -15,7 +15,7 @@ import {
 } from "@/src/server-actions/Otp/Otp"
 
 const OTP_LENGTH = 6
-const RESEND_COOLDOWN_SECONDS = 30
+const RESEND_COOLDOWN_SECONDS = 60
 
 interface OtpStepProps {
   email: string
