@@ -15,7 +15,12 @@ interface StepFourProps {
   totalSteps?: number
 }
 
-export function StepFour({ step, setStep, totalSteps = 5 }: StepFourProps) {
+export function StepFour({
+  step,
+  setStep,
+  user,
+  totalSteps = 5
+}: StepFourProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null)
@@ -106,6 +111,7 @@ export function StepFour({ step, setStep, totalSteps = 5 }: StepFourProps) {
 
       <EmailVerificationDialog
         open={isDialogOpen}
+        userId={user.unique_id}
         onOpenChange={setIsDialogOpen}
         onVerified={handleVerified}
       />

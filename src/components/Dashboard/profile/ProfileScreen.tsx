@@ -566,7 +566,7 @@ export default function ProfileScreen({
             )}
 
             {/* Email Verification Card */}
-            {isMyProfile && <EmailVerificationCard />}
+            {isMyProfile && <EmailVerificationCard userId={user.unique_id} />}
             {isStudent && (
               <Card>
                 <CardHeader>

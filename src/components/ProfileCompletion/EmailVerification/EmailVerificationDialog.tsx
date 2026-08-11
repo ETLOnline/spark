@@ -21,12 +21,14 @@ const SCREEN_TITLES: Record<Screen, string> = {
 
 interface EmailVerificationDialogProps {
   open: boolean
+  userId: string
   onOpenChange: (open: boolean) => void
   onVerified: (email: string) => void
 }
 
 export function EmailVerificationDialog({
   open,
+  userId,
   onOpenChange,
   onVerified
 }: EmailVerificationDialogProps) {
@@ -69,6 +71,7 @@ export function EmailVerificationDialog({
           {screen === "otp" && (
             <OtpStep
               email={email}
+              userId={userId}
               onBack={() => setScreen("email")}
               onVerified={() => setScreen("success")}
             />

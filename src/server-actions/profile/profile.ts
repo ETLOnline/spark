@@ -3,6 +3,7 @@ import { InsertProfile, SelectProfile } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import {
   createUserProfile,
+  SearchUserProfile,
   updateUserProfile
 } from "@/src/db/data-access/profile/query"
 import { AddsuccessfulReferralAction } from "../Referrals/referrals"
@@ -16,6 +17,25 @@ export const createUserProfileAction = CreateServerAction(
       const profile = await createUserProfile(profileData)
 
       return { success: true, data: profile }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetProfileVerificationStatusAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const profile = await SearchUserProfile(userId)
+
+      return {
+        success: true,
+        data: {
+          email: profile?.email ?? null,
+          verified: profile?.verified ?? false
+        }
+      }
     } catch (error) {
       return { error: error }
     }

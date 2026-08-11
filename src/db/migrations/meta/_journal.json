@@ -400,6 +400,13 @@
       "when": 1785915399227,
       "tag": "0056_remove_default_type_in_recommendations_table",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1786450704069,
+      "tag": "0057_2026_08_11_171823__add_otp_table_and_column_in_profile",
+      "breakpoints": true
     }
   ]
 }

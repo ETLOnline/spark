@@ -7,6 +7,7 @@ import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Button } from "@/src/components/ui/button"
 import { toast } from "@/src/hooks/use-toast"
+import { SendEmailOtpAction } from "@/src/server-actions/Otp/Otp"
 import {
   VerificationEmailFormValues,
   verificationEmailSchema
@@ -29,8 +30,17 @@ export function EmailStep({ onSubmitted }: EmailStepProps) {
   const handleSendCode = async (data: EmailFormValues) => {
     setIsSending(true)
     try {
-      // TODO: replace with a real "send OTP" server action
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      const result = await SendEmailOtpAction(data.email)
+      if (!result?.success) {
+        toast({
+          title: "Couldn't send code",
+          description: "Something went wrong. Please try again.",
+          variant: "destructive",
+          duration: 2500
+        })
+        return
+      }
+
       toast({
         title: "Verification code sent",
         description: `We've sent a 6-digit code to ${data.email}`,

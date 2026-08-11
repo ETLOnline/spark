@@ -9,19 +9,22 @@ import {
 } from "react"
 import { Button } from "@/src/components/ui/button"
 import { toast } from "@/src/hooks/use-toast"
+import {
+  SendEmailOtpAction,
+  VerifyEmailOtpAction
+} from "@/src/server-actions/Otp/Otp"
 
 const OTP_LENGTH = 6
 const RESEND_COOLDOWN_SECONDS = 30
-// Mocked verification code — replace with a real "verify OTP" server action
-const MOCK_VALID_CODE = "123456"
 
 interface OtpStepProps {
   email: string
+  userId: string
   onBack: () => void
   onVerified: () => void
 }
 
-export function OtpStep({ email, onBack, onVerified }: OtpStepProps) {
+export function OtpStep({ email, userId, onBack, onVerified }: OtpStepProps) {
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""))
   const [error, setError] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -93,9 +96,8 @@ export function OtpStep({ email, onBack, onVerified }: OtpStepProps) {
     setIsVerifying(true)
     setError(null)
     try {
-      // TODO: replace with a real "verify OTP" server action
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      if (code === MOCK_VALID_CODE) {
+      const result = await VerifyEmailOtpAction(userId, email, code)
+      if (result?.success) {
         onVerified()
       } else {
         setError("Invalid code. Please try again.")
@@ -110,8 +112,17 @@ export function OtpStep({ email, onBack, onVerified }: OtpStepProps) {
   const handleResend = async () => {
     setIsResending(true)
     try {
-      // TODO: replace with a real "resend OTP" server action
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      const result = await SendEmailOtpAction(email)
+      if (!result?.success) {
+        toast({
+          title: "Couldn't resend code",
+          description: "Something went wrong. Please try again.",
+          variant: "destructive",
+          duration: 2500
+        })
+        return
+      }
+
       toast({
         title: "Code resent",
         description: `A new code was sent to ${email}`,
