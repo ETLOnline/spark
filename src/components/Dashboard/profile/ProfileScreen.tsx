@@ -75,6 +75,7 @@ import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import ProfileCompletionCard from "./ProfileCompletionCard"
+import EmailVerificationCard from "./EmailVerificationCard"
 import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
@@ -563,6 +564,9 @@ export default function ProfileScreen({
                 }}
               />
             )}
+
+            {/* Email Verification Card */}
+            {isMyProfile && <EmailVerificationCard />}
             {isStudent && (
               <Card>
                 <CardHeader>

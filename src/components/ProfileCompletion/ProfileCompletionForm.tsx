@@ -11,6 +11,7 @@ import { Progress } from "@/src/components/ui/progress"
 import { StepOne } from "./StepOne"
 import { StepTwo } from "./StepTwo"
 import { StepThree } from "./StepThree"
+import { StepFour } from "./StepFour"
 import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
@@ -25,7 +26,7 @@ export default function ProfileCompletionForm() {
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
 
   const userIsMentor = !!getUserRole(user!)?.includes("Mentor")
-  const totalSteps = 4
+  const totalSteps = 5
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,6 +53,7 @@ export default function ProfileCompletionForm() {
     { title: "Personal Info", icon: "user" },
     { title: "Education", icon: "graduation-cap" },
     { title: "Social Links", icon: "link-2" },
+    { title: "Verify Identity", icon: "shield-check" },
     { title: "Complete", icon: "check-circle" }
   ]
 
@@ -124,6 +126,15 @@ export default function ProfileCompletionForm() {
             setUser={setUser}
             totalSteps={totalSteps}
             isMentor={userIsMentor}
+          />
+        )}
+        {step === 4 && user && (
+          <StepFour
+            step={step}
+            setStep={setStep}
+            user={user}
+            setUser={setUser}
+            totalSteps={totalSteps}
           />
         )}
 
