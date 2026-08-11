@@ -413,6 +413,11 @@ export async function getCommunityUsers(communityId: string) {
       with: {
         user: {
           with: {
+            profile: {
+              columns: {
+                verified: true
+              }
+            },
             roles: {
               with: {
                 role: true

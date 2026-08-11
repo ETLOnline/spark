@@ -81,6 +81,11 @@ export async function FindUserWildCard(wildcard: string) {
         meta_profile: true
       },
       with: {
+        profile: {
+          columns: {
+            verified: true
+          }
+        },
         roles: {
           with: {
             role: true

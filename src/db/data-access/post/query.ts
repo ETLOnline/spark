@@ -250,6 +250,11 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
         with: {
           author: {
             with: {
+              profile: {
+                columns: {
+                  verified: true
+                }
+              },
               roles: {
                 with: {
                   role: true
@@ -258,7 +263,9 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
             }
           },
           postComments: {
-            with: { commentor: true },
+            with: {
+              commentor: { with: { profile: { columns: { verified: true } } } }
+            },
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },
@@ -279,6 +286,11 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
         with: {
           author: {
             with: {
+              profile: {
+                columns: {
+                  verified: true
+                }
+              },
               roles: {
                 with: {
                   role: true
@@ -287,7 +299,9 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
             }
           },
           postComments: {
-            with: { commentor: true },
+            with: {
+              commentor: { with: { profile: { columns: { verified: true } } } }
+            },
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },

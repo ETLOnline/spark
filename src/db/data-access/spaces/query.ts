@@ -396,6 +396,11 @@ export async function getSpaceUsers(spaceId: string) {
       with: {
         user: {
           with: {
+            profile: {
+              columns: {
+                verified: true
+              }
+            },
             roles: {
               with: {
                 role: true
