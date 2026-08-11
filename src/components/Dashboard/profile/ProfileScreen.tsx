@@ -366,6 +366,8 @@ export default function ProfileScreen({
     }
   }, [isMyProfile])
 
+  console.log(profile?.verified, "profileData")
+
   return (
     <>
       <div className="container mx-auto p-3 sm:p-6 relative">
@@ -566,7 +568,9 @@ export default function ProfileScreen({
             )}
 
             {/* Email Verification Card */}
-            {isMyProfile && <EmailVerificationCard userId={user.unique_id} />}
+            {isMyProfile && !profile?.verified ? (
+              <EmailVerificationCard userId={user.unique_id} />
+            ) : null}
             {isStudent && (
               <Card>
                 <CardHeader>

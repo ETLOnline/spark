@@ -6,7 +6,10 @@ import {
   GetOtpByEmail,
   VerifyAndConsumeOtp
 } from "@/src/db/data-access/otp/query"
-import { updateUserProfile } from "@/src/db/data-access/profile/query"
+import {
+  GetVerifiedProfileByEmail,
+  updateUserProfile
+} from "@/src/db/data-access/profile/query"
 import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
 import {
   sendIdentityVerificationOtpEmail,
@@ -91,6 +94,18 @@ export const VerifyEmailOtpAction = CreateServerAction(
         verifiedEmail: email
       })
 
+      return { success: true, data: profile }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetVerifiedProfileByEmailAction = CreateServerAction(
+  true,
+  async (email: string) => {
+    try {
+      const profile = await GetVerifiedProfileByEmail(email)
       return { success: true, data: profile }
     } catch (error) {
       return { error: error }

@@ -7,7 +7,10 @@ import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Button } from "@/src/components/ui/button"
 import { toast } from "@/src/hooks/use-toast"
-import { SendEmailOtpAction } from "@/src/server-actions/Otp/Otp"
+import {
+  GetVerifiedProfileByEmailAction,
+  SendEmailOtpAction
+} from "@/src/server-actions/Otp/Otp"
 import {
   VerificationEmailFormValues,
   verificationEmailSchema
@@ -31,6 +34,15 @@ export function EmailStep({ userId, onSubmitted }: EmailStepProps) {
   const handleSendCode = async (data: EmailFormValues) => {
     setIsSending(true)
     try {
+      const verifiedCheck = await GetVerifiedProfileByEmailAction(data.email)
+      if (verifiedCheck?.data) {
+        form.setError("email", {
+          type: "manual",
+          message: "This email is already verified or taken."
+        })
+        return
+      }
+
       const result = await SendEmailOtpAction(data.email, userId)
       if (!result?.success) {
         toast({
