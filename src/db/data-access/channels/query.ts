@@ -279,11 +279,7 @@ export async function getChannelUsers(channelId: string) {
       with: {
         user: {
           with: {
-            profile: {
-              columns: {
-                verified: true
-              }
-            },
+            profile: true,
             roles: {
               with: {
                 role: true

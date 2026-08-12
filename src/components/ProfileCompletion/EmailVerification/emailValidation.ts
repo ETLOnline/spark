@@ -1,40 +1,14 @@
 import { z } from "zod"
-
-// Common free/personal email providers — students, faculty, and mentors must
-// verify with a .edu, university, or company email instead.
-const PERSONAL_EMAIL_DOMAINS = new Set([
-  "gmail.com",
-  "googlemail.com",
-  "yahoo.com",
-  "yahoo.co.in",
-  "yahoo.co.uk",
-  "ymail.com",
-  "rocketmail.com",
-  "hotmail.com",
-  "hotmail.co.uk",
-  "outlook.com",
-  "live.com",
-  "msn.com",
-  "aol.com",
-  "icloud.com",
-  "me.com",
-  "mac.com",
-  "protonmail.com",
-  "proton.me",
-  "mail.com",
-  "zoho.com",
-  "gmx.com",
-  "yandex.com",
-  "rediffmail.com",
-  "inbox.com"
-])
+import { isPersonalEmailDomainAction } from "@/src/server-actions/personalEmailDomain/personalEmailDomain"
 
 export const NON_PERSONAL_EMAIL_MESSAGE =
   "Personal email providers (Gmail, Yahoo, Outlook, etc.) aren't accepted. Please use your school, university, or company email."
 
-export function isPersonalEmailDomain(email: string): boolean {
+export async function isPersonalEmailDomain(email: string) {
   const domain = email.split("@")[1]?.toLowerCase().trim()
-  return !!domain && PERSONAL_EMAIL_DOMAINS.has(domain)
+  const res = await isPersonalEmailDomainAction(domain)
+
+  return !!domain && res
 }
 
 export const verificationEmailSchema = z.object({

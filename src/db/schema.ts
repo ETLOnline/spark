@@ -2107,6 +2107,17 @@ export const emailOtpsTable = pgTable("email_otps", {
 export type InsertEmailOtp = typeof emailOtpsTable.$inferInsert
 export type SelectEmailOtp = typeof emailOtpsTable.$inferSelect
 
+export const personalEmailDomainsTable = pgTable("personal_email_domains", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  domain: varchar("domain").notNull().unique(),
+  ...timestamps
+})
+
+export type InsertPersonalEmailDomain =
+  typeof personalEmailDomainsTable.$inferInsert
+export type SelectPersonalEmailDomain =
+  typeof personalEmailDomainsTable.$inferSelect
+
 export const leaderboardSnapshotsTable = pgTable("leaderboard_snapshots", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   community_id: varchar("community_id", { length: 36 })

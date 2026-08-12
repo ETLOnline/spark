@@ -166,7 +166,7 @@ export async function getProjectUsers(
       limit,
       where: whereClauses.length ? and(...whereClauses) : undefined,
       with: {
-        user: { with: { profile: { columns: { verified: true } } } }
+        user: { with: { profile: true } }
       }
     })
 
