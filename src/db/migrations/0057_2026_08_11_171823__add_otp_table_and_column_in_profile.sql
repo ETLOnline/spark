@@ -9,7 +9,5 @@ CREATE TABLE IF NOT EXISTS "email_otps" (
 	CONSTRAINT "email_otps_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-ALTER TABLE "recommendations" ALTER COLUMN "type" DROP DEFAULT;--> statement-breakpoint
-ALTER TABLE "recommendations" ALTER COLUMN "type" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "profile" ADD COLUMN "email" varchar;--> statement-breakpoint
 ALTER TABLE "profile" ADD COLUMN "verified" boolean DEFAULT false NOT NULL;

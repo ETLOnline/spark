@@ -398,7 +398,7 @@
       "idx": 56,
       "version": "7",
       "when": 1785915399227,
-      "tag": "0056_remove_default_type_in_recommendations_table",
+      "tag": "0056_2026_08_05_123639__remove_default_type_in_recommendations_table",
       "breakpoints": true
     },
     {
