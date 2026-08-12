@@ -24,6 +24,7 @@ import {
 } from "@/src/server-actions/Post/Post"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { Button } from "@/src/components/ui/button"
+import { VerifiedBadge } from "@/src/components/ui/verified-badge"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -122,7 +123,12 @@ const PostFeed: React.FC<PostFeedProps> = ({
                         <AvatarFallback>{name}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{name}</p>
+                        <p className="font-semibold flex items-center gap-1">
+                          {name}
+                          {post.author.profile?.verified && (
+                            <VerifiedBadge size={14} />
+                          )}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {getUserRole(post.author, spaceId)}
                         </p>

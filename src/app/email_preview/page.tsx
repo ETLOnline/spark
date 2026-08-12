@@ -109,6 +109,16 @@ const emailTemplates = [
     value: "session_request_rejected",
     label: "Session Request Rejected Email",
     file: "session_request_response.html"
+  },
+  {
+    value: "identity_verification_otp",
+    label: "Identity Verification OTP",
+    file: "identity_verification_otp.html"
+  },
+  {
+    value: "identity_verified",
+    label: "Identity Verified Success",
+    file: "identity_verified_success.html"
   }
 ]
 

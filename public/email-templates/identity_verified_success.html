@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Identity Verified</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1a1a1a;
+    "
+  >
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      width="100%"
+      style="background-color: #f8fafc; padding: 20px 0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            width="600"
+            style="
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            "
+          >
+            <tr>
+              <td align="center" style="padding: 24px 0 16px 0">
+                <img
+                  src="{{logoUrl}}"
+                  alt="Platform Logo"
+                  width="120"
+                  style="display: block; max-width: 120px; height: auto"
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                align="center"
+                style="
+                  background-color: #51ecdc;
+                  padding: 20px;
+                  color: #0f172a;
+                  font-size: 20px;
+                  font-weight: bold;
+                "
+              >
+                Identity Verified
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 32px;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  color: #1a1a1a;
+                "
+              >
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  align="center"
+                  style="margin: 0 auto 24px"
+                >
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        width: 56px;
+                        height: 56px;
+                        border-radius: 50%;
+                        background-color: #ecfdf5;
+                        color: #16a34a;
+                        font-size: 28px;
+                        font-weight: bold;
+                        line-height: 56px;
+                      "
+                    >
+                      &#10003;
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 0 0 16px; text-align: center">
+                  Hi {{userName}},
+                </p>
+                <p style="margin: 0 0 24px; text-align: center">
+                  Your identity has been successfully verified using
+                  <strong>{{verifiedEmail}}</strong>. You now have a verified
+                  badge on your Spark profile.
+                </p>
+
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  align="center"
+                  style="margin: 0 auto 8px"
+                >
+                  <tr>
+                    <td
+                      align="center"
+                      bgcolor="#51ecdc"
+                      style="border-radius: 6px"
+                    >
+                      <a
+                        href="{{ctaLink}}"
+                        target="_blank"
+                        style="
+                          display: inline-block;
+                          padding: 12px 32px;
+                          font-size: 16px;
+                          font-weight: bold;
+                          color: #0f172a;
+                          text-decoration: none;
+                        "
+                      >
+                        View Your Profile
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 0 32px 24px;
+                  text-align: center;
+                  font-size: 12px;
+                  color: #9ca3af;
+                "
+              >
+                &copy; 2026 Spark. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -279,6 +279,7 @@ export async function getChannelUsers(channelId: string) {
       with: {
         user: {
           with: {
+            profile: true,
             roles: {
               with: {
                 role: true

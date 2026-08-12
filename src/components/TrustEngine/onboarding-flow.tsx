@@ -10,18 +10,15 @@ import {
   Target,
   Award,
   Users,
-  Zap,
   ArrowRight,
   Sparkles,
   Trophy
 } from "lucide-react"
-import { SelectActivityRules, SelectRewardLevel } from "@/src/db/schema"
+import { SelectActivityRules } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  getRewardLevelsAction,
-  GetActivityRulesAction
-} from "@/src/server-actions/Reward/Reward"
+import { GetActivityRulesAction } from "@/src/server-actions/Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { TrustEngineDetails } from "./TrustEngineDetails"
 
 // Which activity types to feature in onboarding, with friendly labels
 const FEATURED_ACTIVITIES: { type: ActivityTypes; label: string }[] = [
@@ -41,22 +38,15 @@ function formatReward(
 
 export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [levels, setLevels] = useState<SelectRewardLevel[]>([])
   const [rewardRows, setRewardRows] = useState<
     { label: string; reward: string }[]
   >([])
 
-  const [, , , getLevels] = useServerAction(getRewardLevelsAction)
   const [, , , getActivityRules] = useServerAction(GetActivityRulesAction)
 
   useEffect(() => {
     const fetchData = async () => {
-      const [levelsRes, rulesRes] = await Promise.all([
-        getLevels(),
-        getActivityRules()
-      ])
-
-      if (levelsRes?.success && levelsRes.data) setLevels(levelsRes.data)
+      const rulesRes = await getActivityRules()
 
       if (rulesRes?.success && rulesRes.data) {
         const rulesMap = new Map(
@@ -78,93 +68,19 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
       icon: Target,
       title: "Welcome to SPARK Trust System",
       description: "Your reputation and achievements matter",
-      content: (
-        <div className="space-y-4">
-          <p>
-            Every action you take contributes to your reputation in the
-            community. We track two key metrics to measure your growth:
-          </p>
-          <div className="space-y-3">
-            <div className="p-4  border  rounded-lg">
-              <h4 className="font-semibold  flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5" />
-                Reputation Points (RP)
-              </h4>
-              <p className="text-sm">
-                Earned through learning, contribution, and community engagement.
-                Unlocks advanced opportunities.
-              </p>
-            </div>
-            <div className="p-4  border  rounded-lg">
-              <h4 className="font-semibold  flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5" />
-                Spark Credits (SC)
-              </h4>
-              <p className="text-sm">
-                Earned through milestones and achievements. Spend them on
-                premium courses and mentorship.
-              </p>
-            </div>
-          </div>
-        </div>
-      )
+      content: <TrustEngineDetails section="intro" />
     },
     {
       icon: Award,
       title: "Earn & Build Your Reputation",
       description: "Every action counts toward your progression",
-      content: (
-        <div className="space-y-4">
-          <p>Get rewarded for meaningful contributions:</p>
-          <div className="space-y-2">
-            {rewardRows.map((item, i) => (
-              <div
-                key={i}
-                className="p-3 border rounded-lg flex items-center justify-between"
-              >
-                <span className="text-sm font-medium">{item.label}</span>
-                <span className="text-sm font-semibold">{item.reward}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
+      content: <TrustEngineDetails section="earn" />
     },
     {
       icon: Users,
       title: "Progress Through Levels",
       description: "Unlock new opportunities as you grow",
-      content: (
-        <div className="space-y-4">
-          <p>
-            As you accumulate reputation, you'll progress through distinct
-            levels, each unlocking new opportunities:
-          </p>
-          <div className="space-y-3">
-            {levels.map((item, i) => (
-              <div
-                key={i}
-                className="p-3 border rounded-lg flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge>{item.name}</Badge>
-                    <span className="text-xs">
-                      {item.min_points} - {item.max_points} RP
-                    </span>
-                  </div>
-                  <p className="text-sm">{item.description}</p>
-                </div>
-                <img
-                  src={`/images/rewards/levels/compressed/level-${item.id ?? 1}.png`}
-                  className=" w-12 h-12"
-                  alt=""
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )
+      content: <TrustEngineDetails section="levels" />
     },
     {
       icon: Target,

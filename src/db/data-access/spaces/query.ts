@@ -425,6 +425,7 @@ export async function getSpaceUsers(spaceId: string) {
       with: {
         user: {
           with: {
+            profile: true,
             roles: {
               with: {
                 role: true

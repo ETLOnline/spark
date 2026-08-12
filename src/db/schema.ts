@@ -192,6 +192,8 @@ export const profileTable = pgTable("profile", {
   total_completed_sessions: integer("total_completed_sessions")
     .notNull()
     .default(0),
+  email: varchar("email"),
+  verified: boolean("verified").notNull().default(false),
   ...timestamps
 })
 
@@ -2093,6 +2095,28 @@ export const contactUsTable = pgTable("contact_us", {
 
 export type InsertContactUs = typeof contactUsTable.$inferInsert
 export type SelectContactUs = typeof contactUsTable.$inferSelect
+
+export const emailOtpsTable = pgTable("email_otps", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  email: varchar().notNull().unique(),
+  otp: varchar().notNull(),
+  expires_at: varchar("expires_at").notNull(),
+  ...timestamps
+})
+
+export type InsertEmailOtp = typeof emailOtpsTable.$inferInsert
+export type SelectEmailOtp = typeof emailOtpsTable.$inferSelect
+
+export const personalEmailDomainsTable = pgTable("personal_email_domains", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  domain: varchar("domain").notNull().unique(),
+  ...timestamps
+})
+
+export type InsertPersonalEmailDomain =
+  typeof personalEmailDomainsTable.$inferInsert
+export type SelectPersonalEmailDomain =
+  typeof personalEmailDomainsTable.$inferSelect
 
 export const leaderboardSnapshotsTable = pgTable("leaderboard_snapshots", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

@@ -75,6 +75,7 @@ import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import ProfileCompletionCard from "./ProfileCompletionCard"
+import EmailVerificationCard from "./EmailVerificationCard"
 import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
@@ -365,6 +366,8 @@ export default function ProfileScreen({
     }
   }, [isMyProfile])
 
+  console.log(profile?.verified, "profileData")
+
   return (
     <>
       <div className="container mx-auto p-3 sm:p-6 relative">
@@ -563,6 +566,11 @@ export default function ProfileScreen({
                 }}
               />
             )}
+
+            {/* Email Verification Card */}
+            {isMyProfile && !profile?.verified ? (
+              <EmailVerificationCard userId={user.unique_id} />
+            ) : null}
             {isStudent && (
               <Card>
                 <CardHeader>
