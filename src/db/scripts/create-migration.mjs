@@ -36,60 +36,69 @@ rl.question("Enter migration name: ", (migrationName) => {
   const migrationFullName = `${timestamp}__${sanitizedName}`
 
   try {
+    const metaDir = path.join("src", "db", "migrations", "meta")
+
+    if (!fs.existsSync(metaDir)) {
+      console.log("❌ Meta directory not found")
+      rl.close()
+      return
+    }
+
+    const numberedPattern = /^\d{4}_snapshot\.json$/
+    const before = new Set(
+      fs.readdirSync(metaDir).filter((f) => numberedPattern.test(f))
+    )
+
     console.log(`🔄 Generating migration: ${migrationFullName}`)
     execSync(`npx drizzle-kit generate --name="${migrationFullName}"`, {
       stdio: "inherit"
     })
 
-    // Find and rename snapshot
-    const metaDir = path.join("src", "db", "migrations", "meta")
+    const after = fs.readdirSync(metaDir).filter((f) => numberedPattern.test(f))
+    const newFiles = after.filter((f) => !before.has(f))
 
-    if (fs.existsSync(metaDir)) {
-      const files = fs
-        .readdirSync(metaDir)
+    if (newFiles.length === 1) {
+      const oldPath = path.join(metaDir, newFiles[0])
+      const newPath = path.join(metaDir, `${migrationFullName}_snapshot.json`)
+
+      fs.renameSync(oldPath, newPath)
+
+      console.log("✅ Migration generated successfully")
+      console.log(
+        `🔄 Renamed: ${newFiles[0]} → ${migrationFullName}_snapshot.json`
+      )
+
+      const migrationsDir = path.join("src", "db", "migrations")
+      const sqlFiles = fs
+        .readdirSync(migrationsDir)
         .filter(
-          (file) =>
-            file.endsWith("_snapshot.json") &&
-            file.match(/^\d{4}_snapshot\.json$/)
-        ) // Only get numbered snapshots
-        .sort((a, b) => {
-          // Sort by the number at the beginning of the filename
-          const numA = parseInt(a.split("_")[0])
-          const numB = parseInt(b.split("_")[0])
-          return numB - numA // Sort in descending order to get the latest first
-        })
-
-      console.log("Found snapshots:", files) // Debug log
-
-      if (files.length > 0) {
-        const latestSnapshot = files[0] // Get the first one (highest number)
-        const oldPath = path.join(metaDir, latestSnapshot)
-        const newPath = path.join(metaDir, `${migrationFullName}_snapshot.json`)
-
-        fs.renameSync(oldPath, newPath)
-
-        console.log("✅ Migration generated successfully")
-        console.log(
-          `🔄 Renamed: ${latestSnapshot} → ${migrationFullName}_snapshot.json`
+          (file) => file.includes(migrationFullName) && file.endsWith(".sql")
         )
 
-        // Find the SQL file
-        const migrationsDir = path.join("src", "db", "migrations")
-        const sqlFiles = fs
-          .readdirSync(migrationsDir)
-          .filter(
-            (file) => file.includes(migrationFullName) && file.endsWith(".sql")
-          )
-
-        if (sqlFiles.length > 0) {
-          console.log(`📁 SQL: ${path.join(migrationsDir, sqlFiles[0])}`)
-        }
-        console.log(`📄 Snapshot: ${newPath}`)
-      } else {
-        console.log("⚠️ No snapshot file found to rename")
+      if (sqlFiles.length > 0) {
+        console.log(`📁 SQL: ${path.join(migrationsDir, sqlFiles[0])}`)
       }
+      console.log(`📄 Snapshot: ${newPath}`)
+    } else if (newFiles.length === 0) {
+      // No new numbered snapshot appeared — either nothing changed, or
+      // drizzle-kit already wrote it under a name not matching the raw
+      // numbered pattern. Don't guess; leave it for manual inspection.
+      console.log(
+        "⚠️ No new snapshot file was created by this run — nothing to rename. " +
+          "If schema.ts has pending changes, check meta/ manually."
+      )
     } else {
-      console.log("❌ Meta directory not found")
+      // More than one new numbered snapshot appeared in one run — this
+      // means stray/orphaned numbered files were already sitting in meta/
+      // before this even started. Refuse to guess which one is real.
+      console.log(
+        `❌ Found ${newFiles.length} new snapshot files, expected exactly 1: ${newFiles.join(", ")}`
+      )
+      console.log(
+        "This means meta/ already had leftover numbered snapshot files before this run. " +
+          "Clean those up (they're usually orphaned artifacts with no matching journal entry) and re-run."
+      )
+      process.exit(1)
     }
   } catch (error) {
     console.error("❌ Error:", error.message)

@@ -32,6 +32,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { useEffect, useState } from "react"
 import { getUserRole } from "@/src/utils/helpers"
+import { VerifiedBadge } from "../../ui/verified-badge"
 
 export default function CommandCenter() {
   const [open, setOpen] = useState(false)
@@ -112,7 +113,6 @@ export default function CommandCenter() {
           <CommandGroup heading="Users">
             {peopleList.map((person) => (
               <CommandItem
-                value={`${person.first_name} ${person.last_name}`}
                 key={person.unique_id}
                 onSelect={() => handleItemPress(`/profile/${person.unique_id}`)}
                 className="group"
@@ -124,8 +124,9 @@ export default function CommandCenter() {
                   />
                 </Avatar>
                 <div className="flex flex-col">
-                  <h2>
+                  <h2 className="flex items-center gap-1">
                     {person.first_name} {person.last_name}
+                    {person.profile?.verified && <VerifiedBadge size={14} />}
                   </h2>
                   <p
                     className="text-sm text-muted-foreground

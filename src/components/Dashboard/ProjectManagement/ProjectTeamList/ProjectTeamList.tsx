@@ -20,6 +20,7 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import { VerifiedBadge } from "@/src/components/ui/verified-badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -407,8 +408,11 @@ export default function ProjectTeamList({
                             {user.last_name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="font-medium truncate">
+                        <div className="font-medium truncate flex items-center gap-1">
                           {user.first_name}
+                          {user.profile?.verified && (
+                            <VerifiedBadge size={14} />
+                          )}
                         </div>
                       </div>
 

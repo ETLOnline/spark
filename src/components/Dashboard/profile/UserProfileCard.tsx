@@ -10,6 +10,7 @@ import ProfileFollowActions from "./user/ProfileFollowActions"
 import { SelectUser } from "@/src/db/schema"
 import { getUserRole } from "@/src/utils/helpers"
 import { Skeleton } from "../../ui/skeleton"
+import { VerifiedBadge } from "../../ui/verified-badge"
 
 type ProfileCardProps = {
   userInfo: SelectUser
@@ -79,8 +80,9 @@ export default function UserProfileCard({
           <div className="mb-2">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
                   {userInfo.first_name} {userInfo.last_name}
+                  {userInfo.profile?.verified && <VerifiedBadge size={20} />}
                 </h1>
                 <TooltipProvider>
                   <Tooltip>
