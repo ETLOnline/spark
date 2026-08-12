@@ -407,6 +407,13 @@
       "when": 1786450704069,
       "tag": "0057_2026_08_11_171823__add_otp_table_and_column_in_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1786528629678,
+      "tag": "0058_2026_08_12_145708__add_non_edu_mails",
+      "breakpoints": true
     }
   ]
 }
