@@ -6,9 +6,11 @@ export const NON_PERSONAL_EMAIL_MESSAGE =
 
 export async function isPersonalEmailDomain(email: string) {
   const domain = email.split("@")[1]?.toLowerCase().trim()
+  if (!domain) return false
+
   const res = await isPersonalEmailDomainAction(domain)
 
-  return !!domain && res
+  return res
 }
 
 export const verificationEmailSchema = z.object({
@@ -16,7 +18,7 @@ export const verificationEmailSchema = z.object({
     .string()
     .min(1, "Email is required")
     .email("Enter a valid email address")
-    .refine((email) => !isPersonalEmailDomain(email), {
+    .refine(async (email) => !(await isPersonalEmailDomain(email)), {
       message: NON_PERSONAL_EMAIL_MESSAGE
     })
 })
