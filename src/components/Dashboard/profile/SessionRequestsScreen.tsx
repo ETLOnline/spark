@@ -20,6 +20,7 @@ import {
   TabsList,
   TabsTrigger
 } from "@/src/components/ui/tabs"
+import { VerifiedBadge } from "@/src/components/ui/verified-badge"
 import AcceptSessionRequestDialog from "./AcceptSessionRequestDialog"
 import SuggestNewSlotDialog from "./SuggestNewSlotDialog"
 import PaginationComponent from "@/src/components/common/Pagination"
@@ -36,6 +37,7 @@ interface MenteeInfo {
     bio: string | null
     institute: string | null
     degree: string | null
+    verified: boolean
   } | null
 }
 
@@ -216,8 +218,13 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium truncate">
-                      {request.mentee.first_name} {request.mentee.last_name}
+                    <p className="font-medium truncate flex items-center gap-1">
+                      <span className="truncate">
+                        {request.mentee.first_name} {request.mentee.last_name}
+                      </span>
+                      {request.mentee.profile?.verified && (
+                        <VerifiedBadge size={14} />
+                      )}
                     </p>
                     <span className="text-xs text-muted-foreground border border-foreground/10 rounded px-1.5 py-0.5 shrink-0 flex items-center gap-1">
                       {request.session_type === "group" ? (
