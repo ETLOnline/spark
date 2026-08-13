@@ -226,7 +226,7 @@ const ProfileFollowActions = ({ user }: Props) => {
           ) : (
             <Button
               disabled
-              className="bg-muted text-muted-foreground"
+              className="bg-muted disabled:opacity-100"
               size={"sm"}
             >
               {contactLoading ? <Loader /> : null} Connect Requested
