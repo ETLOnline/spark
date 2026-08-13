@@ -113,6 +113,7 @@ export default function CommandCenter() {
           <CommandGroup heading="Users">
             {peopleList.map((person) => (
               <CommandItem
+                value={`${person.first_name} ${person.last_name}`}
                 key={person.unique_id}
                 onSelect={() => handleItemPress(`/profile/${person.unique_id}`)}
                 className="group"
