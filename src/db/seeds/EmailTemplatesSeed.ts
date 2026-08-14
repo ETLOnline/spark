@@ -104,6 +104,16 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.SESSION_REQUEST_REJECTED,
     subject: "{{mentorName}} declined your session request",
     body: loadTemplate("session_request_response.html")
+  },
+  {
+    name: NotificationEvent.IDENTITY_VERIFICATION_OTP,
+    subject: "Your Spark verification code",
+    body: loadTemplate("identity_verification_otp.html")
+  },
+  {
+    name: NotificationEvent.IDENTITY_VERIFIED,
+    subject: "Your identity has been verified",
+    body: loadTemplate("identity_verified_success.html")
   }
 ]
 
