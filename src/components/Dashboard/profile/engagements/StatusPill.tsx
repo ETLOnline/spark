@@ -15,6 +15,7 @@ export function StatusPill({ status, size = "sm" }: StatusPillProps) {
         size === "md" && "text-xs px-2.5 py-1",
         status === "overdue" && "bg-red-500/10 text-red-500",
         status === "upcoming" && "bg-blue-500/10 text-blue-600",
+        status === "open" && "bg-amber-500/10 text-amber-600",
         status === "completed" && "bg-emerald-500/10 text-emerald-600"
       )}
     >
@@ -23,6 +24,7 @@ export function StatusPill({ status, size = "sm" }: StatusPillProps) {
           "w-1.5 h-1.5 rounded-full",
           status === "overdue" && "bg-red-500",
           status === "upcoming" && "bg-blue-500",
+          status === "open" && "bg-amber-500",
           status === "completed" && "bg-emerald-500"
         )}
       />

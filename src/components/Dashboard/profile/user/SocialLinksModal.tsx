@@ -36,18 +36,31 @@ const urlField = z
   .optional()
   .or(z.literal(""))
 
-const socialLinksSchema = z.object({
-  personal_website_url: urlField,
-  github_url: urlField,
-  linkedin_url: urlField,
-  twitter_url: urlField,
-  instagram_url: urlField
-})
+const requiredUrlField = z
+  .string()
+  .trim()
+  .min(1, "LinkedIn URL is required for mentors")
+  .refine((val) => isValidUrl(val), {
+    message: "Please enter a valid URL"
+  })
 
-const platformToFieldMap: Record<
-  string,
-  keyof z.infer<typeof socialLinksSchema>
-> = {
+const getSocialLinksSchema = (isMentor: boolean) =>
+  z.object({
+    personal_website_url: urlField,
+    github_url: urlField,
+    linkedin_url: isMentor ? requiredUrlField : urlField,
+    twitter_url: urlField,
+    instagram_url: urlField
+  })
+
+type SocialLinkField =
+  | "personal_website_url"
+  | "github_url"
+  | "linkedin_url"
+  | "twitter_url"
+  | "instagram_url"
+
+const platformToFieldMap: Record<string, SocialLinkField> = {
   website: "personal_website_url",
   github: "github_url",
   linkedin: "linkedin_url",
@@ -60,13 +73,15 @@ interface Props {
   profile: SelectProfile
   setprofile: Dispatch<SetStateAction<SelectProfile | null | undefined>>
   hasData?: boolean
+  isMentor?: boolean
 }
 
 export default function EditSocialLinksModal({
   user,
   profile,
   setprofile,
-  hasData = false
+  hasData = false,
+  isMentor = false
 }: Props) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -75,7 +90,7 @@ export default function EditSocialLinksModal({
   )
 
   const form = useForm({
-    resolver: zodResolver(socialLinksSchema)
+    resolver: zodResolver(getSocialLinksSchema(isMentor))
   })
 
   const errors = form.formState.errors
@@ -161,6 +176,9 @@ export default function EditSocialLinksModal({
                   <div key={platform.key} className="flex flex-col gap-2 ">
                     <Label className="font-semibold flex items-center gap-2">
                       {platform.label}
+                      {isMentor && platform.key === "linkedin" && (
+                        <span className="text-red-500">*</span>
+                      )}
                     </Label>
 
                     <Controller

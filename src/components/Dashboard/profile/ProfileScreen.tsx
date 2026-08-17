@@ -75,6 +75,7 @@ import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import ProfileCompletionCard from "./ProfileCompletionCard"
+import EmailVerificationCard from "./EmailVerificationCard"
 import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
@@ -365,6 +366,8 @@ export default function ProfileScreen({
     }
   }, [isMyProfile])
 
+  console.log(profile?.verified, "profileData")
+
   return (
     <>
       <div className="container mx-auto p-3 sm:p-6 relative">
@@ -508,7 +511,10 @@ export default function ProfileScreen({
             </Card>
 
             {isMentor && (
-              <MentorSessionsCard acceptedRequests={acceptedMentorSessions} />
+              <MentorSessionsCard
+                acceptedRequests={acceptedMentorSessions}
+                isMyProfile={!!isMyProfile}
+              />
             )}
           </div>
           {/* Right Column */}
@@ -560,6 +566,11 @@ export default function ProfileScreen({
                 }}
               />
             )}
+
+            {/* Email Verification Card */}
+            {isMyProfile && !profile?.verified ? (
+              <EmailVerificationCard userId={user.unique_id} />
+            ) : null}
             {isStudent && (
               <Card>
                 <CardHeader>
@@ -806,6 +817,7 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
+                      isMentor={isMentor}
                       hasData={
                         !!(
                           profile?.github_url ||
@@ -821,6 +833,13 @@ export default function ProfileScreen({
               </CardHeader>
 
               <CardContent className="space-y-3">
+                {isMentor && isMyProfile && !profile?.linkedin_url && (
+                  <p className="text-sm text-amber-600 bg-amber-500/10 rounded-md px-3 py-2">
+                    A LinkedIn URL is required for mentors. Please add yours
+                    below.
+                  </p>
+                )}
+
                 {!profile?.github_url &&
                   !profile?.linkedin_url &&
                   !profile?.instagram_url &&

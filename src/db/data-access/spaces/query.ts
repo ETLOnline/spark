@@ -1,10 +1,11 @@
-import { and, eq, inArray, isNull, or, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, isNull, not, or, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
   InsertSpace,
   SelectSpace,
   SelectSpaceUser,
+  sessionRequestsTable,
   spaceFeaturesTable,
   spacesTable,
   SpaceUsersTable
@@ -21,6 +22,7 @@ export type spaceQueryFilters = {
   created_by?: string
   isIndependent?: boolean
   forUserId?: string
+  excludeArchived?: boolean
 }
 
 export async function CreateSpace(spaceData: InsertSpace) {
@@ -84,6 +86,33 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
 
       if (filters.isIndependent) {
         whereClauses.push(isNull(spacesTable.channel_id))
+      }
+
+      if (filters.excludeArchived) {
+        // is_space_archived lives on session_requests, scoped to whoever
+        // owns the space (its created_by mentor) — not the viewer. So a
+        // space is "archived" the same way for the mentor, a mentee member,
+        // or anyone else looking at it, regardless of whose listing this is.
+        const archivedRows = await db
+          .selectDistinct({ space_id: sessionRequestsTable.space_id })
+          .from(sessionRequestsTable)
+          .innerJoin(
+            spacesTable,
+            eq(spacesTable.id, sessionRequestsTable.space_id)
+          )
+          .where(
+            and(
+              eq(sessionRequestsTable.mentor_id, spacesTable.created_by),
+              eq(sessionRequestsTable.is_space_archived, true)
+            )
+          )
+        const archivedSpaceIds = archivedRows
+          .map((row) => row.space_id)
+          .filter((id): id is string => id !== null)
+
+        if (archivedSpaceIds.length) {
+          whereClauses.push(not(inArray(spacesTable.id, archivedSpaceIds)))
+        }
       }
 
       if (filters.forUserId) {
@@ -396,6 +425,7 @@ export async function getSpaceUsers(spaceId: string) {
       with: {
         user: {
           with: {
+            profile: true,
             roles: {
               with: {
                 role: true

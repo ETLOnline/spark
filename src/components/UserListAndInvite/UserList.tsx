@@ -18,6 +18,7 @@ import {
 } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import { VerifiedBadge } from "@/src/components/ui/verified-badge"
 import { Badge } from "@/src/components/ui/badge"
 import {
   DropdownMenu,
@@ -522,8 +523,11 @@ export default function ChannelUserList({
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col min-w-0">
-                        <div className="font-medium text-sm lg:text-base truncate">
+                        <div className="font-medium text-sm lg:text-base truncate flex items-center gap-1">
                           {user.first_name}
+                          {user.profile?.verified && (
+                            <VerifiedBadge size={14} />
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground md:hidden truncate">
                           {user.email}

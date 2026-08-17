@@ -16,6 +16,7 @@ import {
 } from "@/src/components/ui/dropdown-menu"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { VerifiedBadge } from "@/src/components/ui/verified-badge"
 
 type Props = {
   comment: SelectComment
@@ -47,8 +48,11 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
 
           <div className="min-w-0">
             <div className="flex flex-row gap-2 items-center min-w-0">
-              <p className="font-semibold text-sm leading-tight text-foreground truncate">
+              <p className="font-semibold text-sm leading-tight text-foreground truncate flex items-center gap-1">
                 {name}
+                {comment.commentor.profile?.verified && (
+                  <VerifiedBadge size={13} />
+                )}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {formatRelativeTime(comment.created_at || "")}

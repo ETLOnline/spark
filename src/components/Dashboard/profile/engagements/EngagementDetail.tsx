@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
   Loader2,
   Star,
-  Video,
+  User,
   Users
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
@@ -55,7 +55,7 @@ export function EngagementDetail({
   feedbackItems = [],
   feedbackLoading = false
 }: EngagementDetailProps) {
-  const sessionLabel = `${moment(e.sessionDate).format("ddd MMM D")} · ${moment(e.startTime, "HH:mm").format("h:mm A")}`
+  const sessionLabel = `${moment(e.sessionDate).format("ddd MMM D")}, ${moment(e.startTime, "HH:mm").format("h:mm A")} - ${moment(e.endTime, "HH:mm").format("h:mm A")}`
   const isCompleted = e.status === "completed"
   const isOverdue = e.status === "overdue"
   const hasSpace = !!(e.spaceId && e.spaceSlug && e.spaceCreatedBy)
@@ -161,7 +161,7 @@ export function EngagementDetail({
                 {e.sessionType === "group" ? (
                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
                 ) : (
-                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
+                  <User className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
                 {e.sessionType === "1:1" ? "1:1" : "Group"}
               </span>
@@ -182,26 +182,38 @@ export function EngagementDetail({
           {hasSpace && (
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-muted-foreground">Space</span>
-              <Link
-                href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}`}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group"
-              >
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <LayoutDashboard className="h-4 w-4 text-primary" />
+              {e.isSpaceArchived ? (
+                <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-border bg-muted/30">
+                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Archive className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {e.spaceName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Archived</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {e.spaceName}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {e.isSpaceArchived ? "Archived" : "Active"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-primary shrink-0">
-                  Go to Space
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </div>
-              </Link>
+              ) : (
+                <Link
+                  href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}`}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <LayoutDashboard className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {e.spaceName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Active</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-primary shrink-0">
+                    Go to Space
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </div>
+                </Link>
+              )}
             </div>
           )}
         </>
@@ -272,15 +284,10 @@ export function EngagementDetail({
             {e.isMentor &&
               hasSpace &&
               (e.isSpaceArchived ? (
-                <Link
-                  href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
-                  className="w-full"
-                >
-                  <Button variant="outline" className="w-full">
-                    <Archive className="h-4 w-4 mr-2" />
-                    View archived space
-                  </Button>
-                </Link>
+                <Button variant="outline" disabled className="w-full">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Space archived
+                </Button>
               ) : (
                 <>
                   <Link
@@ -308,18 +315,25 @@ export function EngagementDetail({
                 </>
               ))}
 
-            {/* Mentee: Go to space button (always visible, space may be archived for this session) */}
-            {!e.isMentor && hasSpace && (
-              <Link
-                href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
-                className="w-full"
-              >
-                <Button variant="outline" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  {e.isSpaceArchived ? "View archived space" : "Go to space"}
+            {/* Mentee: Go to space button (hidden once the space is archived) */}
+            {!e.isMentor &&
+              hasSpace &&
+              (e.isSpaceArchived ? (
+                <Button variant="outline" disabled className="w-full">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Space archived
                 </Button>
-              </Link>
-            )}
+              ) : (
+                <Link
+                  href={`/mentorship/spaces/${encodeURIComponent(e.spaceSlug!)}?session=${e.id}`}
+                  className="w-full"
+                >
+                  <Button variant="outline" className="w-full">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Go to space
+                  </Button>
+                </Link>
+              ))}
           </>
         )}
 

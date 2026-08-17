@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { and, eq, ne } from "drizzle-orm"
 import { db } from "../.."
 import { InsertProfile, profileTable, SelectProfile } from "../../schema"
 
@@ -27,6 +27,21 @@ export async function updateUserProfile(
       .returning()
 
     return updatedProfile[0]
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetVerifiedProfileByEmail(email: string) {
+  try {
+    const rows = await db
+      .select()
+      .from(profileTable)
+      .where(
+        and(eq(profileTable.email, email), eq(profileTable.verified, true))
+      )
+
+    return !!rows[0]
   } catch (e: any) {
     throw new Error(e.message)
   }

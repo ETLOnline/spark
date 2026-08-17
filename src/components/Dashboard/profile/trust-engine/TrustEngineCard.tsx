@@ -1,6 +1,6 @@
 "use client"
 
-import { Zap } from "lucide-react"
+import { Info, Zap } from "lucide-react"
 import Link from "next/link"
 import { Card, CardTitle } from "../../../ui/card"
 import { Button } from "../../../ui/button"
@@ -14,6 +14,13 @@ import { SelectUser, SelectUserRewardsLevel } from "@/src/db/schema"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { progressPercentHelper } from "@/src/utils/clientHelper"
 import { GetUserTopCommunityRankAction } from "@/src/server-actions/Communities/CommunityRanking"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "../../../ui/tooltip"
+import { TrustEngineInfoModal } from "../../../TrustEngine/TrustEngineInfoModal"
 
 interface TrustEngineCardProps {
   user: SelectUser
@@ -33,6 +40,7 @@ export default function TrustEngineCard({
     rank: number
     community_title: string
   } | null>(null)
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
 
   const [, , , GetUserTopCommunityRank] = useServerAction(
     GetUserTopCommunityRankAction
@@ -84,12 +92,29 @@ export default function TrustEngineCard({
           <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
             Trust Engine
           </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsInfoOpen(true)}
+                  aria-label="How to earn SCs and RPs"
+                  className="text-gray-500 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-400"
+                >
+                  <Info className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>How to earn SCs and RPs</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <Button className="w-full sm:w-auto">
           <Link href={dashboardHref}>View Dashboard</Link>
         </Button>
       </div>
+
+      <TrustEngineInfoModal open={isInfoOpen} onOpenChange={setIsInfoOpen} />
 
       {/* Stats Grid */}
       <div className="mb-6 sm:mb-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

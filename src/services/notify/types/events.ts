@@ -21,5 +21,7 @@ export enum NotificationEvent {
   SESSION_SLOT_SUGGESTED = "session_slot_suggested",
   NEW_SESSION_REQUEST = "new_session_request",
   SESSION_REQUEST_ACCEPTED = "session_request_accepted",
-  SESSION_REQUEST_REJECTED = "session_request_rejected"
+  SESSION_REQUEST_REJECTED = "session_request_rejected",
+  IDENTITY_VERIFICATION_OTP = "identity_verification_otp",
+  IDENTITY_VERIFIED = "identity_verified"
 }
