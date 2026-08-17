@@ -14,7 +14,7 @@ import {
   userProfileCompletionAction
 } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
-import { normalizeUrl } from "@/src/utils/clientHelper"
+import { isValidUrl, normalizeUrl } from "@/src/utils/clientHelper"
 import { useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 interface StepThreeProps {
@@ -49,6 +49,17 @@ export function StepThree({
   }
 
   async function submitData(data: any) {
+    if (isMentor && !data.linkedin?.trim()) {
+      form.setError("linkedin", {
+        message: "LinkedIn URL is required for mentors"
+      })
+      return
+    }
+    if (isMentor && !isValidUrl(data.linkedin)) {
+      form.setError("linkedin", { message: "Please enter a valid URL" })
+      return
+    }
+
     setIsTransitioning(true)
     try {
       const socialPlatforms = {
@@ -104,7 +115,9 @@ export function StepThree({
       <div>
         <h3 className="text-lg font-semibold">Social Links</h3>
         <p className="text-sm text-muted-foreground">
-          Connect your social profiles (optional)
+          {isMentor
+            ? "Connect your social profiles (LinkedIn is required for mentors)"
+            : "Connect your social profiles (optional)"}
         </p>
       </div>
 
@@ -112,6 +125,7 @@ export function StepThree({
         <form onSubmit={form.handleSubmit(submitData)}>
           {socialPlatforms.map((platform) => {
             const IconComponent = platform.icon
+            const isRequired = isMentor && platform.key === "linkedin"
             return (
               <Card key={platform.key} className="border-0 shadow-sm">
                 <CardContent className="p-4">
@@ -122,6 +136,7 @@ export function StepThree({
                     <div className="flex-1 space-y-2">
                       <Label htmlFor={platform.key} className="font-semibold">
                         {platform.label}
+                        {isRequired && <span className="text-red-500"> *</span>}
                       </Label>
                       <Controller
                         name={platform.key}
@@ -136,6 +151,11 @@ export function StepThree({
                           />
                         )}
                       />
+                      {isRequired && form.formState.errors.linkedin && (
+                        <p className="text-red-500 text-sm">
+                          {String(form.formState.errors.linkedin.message)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
