@@ -817,6 +817,7 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
+                      isMentor={isMentor}
                       hasData={
                         !!(
                           profile?.github_url ||
@@ -832,6 +833,13 @@ export default function ProfileScreen({
               </CardHeader>
 
               <CardContent className="space-y-3">
+                {isMentor && isMyProfile && !profile?.linkedin_url && (
+                  <p className="text-sm text-amber-600 bg-amber-500/10 rounded-md px-3 py-2">
+                    A LinkedIn URL is required for mentors. Please add yours
+                    below.
+                  </p>
+                )}
+
                 {!profile?.github_url &&
                   !profile?.linkedin_url &&
                   !profile?.instagram_url &&
