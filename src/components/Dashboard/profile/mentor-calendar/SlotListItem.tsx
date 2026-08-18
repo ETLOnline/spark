@@ -79,7 +79,7 @@ export function SlotListItem({
   const { permissionChecker, canAccess } = usePermissionChecker("global")
   // Super admins can view slots but must never see the actual request action
   const canRequestSession =
-    canAccess("session.request") && !permissionChecker?.isSuperAdmin
+    canAccess("mentorship.session.request") && !permissionChecker?.isSuperAdmin
   const mentorPendingCount = isMyProfile
     ? countOverlappingRequests(slot, selectedDate, mentorPendingRequests)
     : 0

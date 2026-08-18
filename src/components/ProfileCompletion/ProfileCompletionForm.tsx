@@ -15,17 +15,18 @@ import { StepFour } from "./StepFour"
 import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
-import { getUserRole } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { useRouter } from "next/navigation"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export default function ProfileCompletionForm() {
   const [step, setStep] = useState(1)
   const [user, setUser] = useState<SelectUser>()
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
 
-  const userIsMentor = !!getUserRole(user!)?.includes("Mentor")
+  const { canAccess } = usePermissionChecker("global")
+  const userIsMentor = canAccess("mentorship.add_availibility")
   const totalSteps = 5
 
   useEffect(() => {

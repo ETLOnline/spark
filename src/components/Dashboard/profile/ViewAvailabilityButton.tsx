@@ -11,7 +11,7 @@ type Props = {
 
 export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
   const { canAccess } = usePermissionChecker("global")
-  if (!canAccess("session.request")) return null
+  if (!canAccess("mentorship.session.request")) return null
 
   return (
     <>
