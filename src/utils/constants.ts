@@ -225,8 +225,9 @@ export const permissions = {
     ChatView: "chat.view"
   },
 
-  session: {
-    request: "request"
+  mentorship: {
+    sessionRequest: "session.request",
+    addAvailability: "add_availibility"
   }
 }
 

@@ -125,8 +125,9 @@ const permissionSeedList = [
   { namespace: "project", action: permissions.project.DetailView },
   { namespace: "project", action: permissions.project.ChatView },
 
-  // Session
-  { namespace: "session", action: permissions.session.request }
+  // Mentorship
+  { namespace: "mentorship", action: permissions.mentorship.sessionRequest },
+  { namespace: "mentorship", action: permissions.mentorship.addAvailability }
 ]
 
 export const PermissionsSeed = async () => {
