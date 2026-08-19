@@ -2,14 +2,24 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { getUserRole } from "@/src/utils/helpers"
+import { GetUserPermissionsParsedAction } from "@/src/server-actions/UserRoles/UserRole"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import { BookedSlotsScreen } from "@/src/components/Dashboard/profile/BookedSlotsScreen"
 
 export default async function BookedSlotsPage() {
   const user = await AuthUserAction()
   if (!user) redirect("/sign-in")
 
-  if (!getUserRole(user)?.includes("Mentor")) redirect("/profile")
+  const isAdmin = await isSuperAdmin(user)
+  const permsResponse = await GetUserPermissionsParsedAction(user.unique_id)
+  const permissionChecker = new PermissionChecker(
+    "global",
+    permsResponse.success ? permsResponse.data : null,
+    isAdmin
+  )
+  if (!permissionChecker.canAccess("mentorship.add_availibility"))
+    redirect("/profile")
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">

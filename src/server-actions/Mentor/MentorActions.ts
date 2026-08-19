@@ -283,7 +283,7 @@ export const CreateSessionRequestAction = CreateServerAction(
         permsResponse.data,
         false
       )
-      if (!permissionChecker.canAccess("session.request")) {
+      if (!permissionChecker.canAccess("mentorship.session.request")) {
         return { error: "You do not have permission to request a session" }
       }
 

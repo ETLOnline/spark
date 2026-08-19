@@ -25,7 +25,7 @@ export default async function ViewAvailabilityPage({ params }: Props) {
     permsResponse.success ? permsResponse.data : null,
     isAdmin
   )
-  if (!isAdmin && !permissionChecker.canAccess("session.request")) {
+  if (!isAdmin && !permissionChecker.canAccess("mentorship.session.request")) {
     redirect(`/profile/${id}`)
   }
 
