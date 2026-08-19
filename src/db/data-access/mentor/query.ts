@@ -21,8 +21,9 @@ import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
+  permissionsTable,
   profileTable,
-  rolesTable,
+  rolePermissionsTable,
   sessionRequestsTable,
   spacesTable,
   SpaceUsersTable,
@@ -31,6 +32,7 @@ import {
   userTagsTable,
   usersTable
 } from "../../schema"
+import { permissions } from "@/src/utils/constants"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -183,17 +185,31 @@ const buildAvailabilityCondition = (
   )
 }
 
-let mentorRoleId: number | null | undefined
+let availabilityPermissionId: number | null | undefined
 
-const getMentorRoleId = async () => {
-  if (mentorRoleId !== undefined) return mentorRoleId
+const getMentorshipPermissionId = async () => {
+  if (availabilityPermissionId !== undefined) return availabilityPermissionId
 
-  const mentorRole = await db.query.rolesTable.findFirst({
-    where: eq(rolesTable.name, "Mentor"),
+  const permission = await db.query.permissionsTable.findFirst({
+    where: and(
+      eq(permissionsTable.namespace, "mentorship"),
+      eq(permissionsTable.action, permissions.mentorship.addAvailability)
+    ),
     columns: { id: true }
   })
-  mentorRoleId = mentorRole?.id ?? null
-  return mentorRoleId
+  availabilityPermissionId = permission?.id ?? null
+  return availabilityPermissionId
+}
+
+const getRoleIdsWithMentorshipPermission = async () => {
+  const permissionId = await getMentorshipPermissionId()
+  if (!permissionId) return []
+
+  const rows = await db.query.rolePermissionsTable.findMany({
+    where: eq(rolePermissionsTable.permission_id, permissionId),
+    columns: { role_id: true }
+  })
+  return rows.map((row) => row.role_id)
 }
 
 export async function GetMentors(filters?: GetMentorFilters) {
@@ -202,9 +218,9 @@ export async function GetMentors(filters?: GetMentorFilters) {
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    const roleId = await getMentorRoleId()
+    const roleIds = await getRoleIdsWithMentorshipPermission()
 
-    if (!roleId) {
+    if (!roleIds.length) {
       return {
         mentors: [],
         pagination: { total: 0, page, limit, totalPages: 0 }
@@ -212,7 +228,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     }
 
     const where = and(
-      eq(userRolesTable.role_id, roleId),
+      inArray(userRolesTable.role_id, roleIds),
       ...([
         filters?.isActive !== undefined
           ? eq(profileTable.is_mentor_active, filters.isActive)
