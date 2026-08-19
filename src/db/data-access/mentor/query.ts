@@ -21,8 +21,8 @@ import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
+  permissionsTable,
   profileTable,
-  rolesTable,
   sessionRequestsTable,
   spacesTable,
   SpaceUsersTable,
@@ -31,6 +31,7 @@ import {
   userTagsTable,
   usersTable
 } from "../../schema"
+import { permissions } from "@/src/utils/constants"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -183,17 +184,17 @@ const buildAvailabilityCondition = (
   )
 }
 
-let mentorRoleId: number | null | undefined
-
-const getMentorRoleId = async () => {
-  if (mentorRoleId !== undefined) return mentorRoleId
-
-  const mentorRole = await db.query.rolesTable.findFirst({
-    where: eq(rolesTable.name, "Mentor"),
-    columns: { id: true }
+const getRoleIdsWithMentorshipPermission = async () => {
+  const permission = await db.query.permissionsTable.findFirst({
+    where: and(
+      eq(permissionsTable.namespace, "mentorship"),
+      eq(permissionsTable.action, permissions.mentorship.addAvailability)
+    ),
+    with: {
+      roles: { columns: { role_id: true } }
+    }
   })
-  mentorRoleId = mentorRole?.id ?? null
-  return mentorRoleId
+  return permission?.roles.map((row) => row.role_id) ?? []
 }
 
 export async function GetMentors(filters?: GetMentorFilters) {
@@ -202,9 +203,9 @@ export async function GetMentors(filters?: GetMentorFilters) {
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    const roleId = await getMentorRoleId()
+    const roleIds = await getRoleIdsWithMentorshipPermission()
 
-    if (!roleId) {
+    if (!roleIds.length) {
       return {
         mentors: [],
         pagination: { total: 0, page, limit, totalPages: 0 }
@@ -212,7 +213,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     }
 
     const where = and(
-      eq(userRolesTable.role_id, roleId),
+      inArray(userRolesTable.role_id, roleIds),
       ...([
         filters?.isActive !== undefined
           ? eq(profileTable.is_mentor_active, filters.isActive)
