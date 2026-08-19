@@ -23,7 +23,6 @@ import {
   mentorshipFeedbackTable,
   permissionsTable,
   profileTable,
-  rolePermissionsTable,
   sessionRequestsTable,
   spacesTable,
   SpaceUsersTable,
@@ -185,31 +184,17 @@ const buildAvailabilityCondition = (
   )
 }
 
-let availabilityPermissionId: number | null | undefined
-
-const getMentorshipPermissionId = async () => {
-  if (availabilityPermissionId !== undefined) return availabilityPermissionId
-
+const getRoleIdsWithMentorshipPermission = async () => {
   const permission = await db.query.permissionsTable.findFirst({
     where: and(
       eq(permissionsTable.namespace, "mentorship"),
       eq(permissionsTable.action, permissions.mentorship.addAvailability)
     ),
-    columns: { id: true }
+    with: {
+      roles: { columns: { role_id: true } }
+    }
   })
-  availabilityPermissionId = permission?.id ?? null
-  return availabilityPermissionId
-}
-
-const getRoleIdsWithMentorshipPermission = async () => {
-  const permissionId = await getMentorshipPermissionId()
-  if (!permissionId) return []
-
-  const rows = await db.query.rolePermissionsTable.findMany({
-    where: eq(rolePermissionsTable.permission_id, permissionId),
-    columns: { role_id: true }
-  })
-  return rows.map((row) => row.role_id)
+  return permission?.roles.map((row) => row.role_id) ?? []
 }
 
 export async function GetMentors(filters?: GetMentorFilters) {
