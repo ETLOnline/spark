@@ -228,6 +228,10 @@ export const permissions = {
   mentorship: {
     sessionRequest: "session.request",
     addAvailability: "add_availibility"
+  },
+
+  advisor: {
+    viewRequests: "view_requests"
   }
 }
 

@@ -61,6 +61,10 @@ const userRolePermissions = [
       {
         namespace: "posting",
         actions: [permissions.posting.create, permissions.posting.view]
+      },
+      {
+        namespace: "advisor",
+        actions: [permissions.advisor.viewRequests]
       }
     ]
   },

@@ -159,6 +159,8 @@ export default function ProfileScreen({
 
   const [hasAvailabilityPermission, setHasAvailabilityPermission] =
     useState(false)
+  const [hasAdvisorRequestPermission, setHasAdvisorRequestPermission] =
+    useState(false)
 
   const [, , , profileSkills, profileInterests] = useUserProfile()
 
@@ -213,6 +215,9 @@ export default function ProfileScreen({
         )
         setHasAvailabilityPermission(
           permissionChecker.canAccess("mentorship.add_availibility")
+        )
+        setHasAdvisorRequestPermission(
+          permissionChecker.canAccess("advisor.view_requests")
         )
       }
     }
@@ -595,6 +600,30 @@ export default function ProfileScreen({
             {isMyProfile && !profile?.verified ? (
               <EmailVerificationCard userId={user.unique_id} />
             ) : null}
+
+            {/* Advisor Requests — shown to the owner only, gated by the "advisor.view_requests" permission */}
+            {isMyProfile && hasAdvisorRequestPermission && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                    Advisor Requests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Review and respond to student requests for your advisorship.
+                  </p>
+                  <Link href="/profile/advisor-requests" className="w-full">
+                    <Button className="w-full" size="sm">
+                      <Inbox className="h-4 w-4 mr-2" />
+                      View Requests
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
             {isStudent && (
               <Card>
                 <CardHeader>
