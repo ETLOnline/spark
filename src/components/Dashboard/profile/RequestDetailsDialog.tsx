@@ -40,7 +40,10 @@ function TextBlock({ label, value }: { label: string; value: string }) {
 export function RequestDetailsDialog({ request, onOpenChange }: Props) {
   return (
     <Dialog open={!!request} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-2xl max-h-[85vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Request Details</DialogTitle>
         </DialogHeader>
