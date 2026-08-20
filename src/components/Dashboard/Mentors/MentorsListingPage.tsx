@@ -5,7 +5,7 @@ import { useDebouncedCallback } from "use-debounce"
 import { Search } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
 import { Skeleton } from "@/src/components/ui/skeleton"
-import MentorCard from "./MentorCard"
+import MentorCard, { type MentorWithStats } from "./MentorCard"
 import MentorFilters from "./MentorFilters"
 import { MentorFiltersType, DEFAULT_FILTERS } from "./MentorTypes"
 import type { MultiSelectOption } from "@/src/components/ui/multi-select"
@@ -13,7 +13,6 @@ import PaginationComponent from "@/src/components/common/Pagination"
 import type { PaginationType } from "@/src/components/common/types/pagination.type"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
-import type { SelectUser } from "@/src/db/schema"
 import type { GetMentorFilters } from "@/src/db/data-access/mentor/query"
 import { Badge } from "../../ui/badge"
 
@@ -29,7 +28,7 @@ export default function MentorsListingPage() {
   const [drawerFilters, setDrawerFilters] =
     useState<MentorFiltersType>(DEFAULT_FILTERS)
   const [mentorData, setMentorData] = useState<{
-    mentors: SelectUser[]
+    mentors: MentorWithStats[]
     pagination: PaginationType
   }>({
     mentors: [],

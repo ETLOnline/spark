@@ -2,7 +2,6 @@ import {
   and,
   asc,
   count,
-  countDistinct,
   desc,
   eq,
   exists,
@@ -11,6 +10,7 @@ import {
   inArray,
   isNull,
   lte,
+  ne,
   or,
   SQL,
   sql,
@@ -21,8 +21,8 @@ import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
+  permissionsTable,
   profileTable,
-  rolesTable,
   sessionRequestsTable,
   spacesTable,
   SpaceUsersTable,
@@ -31,6 +31,7 @@ import {
   userTagsTable,
   usersTable
 } from "../../schema"
+import { permissions } from "@/src/utils/constants"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -183,19 +184,28 @@ const buildAvailabilityCondition = (
   )
 }
 
+const getRoleIdsWithMentorshipPermission = async () => {
+  const permission = await db.query.permissionsTable.findFirst({
+    where: and(
+      eq(permissionsTable.namespace, "mentorship"),
+      eq(permissionsTable.action, permissions.mentorship.addAvailability)
+    ),
+    with: {
+      roles: { columns: { role_id: true } }
+    }
+  })
+  return permission?.roles.map((row) => row.role_id) ?? []
+}
+
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    // Get Mentor role ID
-    const mentorRole = await db.query.rolesTable.findFirst({
-      where: eq(rolesTable.name, "Mentor"),
-      columns: { id: true }
-    })
+    const roleIds = await getRoleIdsWithMentorshipPermission()
 
-    if (!mentorRole) {
+    if (!roleIds.length) {
       return {
         mentors: [],
         pagination: { total: 0, page, limit, totalPages: 0 }
@@ -203,7 +213,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     }
 
     const where = and(
-      eq(userRolesTable.role_id, mentorRole.id),
+      inArray(userRolesTable.role_id, roleIds),
       ...([
         filters?.isActive !== undefined
           ? eq(profileTable.is_mentor_active, filters.isActive)
@@ -224,35 +234,22 @@ export async function GetMentors(filters?: GetMentorFilters) {
       ].filter(Boolean) as SQL[])
     )
 
-    // Mentor <-> profile is one-to-one, but a mentor could in theory hold more
-    // than one "Mentor" row in userRolesTable, so group by user id to keep
-    // counts and pagination accurate.
-    const [mentorRows, totalCountResult] = await Promise.all([
-      db
-        .select({ user: usersTable, profile: profileTable })
-        .from(userRolesTable)
-        .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
-        .innerJoin(
-          profileTable,
-          eq(profileTable.user_id, userRolesTable.user_id)
-        )
-        .where(where)
-        .groupBy(userRolesTable.user_id, usersTable.unique_id, profileTable.id)
-        .orderBy(asc(userRolesTable.user_id))
-        .limit(limit)
-        .offset(offset),
-      db
-        .select({ value: countDistinct(userRolesTable.user_id) })
-        .from(userRolesTable)
-        .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
-        .innerJoin(
-          profileTable,
-          eq(profileTable.user_id, userRolesTable.user_id)
-        )
-        .where(where)
-    ])
+    const mentorRows = await db
+      .select({
+        user: usersTable,
+        profile: profileTable,
+        totalCount: sql<number>`count(*) over()`
+      })
+      .from(userRolesTable)
+      .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
+      .innerJoin(profileTable, eq(profileTable.user_id, userRolesTable.user_id))
+      .where(where)
+      .groupBy(userRolesTable.user_id, usersTable.unique_id, profileTable.id)
+      .orderBy(asc(userRolesTable.user_id))
+      .limit(limit)
+      .offset(offset)
 
-    const totalCount = totalCountResult[0]?.value ?? 0
+    const totalCount = Number(mentorRows[0]?.totalCount ?? 0)
     const userIds = mentorRows.map((row) => row.user.unique_id)
 
     // userTags is one-to-many, so it's loaded separately for just this page
@@ -267,6 +264,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     const mentors = mentorRows.map((row) => ({
       ...row.user,
       profile: row.profile,
+      completedSessionsCount: row.profile.total_completed_sessions ?? 0,
       userTags: userTags.filter((ut) => ut.user_id === row.user.unique_id)
     }))
 
@@ -494,7 +492,8 @@ export async function UpdateSessionRequestStatus(
 
 /** All accepted bookings for a mentor — used to grey out already-booked times
  * on the calendar, and (via the joined space) to link the mentor's session
- * card straight into the workspace created for it, if any. */
+ * card straight into the workspace created for it, if any. Shown publicly on
+ * the mentor's profile, so this must never join mentee PII. */
 export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
   return await db.query.sessionRequestsTable.findMany({
     where: and(
@@ -507,6 +506,56 @@ export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
       }
     }
   })
+}
+
+/** A mentor's accepted bookings that fall on one specific date — powers the
+ * day-by-day "Booked Slots" navigator. Narrows at the DB level to requests
+ * whose recurrence window could possibly cover `date`, then resolves the
+ * exact day-of-week match for weekly recurrences in memory, so we never pull
+ * (or expand) a mentor's entire booking history just to render a single day. */
+export async function GetAcceptedSessionRequestsForMentorOnDate(
+  mentorId: string,
+  date: string
+) {
+  const candidates = await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      eq(sessionRequestsTable.status, "accepted"),
+      // One-time bookings can only ever match `date` exactly; only recurring
+      // ones need the open-below range, so a one-time booking from years ago
+      // never gets pulled just to be filtered back out below.
+      or(
+        eq(sessionRequestsTable.session_date, date),
+        and(
+          ne(sessionRequestsTable.repeat_type, "none"),
+          lte(sessionRequestsTable.session_date, date)
+        )
+      ),
+      or(
+        isNull(sessionRequestsTable.repeat_end_date),
+        gte(sessionRequestsTable.repeat_end_date, date)
+      )
+    ),
+    with: {
+      space: {
+        columns: { id: true, space_slug: true }
+      },
+      mentee: true
+    }
+  })
+
+  return candidates
+    .filter((r) =>
+      recurrencesOverlap(
+        {
+          date: r.session_date,
+          repeat_type: r.repeat_type,
+          repeat_end_date: r.repeat_end_date
+        },
+        { date, repeat_type: "none" }
+      )
+    )
+    .sort((a, b) => a.start_time.localeCompare(b.start_time))
 }
 
 /** A mentee's own accepted bookings across every mentor — used to show their
@@ -533,17 +582,26 @@ export async function GetAcceptedSessionRequestsForMentee(menteeId: string) {
   })
 }
 
-/** All pending + resubmitted requests for a mentor — used for calendar badge counts. */
+/** All pending + resubmitted requests for a mentor — used for calendar badge
+ * counts, and (with the mentee join) so the mentor can see whose request
+ * they're suggesting an alternative slot for when deleting a booked slot. */
 export async function GetPendingSessionRequestsForMentor(mentorId: string) {
-  return await db
-    .select()
-    .from(sessionRequestsTable)
-    .where(
-      and(
-        eq(sessionRequestsTable.mentor_id, mentorId),
-        inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
-      )
-    )
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      inArray(sessionRequestsTable.status, ["pending", "resubmitted"])
+    ),
+    with: {
+      mentee: {
+        columns: {
+          unique_id: true,
+          first_name: true,
+          last_name: true,
+          profile_url: true
+        }
+      }
+    }
+  })
 }
 
 /** True if an accepted booking already overlaps this occurrence for the mentor —
@@ -651,7 +709,7 @@ export async function DeletePendingSessionRequestsForSlot(
 // ── Engagements ─────────────────────────────────────────────────────────────────
 
 export async function GetEngagementsForUser(userId: string) {
-  return db.query.sessionRequestsTable.findMany({
+  const requests = await db.query.sessionRequestsTable.findMany({
     where: and(
       eq(sessionRequestsTable.status, "accepted"),
       or(
@@ -666,6 +724,43 @@ export async function GetEngagementsForUser(userId: string) {
       space: true
     }
   })
+
+  // A space can have several session_requests rows for the same mentor (e.g.
+  // two sessions with the same mentee, or several mentees sharing a space).
+  // Archiving happens per row, so a session's *own* is_space_archived can
+  // still read false even though the mentor archived the space via another
+  // one of its sessions. Resolve the space's real archived state up front so
+  // every engagement tied to that space reflects it consistently.
+  const spaceIds = [
+    ...new Set(
+      requests.map((r) => r.space_id).filter((id): id is string => !!id)
+    )
+  ]
+
+  let archivedSpaceIds = new Set<string>()
+  if (spaceIds.length) {
+    const archivedRows = await db
+      .selectDistinct({ space_id: sessionRequestsTable.space_id })
+      .from(sessionRequestsTable)
+      .innerJoin(spacesTable, eq(spacesTable.id, sessionRequestsTable.space_id))
+      .where(
+        and(
+          inArray(sessionRequestsTable.space_id, spaceIds),
+          eq(sessionRequestsTable.mentor_id, spacesTable.created_by),
+          eq(sessionRequestsTable.is_space_archived, true)
+        )
+      )
+    archivedSpaceIds = new Set(
+      archivedRows.map((row) => row.space_id).filter((id): id is string => !!id)
+    )
+  }
+
+  return requests.map((req) => ({
+    ...req,
+    is_space_archived: req.space_id
+      ? archivedSpaceIds.has(req.space_id)
+      : req.is_space_archived
+  }))
 }
 
 /** All session_requests that share the same availability slot, date, AND start time (same group session occurrence). */
@@ -714,11 +809,54 @@ export async function ArchiveGroupSessionSpace(sessionIds: number[]) {
     .returning()
 }
 
+async function incrementCompletedSessionsIfNowComplete(
+  sessionId: number,
+  userId: string
+) {
+  const session = await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, sessionId),
+    columns: { mentor_id: true, attendee_confirmations: true }
+  })
+  if (!session || session.mentor_id !== userId) return
+
+  const mentorConfirmed = !!(
+    session.attendee_confirmations as Record<string, string> | null
+  )?.[userId]
+  if (!mentorConfirmed) return
+
+  const feedback = await db
+    .select({ id: mentorshipFeedbackTable.id })
+    .from(mentorshipFeedbackTable)
+    .where(
+      and(
+        eq(mentorshipFeedbackTable.session_request_id, sessionId),
+        eq(mentorshipFeedbackTable.submitted_by, userId)
+      )
+    )
+    .limit(1)
+  if (feedback.length === 0) return
+
+  await db
+    .update(profileTable)
+    .set({
+      total_completed_sessions: sql`${profileTable.total_completed_sessions} + 1`
+    })
+    .where(eq(profileTable.user_id, userId))
+}
+
 /** Record that a user confirmed they attended a session (jsonb patch). */
 export async function ConfirmSessionAttendance(
   sessionId: number,
   userId: string
 ) {
+  const before = await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, sessionId),
+    columns: { attendee_confirmations: true }
+  })
+  const alreadyConfirmed = !!(
+    before?.attendee_confirmations as Record<string, string> | null
+  )?.[userId]
+
   const [updated] = await db
     .update(sessionRequestsTable)
     .set({
@@ -730,6 +868,11 @@ export async function ConfirmSessionAttendance(
     })
     .where(eq(sessionRequestsTable.id, sessionId))
     .returning()
+
+  if (!alreadyConfirmed) {
+    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+  }
+
   return updated
 }
 
@@ -766,6 +909,11 @@ export async function SubmitMentorshipFeedback(
       visibility
     })
     .returning()
+
+  if (row) {
+    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+  }
+
   return row
 }
 

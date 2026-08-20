@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { CalendarClock, LayoutGrid, Users, Video } from "lucide-react"
+import { CalendarClock } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
   Card,
@@ -14,6 +14,8 @@ import {
   SessionOccurrence,
   summarizeMentorSessions
 } from "./mentor-calendar/mentorCalendarUtils"
+import { ViewSpaceButton } from "./ViewSpaceButton"
+import { SessionTypeIcon } from "./SessionTypeIcon"
 
 export type MentorSessionRequest = SelectSessionRequest & {
   space?: { id: string; space_slug: string } | null
@@ -21,6 +23,7 @@ export type MentorSessionRequest = SelectSessionRequest & {
 
 interface MentorSessionsCardProps {
   acceptedRequests: MentorSessionRequest[]
+  isMyProfile?: boolean
 }
 
 function SessionRow({
@@ -30,19 +33,9 @@ function SessionRow({
   request: MentorSessionRequest
   occurrence: SessionOccurrence["occurrence"]
 }) {
-  const spaceHref = request.space
-    ? `/mentorship/spaces/${request.space.space_slug}`
-    : null
-
   return (
     <div className="flex items-start gap-3 py-3 first:pt-0 last:pb-0 border-b border-foreground/8 last:border-b-0">
-      <div className="h-9 w-9 rounded-md bg-primary/15 flex items-center justify-center shrink-0">
-        {request.session_type === "group" ? (
-          <Users className="h-4 w-4 text-primary" />
-        ) : (
-          <Video className="h-4 w-4 text-primary" />
-        )}
-      </div>
+      <SessionTypeIcon sessionType={request.session_type} />
       <div className="min-w-0 flex-1">
         <p className="font-medium text-sm truncate">{request.topic}</p>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -50,20 +43,14 @@ function SessionRow({
           {occurrence.format("ddd, MMM D · h:mm A")}
         </p>
       </div>
-      {spaceHref && (
-        <Link href={spaceHref} className="shrink-0">
-          <Button variant="outline" size="sm">
-            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
-            View Space
-          </Button>
-        </Link>
-      )}
+      <ViewSpaceButton spaceSlug={request.space?.space_slug} />
     </div>
   )
 }
 
 export default function MentorSessionsCard({
-  acceptedRequests
+  acceptedRequests,
+  isMyProfile
 }: MentorSessionsCardProps) {
   const { mode, items } = summarizeMentorSessions(acceptedRequests)
 
@@ -90,6 +77,15 @@ export default function MentorSessionsCard({
               />
             ))}
           </div>
+        )}
+
+        {/* Mentor: quick access to the full chronological list of booked sessions */}
+        {isMyProfile && (
+          <Link href="/profile/booked-slots" className="w-full">
+            <Button variant="outline" className="w-full mt-3" size="sm">
+              View Booked Slots
+            </Button>
+          </Link>
         )}
       </CardContent>
     </Card>

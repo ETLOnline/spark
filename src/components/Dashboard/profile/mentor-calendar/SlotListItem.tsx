@@ -6,8 +6,8 @@ import {
   Clock,
   Lock,
   Sparkles,
+  User,
   Users,
-  Video,
   X,
   XCircle
 } from "lucide-react"
@@ -79,7 +79,7 @@ export function SlotListItem({
   const { permissionChecker, canAccess } = usePermissionChecker("global")
   // Super admins can view slots but must never see the actual request action
   const canRequestSession =
-    canAccess("session.request") && !permissionChecker?.isSuperAdmin
+    canAccess("mentorship.session.request") && !permissionChecker?.isSuperAdmin
   const mentorPendingCount = isMyProfile
     ? countOverlappingRequests(slot, selectedDate, mentorPendingRequests)
     : 0
@@ -100,7 +100,7 @@ export function SlotListItem({
           {slot.session_type === "group" ? (
             <Users className="h-4 w-4 text-muted-foreground shrink-0" />
           ) : (
-            <Video className="h-4 w-4 text-muted-foreground shrink-0" />
+            <User className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
           <div className="min-w-0">
             <p className="truncate">
@@ -112,7 +112,21 @@ export function SlotListItem({
             {slot.session_type === "group" ? "Group" : "1-on-1"}
           </span>
         </div>
-        {isMyProfile && (
+        {isMyProfile && mentorAcceptedCount > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-muted-foreground/40 cursor-not-allowed ml-2">
+                  <X className="h-3.5 w-3.5" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                Can't delete — this slot has a confirmed session
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        {isMyProfile && mentorAcceptedCount === 0 && (
           <button
             onClick={() => {
               if (slot.repeat_type === "none") {

@@ -1,7 +1,7 @@
 "use client"
 
 import moment from "moment-timezone"
-import { CalendarDays, Users, Video } from "lucide-react"
+import { CalendarDays, User, Users } from "lucide-react"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
@@ -95,7 +95,7 @@ export function SessionRequestForm({
           {slot.session_type === "group" ? (
             <Users className="h-3.5 w-3.5 text-muted-foreground" />
           ) : (
-            <Video className="h-3.5 w-3.5 text-muted-foreground" />
+            <User className="h-3.5 w-3.5 text-muted-foreground" />
           )}
           {slot.session_type === "group" ? "Group" : "1-on-1"}
           <span className="text-muted-foreground ml-auto">

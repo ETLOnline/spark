@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/src/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
+import { VerifiedBadge } from "@/src/components/ui/verified-badge"
 import type { SelectUser } from "@/src/db/schema"
 
 function StarRating({ rating }: { rating: number }) {
@@ -28,8 +29,10 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
+export type MentorWithStats = SelectUser & { completedSessionsCount?: number }
+
 interface MentorCardProps {
-  mentor: SelectUser
+  mentor: MentorWithStats
 }
 
 export default function MentorCard({ mentor }: MentorCardProps) {
@@ -38,7 +41,7 @@ export default function MentorCard({ mentor }: MentorCardProps) {
     `${mentor.first_name?.[0] ?? ""}${mentor.last_name?.[0] ?? ""}`.toUpperCase()
   const rating = Number(mentor.profile?.total_average_rating) || 0
   const reviewCount = mentor.profile?.number_of_ratings ?? 0
-  const completedSessions = mentor.profile?.total_completed_sessions ?? 0
+  const completedSessions = mentor.completedSessionsCount ?? 0
 
   return (
     <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow border border-border rounded-2xl w-full">
@@ -58,8 +61,9 @@ export default function MentorCard({ mentor }: MentorCardProps) {
       <CardContent className="bg-card rounded-b-2xl -mt-10 px-4 pt-12 pb-4 flex flex-col gap-3 flex-1 min-w-0">
         {/* Name / title / company */}
         <div className="text-center">
-          <h3 className="font-bold text-base text-foreground truncate">
+          <h3 className="font-bold text-base text-foreground truncate flex items-center justify-center gap-1">
             {name}
+            {mentor.profile?.verified && <VerifiedBadge size={16} />}
           </h3>
           {mentor.profile?.professional_title && (
             <p className="text-sm text-muted-foreground mt-0.5 truncate">

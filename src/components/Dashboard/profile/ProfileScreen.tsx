@@ -50,6 +50,8 @@ import {
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
 import { REPUTATION_POINTS_REWARD_ID } from "@/src/utils/constants"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { GetUserPermissionsParsedAction } from "@/src/server-actions/UserRoles/UserRole"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -75,6 +77,7 @@ import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import ProfileCompletionCard from "./ProfileCompletionCard"
+import EmailVerificationCard from "./EmailVerificationCard"
 import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
@@ -146,12 +149,16 @@ export default function ProfileScreen({
   const [, , , getAcceptedMentorSessions] = useServerAction(
     GetAcceptedSessionRequestsForMentorAction
   )
+  const [, , , getUserPermissions] = useServerAction(
+    GetUserPermissionsParsedAction
+  )
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
   const isStudent = !!getUserRole(user)?.includes("Student")
 
-  const isMentor = !!getUserRole(user)?.includes("Mentor")
+  const [hasAvailabilityPermission, setHasAvailabilityPermission] =
+    useState(false)
 
   const [, , , profileSkills, profileInterests] = useUserProfile()
 
@@ -194,9 +201,27 @@ export default function ProfileScreen({
     fetchViewerRp()
   }, [authUser, isMyProfile])
 
+  // Whether the viewed profile's owner has the mentorship "add availability" permission
+  useEffect(() => {
+    const checkAvailabilityPermission = async () => {
+      const res = await getUserPermissions(user.unique_id)
+      if (res?.success) {
+        const permissionChecker = new PermissionChecker(
+          "global",
+          res.data,
+          false
+        )
+        setHasAvailabilityPermission(
+          permissionChecker.canAccess("mentorship.add_availibility")
+        )
+      }
+    }
+    checkAvailabilityPermission()
+  }, [user.unique_id])
+
   // Fetch mentor slots for both owner and viewer — used to derive availability status
   useEffect(() => {
-    if (!isMentor) return
+    if (!hasAvailabilityPermission) return
     const fetchSlots = async () => {
       const res = await getMentorAvailability(user.unique_id)
       if (res?.success && res.data) {
@@ -204,7 +229,7 @@ export default function ProfileScreen({
       }
     }
     fetchSlots()
-  }, [isMentor, user.unique_id])
+  }, [hasAvailabilityPermission, user.unique_id])
 
   // Independent spaces the user created or is a member of — only relevant on their own profile
   useEffect(() => {
@@ -220,7 +245,7 @@ export default function ProfileScreen({
 
   // Accepted bookings — shown publicly on the mentor's profile
   useEffect(() => {
-    if (!isMentor) return
+    if (!hasAvailabilityPermission) return
     const fetchAcceptedMentorSessions = async () => {
       const res = await getAcceptedMentorSessions(user.unique_id)
       if (res?.success && res.data) {
@@ -228,7 +253,7 @@ export default function ProfileScreen({
       }
     }
     fetchAcceptedMentorSessions()
-  }, [isMentor, user.unique_id])
+  }, [hasAvailabilityPermission, user.unique_id])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
   const todayStr = toLocalDateStr(new Date())
@@ -364,6 +389,8 @@ export default function ProfileScreen({
       setReferralLink(ReferralURL)
     }
   }, [isMyProfile])
+
+  console.log(profile?.verified, "profileData")
 
   return (
     <>
@@ -507,8 +534,11 @@ export default function ProfileScreen({
               </CardContent>
             </Card>
 
-            {isMentor && (
-              <MentorSessionsCard acceptedRequests={acceptedMentorSessions} />
+            {hasAvailabilityPermission && (
+              <MentorSessionsCard
+                acceptedRequests={acceptedMentorSessions}
+                isMyProfile={!!isMyProfile}
+              />
             )}
           </div>
           {/* Right Column */}
@@ -548,7 +578,7 @@ export default function ProfileScreen({
                 profile={displayUser?.profile as SelectProfile}
                 skills={profileSkills}
                 interests={profileInterests}
-                isMentor={isMentor}
+                isMentor={hasAvailabilityPermission}
                 hasAvailability={isAvailable}
                 onProfileUpdated={(payload) => {
                   if (payload.profile) {
@@ -560,6 +590,11 @@ export default function ProfileScreen({
                 }}
               />
             )}
+
+            {/* Email Verification Card */}
+            {isMyProfile && !profile?.verified ? (
+              <EmailVerificationCard userId={user.unique_id} />
+            ) : null}
             {isStudent && (
               <Card>
                 <CardHeader>
@@ -603,7 +638,7 @@ export default function ProfileScreen({
             )}
 
             {/* Mentor Info — shown to owner always; to others only when both fields are filled */}
-            {isMentor &&
+            {hasAvailabilityPermission &&
               (isMyProfile ||
                 (!!profile?.professional_title?.trim() &&
                   !!profile?.company?.trim())) && (
@@ -806,6 +841,7 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
+                      isMentor={hasAvailabilityPermission}
                       hasData={
                         !!(
                           profile?.github_url ||
@@ -821,6 +857,15 @@ export default function ProfileScreen({
               </CardHeader>
 
               <CardContent className="space-y-3">
+                {hasAvailabilityPermission &&
+                  isMyProfile &&
+                  !profile?.linkedin_url && (
+                    <p className="text-sm text-amber-600 bg-amber-500/10 rounded-md px-3 py-2">
+                      A LinkedIn URL is required for mentors. Please add yours
+                      below.
+                    </p>
+                  )}
+
                 {!profile?.github_url &&
                   !profile?.linkedin_url &&
                   !profile?.instagram_url &&

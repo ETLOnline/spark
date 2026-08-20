@@ -1,5 +1,6 @@
 import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
+import { VerifiedBadge } from "../../../ui/verified-badge"
 import { SelectUser } from "@/src/db/schema"
 
 interface Contributor {
@@ -31,8 +32,9 @@ function Contributers({ contributors }: Props) {
               <AvatarFallback>{contributor.first_name}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium">
+              <p className="text-sm font-medium flex items-center gap-1">
                 {contributor.first_name} {contributor.last_name}
+                {contributor.profile?.verified && <VerifiedBadge size={13} />}
               </p>
               {/* <p className="text-xs text-muted-foreground">
                 {contributor.role}

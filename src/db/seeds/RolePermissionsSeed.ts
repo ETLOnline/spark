@@ -25,8 +25,8 @@ const userRolePermissions = [
         actions: [permissions.events.view]
       },
       {
-        namespace: "session",
-        actions: [permissions.session.request]
+        namespace: "mentorship",
+        actions: [permissions.mentorship.sessionRequest]
       }
     ]
   },
@@ -78,6 +78,10 @@ const userRolePermissions = [
       {
         namespace: "posting",
         actions: [permissions.posting.create, permissions.posting.view]
+      },
+      {
+        namespace: "mentorship",
+        actions: [permissions.mentorship.addAvailability]
       }
     ]
   },

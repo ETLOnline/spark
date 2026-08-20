@@ -23,7 +23,7 @@ const NotFound = () => {
             Sorry, we can't find that page. You'll find lots to explore on the
             home page.
           </p>
-          <LinkAsButton href="/posts">Back to Homepage</LinkAsButton>
+          <LinkAsButton href="/">Back to Homepage</LinkAsButton>
         </div>
       </div>
     </section>

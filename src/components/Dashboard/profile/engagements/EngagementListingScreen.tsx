@@ -75,7 +75,9 @@ function EngagementListItem({
             ? "bg-red-100 text-red-700"
             : e.status === "upcoming"
               ? "bg-blue-100 text-blue-700"
-              : "bg-emerald-100 text-emerald-700"
+              : e.status === "open"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-emerald-100 text-emerald-700"
         )}
       >
         {isGroupMentor ? <Users className="h-4 w-4" /> : e.counterpart.initials}
@@ -180,6 +182,7 @@ export function EngagementListingScreen() {
   const tabs: { key: Tab; label: string }[] = [
     { key: "all", label: "All" },
     { key: "overdue", label: "Overdue" },
+    { key: "open", label: "Open" },
     { key: "upcoming", label: "Upcoming" },
     { key: "completed", label: "Completed" }
   ]
@@ -188,6 +191,7 @@ export function EngagementListingScreen() {
     tab === "all" ? engagements : engagements.filter((e) => e.status === tab)
 
   const overdue = filtered.filter((e) => e.status === "overdue")
+  const open = filtered.filter((e) => e.status === "open")
   const upcoming = filtered.filter((e) => e.status === "upcoming")
   const completed = filtered.filter((e) => e.status === "completed")
 
@@ -313,6 +317,12 @@ export function EngagementListingScreen() {
                 <>
                   <SectionLabel label="Overdue — Feedback Pending" />
                   {renderList(overdue)}
+                </>
+              )}
+              {open.length > 0 && (
+                <>
+                  <SectionLabel label="Open" />
+                  {renderList(open)}
                 </>
               )}
               {upcoming.length > 0 && (
