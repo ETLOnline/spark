@@ -1648,6 +1648,8 @@ export type InsertAdvisorRequest = typeof advisorRequestsTable.$inferInsert
 export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
   domain?: SelectTag
   proposalFile?: SelectFile
+  space?: SelectSpace
+  requester?: SelectUser
 }
 
 export const shortcutsTable = pgTable("shortcuts", {

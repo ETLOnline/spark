@@ -119,6 +119,11 @@ const emailTemplates = [
     value: "identity_verified",
     label: "Identity Verified Success",
     file: "identity_verified_success.html"
+  },
+  {
+    value: "new_advisor_request",
+    label: "New Advisor Request Email",
+    file: "new_advisor_request.html"
   }
 ]
 
