@@ -1,5 +1,11 @@
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
 import {
   CircleCheckBig,
@@ -10,6 +16,8 @@ import {
   Users
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
+import RequestAdvisorModal from "@/src/components/Dashboard/Spaces/RequestAdvisorModal"
+import { GetActiveAdvisorRequestForSpaceAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
 import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -45,11 +53,16 @@ function SpaceOverview({
 }: SpaceOverviewProps) {
   const [isEditDetail, setIsEditDetail] = useState(false)
   const [content, setContent] = useState("")
+  const [isRequestAdvisorModalOpen, setIsRequestAdvisorModalOpen] =
+    useState(false)
+  const [hasActiveAdvisorRequest, setHasActiveAdvisorRequest] = useState(false)
   const OnlineSpaceUsersCount = useAtomValue(onlineUsersStore.spaceOnlineUsers)
   const authUser = useAtomValue(userStore.AuthUser)
 
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
+  const [GetActiveAdvisorRequestLoading, , , GetActiveAdvisorRequest] =
+    useServerAction(GetActiveAdvisorRequestForSpaceAction)
 
   useEffect(() => {
     if (space.overview) {
@@ -57,15 +70,41 @@ function SpaceOverview({
     }
   }, [space])
 
+  const GetActiveRequest = async () => {
+    if (!space?.id) return
+    const res = await GetActiveAdvisorRequest(space.id)
+    if (res?.success) {
+      setHasActiveAdvisorRequest(!!res.data)
+    }
+  }
+
+  useEffect(() => {
+    GetActiveRequest()
+  }, [space?.id])
+
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
     space?.id
   )
+  const { permissionChecker: globalPermissionChecker } =
+    usePermissionChecker("global")
 
   const canEditDetails = permissionChecker
     ? permissionChecker.canAccess("space.update")
     : false
+
+  // space editor/admin (scoped grant) AND student (global fyp grant)
+  const canRequestAdvisor = globalPermissionChecker
+    ? globalPermissionChecker.canAccess("fyp.can_request_advisor")
+    : false
+
+  const showRequestAdvisor =
+    space.is_FYP_enable === true && canEditDetails && canRequestAdvisor
+
+  const handleRequestAdvisor = () => {
+    setIsRequestAdvisorModalOpen(true)
+  }
 
   const handleEditDetails = async () => {
     try {
@@ -124,7 +163,31 @@ function SpaceOverview({
             Overview
           </h1>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-2">
+          {showRequestAdvisor && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="outline"
+                      onClick={handleRequestAdvisor}
+                      disabled={hasActiveAdvisorRequest}
+                      loading={GetActiveAdvisorRequestLoading}
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Request Advisor
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {hasActiveAdvisorRequest && (
+                  <TooltipContent>
+                    This space already has an active advisor request.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <CreateShortcut
             type="space"
             entity={{
@@ -224,6 +287,15 @@ function SpaceOverview({
           </div>
         </div>
       </div>
+
+      {showRequestAdvisor && (
+        <RequestAdvisorModal
+          open={isRequestAdvisorModalOpen}
+          onOpenChange={setIsRequestAdvisorModalOpen}
+          spaceId={space.id}
+          onSubmitted={() => setHasActiveAdvisorRequest(true)}
+        />
+      )}
     </div>
   )
 }

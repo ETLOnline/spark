@@ -45,8 +45,10 @@ import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import {
   AttachCommunityUserAction,
-  DetachCommunityUserAction
+  DetachCommunityUserAction,
+  UpdateCommunityAction
 } from "@/src/server-actions/Community/Community"
+import { Switch } from "../ui/switch"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
@@ -121,6 +123,13 @@ export default function CommunityDetailsClient({
     boolean | null
   >(null)
   const [communityUserRank, setCommunityUserRank] = useState<any>(null)
+  const [communityFypEnabled, setCommunityFypEnabled] = useState<boolean>(
+    !!community.is_FYP_enable
+  )
+  const [showFypConfirm, setShowFypConfirm] = useState(false)
+  const [updateFypLoading, , , updateCommunityFyp] = useServerAction(
+    UpdateCommunityAction
+  )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
@@ -135,6 +144,7 @@ export default function CommunityDetailsClient({
         slug: community.slug,
         type: community.type,
         cover_image: community.cover_image,
+        is_FYP_enable: community.is_FYP_enable,
 
         category_id: community.category,
         created_by: "unknown",
@@ -303,6 +313,32 @@ export default function CommunityDetailsClient({
   const canInviteUser = permissionChecker
     ? permissionChecker?.canAccess("community.user.invite")
     : false
+  const canManageCommunity = permissionChecker
+    ? permissionChecker?.canAccess("community.update")
+    : false
+
+  const handleEnableFyp = async () => {
+    const res = await updateCommunityFyp(community.id, {
+      is_FYP_enable: true
+    })
+    if (res?.success) {
+      setCommunityFypEnabled(true)
+      setShowFypConfirm(false)
+      toast({
+        title: "FYP enabled",
+        description: "FYP has been enabled for this community.",
+        duration: 3000
+      })
+    } else {
+      toast({
+        title: "Error enabling FYP",
+        description: res?.error || "Something went wrong.",
+        variant: "destructive",
+        duration: 3000
+      })
+    }
+  }
+
   const handleJoinCommunity = async () => {
     if (!community.id || !currentUserId) return
 
@@ -865,9 +901,57 @@ export default function CommunityDetailsClient({
                 </div>
               </CardContent>
             </Card>
+
+            {/* FYP Section */}
+            {canManageCommunity && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg">FYP</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">
+                      {communityFypEnabled ? "Enabled" : "Disabled"}
+                    </span>
+                    <Switch
+                      checked={communityFypEnabled}
+                      disabled={communityFypEnabled || updateFypLoading}
+                      onCheckedChange={(checked) => {
+                        if (checked) setShowFypConfirm(true)
+                      }}
+                    />
+                  </div>
+                  {communityFypEnabled ? (
+                    <p className="text-xs text-muted-foreground">
+                      FYP is permanently enabled for this community. Manage it
+                      per-space in each space&apos;s settings.
+                    </p>
+                  ) : null}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showFypConfirm} onOpenChange={setShowFypConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable FYP</AlertDialogTitle>
+            <AlertDialogDescription>
+              Once the FYP feature is enabled it cannot be disabled again. You
+              can disable it in each space individually at the time of creating
+              a space or in space settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEnableFyp}>
+              Enable FYP
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <InviteUserDialog
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}

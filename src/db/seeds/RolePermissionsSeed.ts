@@ -27,6 +27,10 @@ const userRolePermissions = [
       {
         namespace: "mentorship",
         actions: [permissions.mentorship.sessionRequest]
+      },
+      {
+        namespace: "fyp",
+        actions: [permissions.fyp.canRequestAdvisor]
       }
     ]
   },

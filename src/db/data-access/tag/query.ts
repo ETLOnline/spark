@@ -16,11 +16,13 @@ export const FindTagsByNames = async (names: string[]) => {
 }
 export const GetTags = async (type: string) => {
   try {
-    const res = await db
-      .select()
-      .from(tagsTable)
-      .where(eq(tagsTable.type, type))
-      .limit(10)
+    const res = await db.query.tagsTable.findMany({
+      where: eq(tagsTable.type, type),
+      limit: 10,
+      with: {
+        tags: true
+      }
+    })
 
     return res
   } catch (e: any) {
@@ -36,6 +38,16 @@ export const SearchTagsByName = async (name: string, type: string) => {
     .limit(10)
 
   return results ?? []
+}
+
+export const HasUsersWithTagId = async (tagId: number) => {
+  const [userTag] = await db
+    .select({ id: userTagsTable.id })
+    .from(userTagsTable)
+    .where(eq(userTagsTable.tag_id, tagId))
+    .limit(1)
+
+  return !!userTag
 }
 
 export const SearchUserTagsByTagId = async (userId: string, tagId: number) => {

@@ -235,6 +235,10 @@ export const permissions = {
     viewDetails: "view_details",
     accept: "accept",
     reject: "reject"
+  },
+
+  fyp: {
+    canRequestAdvisor: "can_request_advisor"
   }
 }
 

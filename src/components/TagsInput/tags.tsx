@@ -14,9 +14,18 @@ interface Props {
   control?: any
   selected: MultiSelectOption[]
   setSelected: Dispatch<SetStateAction<MultiSelectOption[]>>
+  single?: boolean
+  placeholder?: string
 }
 
-function TagSelect({ type, control, selected, setSelected }: Props) {
+function TagSelect({
+  type,
+  control,
+  selected,
+  setSelected,
+  single = false,
+  placeholder
+}: Props) {
   const [existingTags, setExistingTags] = useState<SelectTag[]>([])
 
   const [getTagsLoading, , , GetTags] = useServerAction(GetAllTAgsAction)
@@ -66,6 +75,8 @@ function TagSelect({ type, control, selected, setSelected }: Props) {
         onChange={setSelected}
         onQueryChange={handleQuerySearch}
         shouldFilter={false}
+        single={single}
+        placeholder={placeholder}
       />
     </div>
   )
