@@ -1615,9 +1615,10 @@ export const advisorRequestsTable = pgTable("advisor_requests", {
   proposal_link: varchar(),
   status: varchar().notNull().default("pending"),
   accepted_by: varchar(),
-  rejected_by: jsonb("rejected_by").$type<string[]>().default([]),
+  rejected_by: jsonb("rejected_by")
+    .$type<{ advisor_id: string; reason: string }[]>()
+    .default([]),
   advisor_ids: jsonb("advisor_ids").$type<string[]>().default([]),
-  rejection_reason: varchar(),
   expiry_date: varchar().notNull(),
   ...timestamps
 })

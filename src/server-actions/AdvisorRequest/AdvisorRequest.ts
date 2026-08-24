@@ -2,15 +2,46 @@
 
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
+import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import {
+  AcceptAdvisorRequest,
   CreateAdvisorRequest,
-  GetActiveAdvisorRequestForSpace
+  GetActiveAdvisorRequestForSpace,
+  GetAdvisorRequestById,
+  GetAdvisorRequestsForAdvisor,
+  getStudentRequestStatus,
+  RejectAdvisorRequest
 } from "@/src/db/data-access/advisor-requests/query"
 import { HasUsersWithTagId } from "@/src/db/data-access/tag/query"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { sendAdvisorRequestResponseNotification } from "@/src/services/notifications/AdvisorRequest/utils"
+import { createAdvisorRequestResponseEmailNotification } from "@/src/services/notify/advisorRequest/advisorRequest"
+import { advisorRequestsTable } from "@/src/db/schema"
+import type { SelectFile, SelectTag, SelectUser } from "@/src/db/schema"
+
+async function assertAdvisorPermission(
+  action: "advisor.accept" | "advisor.reject"
+) {
+  const user = await AuthUserAction()
+  const admin = await isSuperAdmin(user)
+  const permsResponse = await GetUserPermissionsParsedAction(user.unique_id)
+  const permissionChecker = new PermissionChecker(
+    "global",
+    permsResponse.success ? permsResponse.data : null,
+    admin
+  )
+
+  if (!permissionChecker.canAccess(action)) {
+    throw new Error("You do not have permission to perform this action")
+  }
+
+  return user
+}
 
 const MAX_PROPOSAL_FILE_SIZE = 200 * 1024 * 1024
 const ADVISOR_REQUEST_EXPIRY_DAYS = 14
@@ -120,6 +151,160 @@ export const CreateAdvisorRequestAction = CreateServerAction(
         proposal_file_id,
         expiry_date: expiryDate.toISOString()
       })
+
+      return { success: true, data: request }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export type AdvisorViewerStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "already_assigned"
+  | "expired"
+
+export type AdvisorRequestListItem =
+  typeof advisorRequestsTable.$inferSelect & {
+    requester: SelectUser
+    domain: SelectTag
+    proposalFile: SelectFile | null
+    viewerStatus: AdvisorViewerStatus
+  }
+
+function getAdvisorViewerStatus(
+  request: {
+    accepted_by: string | null
+    rejected_by: { advisor_id: string; reason: string }[] | null
+    expiry_date: string
+  },
+  advisorId: string
+): AdvisorViewerStatus {
+  if (request.accepted_by === advisorId) return "accepted"
+  if (request.accepted_by) return "already_assigned"
+  if (request.rejected_by?.some((r) => r.advisor_id === advisorId))
+    return "rejected"
+  if (new Date(request.expiry_date) < new Date()) return "expired"
+  return "pending"
+}
+
+export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(
+  true,
+  async () => {
+    try {
+      const user = await AuthUserAction()
+      const requests = await GetAdvisorRequestsForAdvisor(user.unique_id)
+      const data = requests.map((request) => ({
+        ...request,
+        viewerStatus: getAdvisorViewerStatus(request, user.unique_id)
+      }))
+      return { success: true, data }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const AcceptAdvisorRequestAction = CreateServerAction(
+  true,
+  async (requestId: string) => {
+    try {
+      const user = await assertAdvisorPermission("advisor.accept")
+      const request = await AcceptAdvisorRequest(requestId, user.unique_id)
+      if (!request) {
+        return {
+          success: false,
+          error: "This request has already been resolved by another advisor."
+        }
+      }
+
+      try {
+        const withSpace = await GetAdvisorRequestById(requestId)
+        if (withSpace) {
+          const advisorName = `${user.first_name} ${user.last_name}`.trim()
+          const notifyContext = {
+            requested_by: withSpace.requested_by,
+            fyp_title: withSpace.fyp_title,
+            space_slug: withSpace.space.space_slug,
+            channel_slug: withSpace.space.channel?.channel_slug
+          }
+
+          await sendAdvisorRequestResponseNotification(
+            notifyContext,
+            "accepted",
+            { unique_id: user.unique_id, profile_url: user.profile_url },
+            advisorName
+          )
+          await createAdvisorRequestResponseEmailNotification(
+            notifyContext,
+            "accepted",
+            advisorName
+          )
+        }
+      } catch (notifyError) {
+        console.error(
+          "Failed to send advisor acceptance notification:",
+          notifyError
+        )
+      }
+
+      return { success: true, data: request }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const RejectAdvisorRequestAction = CreateServerAction(
+  true,
+  async (requestId: string, reason: string) => {
+    try {
+      const user = await assertAdvisorPermission("advisor.reject")
+
+      const before = await GetAdvisorRequestById(requestId)
+      if (!before) {
+        return { success: false, error: "Request not found." }
+      }
+      const wasAlreadyRejected = getStudentRequestStatus(before) === "rejected"
+
+      const request = await RejectAdvisorRequest(
+        requestId,
+        user.unique_id,
+        reason
+      )
+
+      try {
+        const after = await GetAdvisorRequestById(requestId)
+        if (
+          after &&
+          !wasAlreadyRejected &&
+          getStudentRequestStatus(after) === "rejected"
+        ) {
+          const notifyContext = {
+            requested_by: after.requested_by,
+            fyp_title: after.fyp_title,
+            space_slug: after.space.space_slug,
+            channel_slug: after.space.channel?.channel_slug
+          }
+
+          await sendAdvisorRequestResponseNotification(
+            notifyContext,
+            "rejected",
+            { unique_id: user.unique_id, profile_url: null }
+          )
+          await createAdvisorRequestResponseEmailNotification(
+            notifyContext,
+            "rejected"
+          )
+        }
+      } catch (notifyError) {
+        console.error(
+          "Failed to send advisor rejection notification:",
+          notifyError
+        )
+      }
 
       return { success: true, data: request }
     } catch (error) {

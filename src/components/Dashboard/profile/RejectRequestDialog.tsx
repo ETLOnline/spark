@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { TriangleAlert, X } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -9,18 +10,49 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/src/components/ui/dialog"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { useToast } from "@/src/hooks/use-toast"
+import { RejectAdvisorRequestAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  requestId: string
   studentName: string
+  onRejected: () => void
 }
 
 export function RejectRequestDialog({
   open,
   onOpenChange,
-  studentName
+  requestId,
+  studentName,
+  onRejected
 }: Props) {
+  const [reason, setReason] = useState("")
+  const { toast } = useToast()
+  const [rejecting, , , rejectRequest] = useServerAction(
+    RejectAdvisorRequestAction
+  )
+
+  async function handleReject() {
+    const result = await rejectRequest(requestId, reason.trim())
+    if (result?.success) {
+      setReason("")
+      onOpenChange(false)
+      onRejected()
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Could not reject request",
+        description:
+          typeof result?.error === "string"
+            ? result.error
+            : "Something went wrong."
+      })
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -35,8 +67,8 @@ export function RejectRequestDialog({
           <div className="space-y-1">
             <p className="text-sm font-semibold">Reject this request?</p>
             <p className="text-xs text-muted-foreground">
-              {studentName} will be notified that their advisor request was not
-              accepted. This action cannot be undone.
+              {studentName} will not be notified which advisor rejected this
+              request. This action cannot be undone.
             </p>
           </div>
         </div>
@@ -44,6 +76,8 @@ export function RejectRequestDialog({
         <div className="space-y-1.5">
           <p className="text-sm font-semibold">Reason (optional)</p>
           <Textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
             placeholder="Let the student know why their request was rejected..."
             rows={3}
             className="resize-none text-sm"
@@ -54,9 +88,13 @@ export function RejectRequestDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="destructive"
+            onClick={handleReject}
+            disabled={rejecting}
+          >
             <X className="h-4 w-4 mr-1.5" />
-            Reject Request
+            {rejecting ? "Rejecting..." : "Reject Request"}
           </Button>
         </div>
       </DialogContent>
