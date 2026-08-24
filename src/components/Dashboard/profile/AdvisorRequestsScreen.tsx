@@ -143,7 +143,17 @@ export const STATUS_LABEL: Record<RequestStatus, string> = {
   expired: "Expired"
 }
 
-export function AdvisorRequestsScreen() {
+interface AdvisorRequestsScreenProps {
+  canViewDetails: boolean
+  canAccept: boolean
+  canReject: boolean
+}
+
+export function AdvisorRequestsScreen({
+  canViewDetails,
+  canAccept,
+  canReject
+}: AdvisorRequestsScreenProps) {
   const [activeTab, setActiveTab] = useState<StatusTab>("all")
   const [selectedRequest, setSelectedRequest] = useState<AdvisorRequest | null>(
     null
@@ -207,13 +217,15 @@ export function AdvisorRequestsScreen() {
                   >
                     {STATUS_LABEL[request.status]}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedRequest(request)}
-                  >
-                    View Details
-                  </Button>
+                  {canViewDetails && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedRequest(request)}
+                    >
+                      View Details
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -223,6 +235,8 @@ export function AdvisorRequestsScreen() {
 
       <RequestDetailsDialog
         request={selectedRequest}
+        canAccept={canAccept}
+        canReject={canReject}
         onOpenChange={(open) => {
           if (!open) setSelectedRequest(null)
         }}

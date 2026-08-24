@@ -231,7 +231,10 @@ export const permissions = {
   },
 
   advisor: {
-    viewRequests: "view_requests"
+    viewRequests: "view_requests",
+    viewDetails: "view_details",
+    accept: "accept",
+    reject: "reject"
   }
 }
 

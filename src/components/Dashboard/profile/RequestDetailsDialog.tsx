@@ -16,6 +16,8 @@ import { RejectRequestDialog } from "./RejectRequestDialog"
 
 interface Props {
   request: AdvisorRequest | null
+  canAccept: boolean
+  canReject: boolean
   onOpenChange: (open: boolean) => void
 }
 
@@ -39,7 +41,12 @@ function TextBlock({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function RequestDetailsDialog({ request, onOpenChange }: Props) {
+export function RequestDetailsDialog({
+  request,
+  canAccept,
+  canReject,
+  onOpenChange
+}: Props) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
 
   return (
@@ -129,15 +136,17 @@ export function RequestDetailsDialog({ request, onOpenChange }: Props) {
                 </div>
               </div>
 
-              {request.status === "pending" && (
+              {request.status === "pending" && (canReject || canAccept) && (
                 <div className="flex items-center justify-end gap-2 pt-1">
-                  <Button
-                    variant="destructive"
-                    onClick={() => setRejectDialogOpen(true)}
-                  >
-                    Reject
-                  </Button>
-                  <Button>Accept</Button>
+                  {canReject && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => setRejectDialogOpen(true)}
+                    >
+                      Reject
+                    </Button>
+                  )}
+                  {canAccept && <Button>Accept</Button>}
                 </div>
               )}
             </div>

@@ -130,7 +130,10 @@ const permissionSeedList = [
   { namespace: "mentorship", action: permissions.mentorship.addAvailability },
 
   // Advisor
-  { namespace: "advisor", action: permissions.advisor.viewRequests }
+  { namespace: "advisor", action: permissions.advisor.viewRequests },
+  { namespace: "advisor", action: permissions.advisor.viewDetails },
+  { namespace: "advisor", action: permissions.advisor.accept },
+  { namespace: "advisor", action: permissions.advisor.reject }
 ]
 
 export const PermissionsSeed = async () => {

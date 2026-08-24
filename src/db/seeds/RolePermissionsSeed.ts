@@ -64,7 +64,12 @@ const userRolePermissions = [
       },
       {
         namespace: "advisor",
-        actions: [permissions.advisor.viewRequests]
+        actions: [
+          permissions.advisor.viewRequests,
+          permissions.advisor.viewDetails,
+          permissions.advisor.accept,
+          permissions.advisor.reject
+        ]
       }
     ]
   },

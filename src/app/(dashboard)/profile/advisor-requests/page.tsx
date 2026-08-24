@@ -21,6 +21,10 @@ export default async function AdvisorRequestsPage() {
   if (!permissionChecker.canAccess("advisor.view_requests"))
     redirect("/profile")
 
+  const canViewDetails = permissionChecker.canAccess("advisor.view_details")
+  const canAccept = permissionChecker.canAccess("advisor.accept")
+  const canReject = permissionChecker.canAccess("advisor.reject")
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-foreground/5 shrink-0">
@@ -39,7 +43,11 @@ export default async function AdvisorRequestsPage() {
       </div>
 
       <div className="flex-1 min-h-0">
-        <AdvisorRequestsScreen />
+        <AdvisorRequestsScreen
+          canViewDetails={canViewDetails}
+          canAccept={canAccept}
+          canReject={canReject}
+        />
       </div>
     </div>
   )
