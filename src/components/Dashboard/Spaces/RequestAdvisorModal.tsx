@@ -34,10 +34,10 @@ import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDial
 import { toast } from "@/src/hooks/use-toast"
 import { CreateAdvisorRequestAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
 import { ScrollArea } from "../../ui/scroll-area"
-
-const MAX_PROPOSAL_FILE_SIZE = 200 * 1024 * 1024
-const ALLOWED_PROPOSAL_ACCEPT =
-  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+import {
+  ADVISOR_REQUEST_PROPOSAL_ACCEPT,
+  ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
+} from "@/src/utils/constants"
 
 const requestAdvisorSchema = z
   .object({
@@ -192,7 +192,7 @@ function RequestAdvisorModal({
       return
     }
 
-    if (file.size > MAX_PROPOSAL_FILE_SIZE) {
+    if (file.size > ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE) {
       toast({
         title: "File too large",
         description: "Proposal file must be 200MB or smaller."
@@ -486,7 +486,7 @@ function RequestAdvisorModal({
                         <TabsContent value="file">
                           <FileUpload
                             fileType="file"
-                            accept={ALLOWED_PROPOSAL_ACCEPT}
+                            accept={ADVISOR_REQUEST_PROPOSAL_ACCEPT}
                             multiple={false}
                             onChange={handleFileChange}
                             onRemove={() => setProposalFile(null)}

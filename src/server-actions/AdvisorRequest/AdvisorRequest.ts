@@ -17,14 +17,12 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { notifyAdvisorsOfNewAdvisorRequest } from "@/src/services/notify/advisor-request/advisor-request"
+import {
+  ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
+  ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
+} from "@/src/utils/constants"
 
-const MAX_PROPOSAL_FILE_SIZE = 200 * 1024 * 1024
 const ADVISOR_REQUEST_EXPIRY_DAYS = 14
-const ALLOWED_PROPOSAL_MIME_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-]
 
 export interface AdvisorRequestFormData {
   group_members: { name: string; registration_number: string }[]
@@ -93,13 +91,17 @@ export const CreateAdvisorRequestAction = CreateServerAction(
       let proposal_file_id: number | undefined
 
       if (proposalFile) {
-        if (!ALLOWED_PROPOSAL_MIME_TYPES.includes(proposalFile.mimeType)) {
+        if (
+          !ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES.includes(
+            proposalFile.mimeType
+          )
+        ) {
           return {
             success: false,
             error: "Proposal must be a PDF, DOC, or DOCX file."
           }
         }
-        if (proposalFile.sizeBytes > MAX_PROPOSAL_FILE_SIZE) {
+        if (proposalFile.sizeBytes > ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE) {
           return {
             success: false,
             error: "Proposal file must be 200MB or smaller."
