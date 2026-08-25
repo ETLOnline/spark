@@ -181,12 +181,33 @@ function SpaceSidebar({ space }: Props) {
         return canViewProject
       case "chat":
         return canViewChat
+      case "fyp":
+        return (currentSpace ?? space).is_FYP_enable === true
       default:
         return false
     }
   }
 
-  const accessibleFeatures = spaceFeatures.filter(({ feature }) => {
+  type SidebarFeature = {
+    feature?: {
+      feature_slug: string
+      feature_name: string
+      feature_icon: string | null
+    }
+  }
+
+  const fypFeature: SidebarFeature = {
+    feature: {
+      feature_slug: "fyp",
+      feature_name: "FYP",
+      feature_icon: "graduation-cap"
+    }
+  }
+
+  const accessibleFeatures: SidebarFeature[] = [
+    fypFeature,
+    ...spaceFeatures
+  ].filter(({ feature }) => {
     if (!feature) return false
     return hasFeaturePermission(feature.feature_slug)
   })
@@ -342,7 +363,7 @@ function SpaceSidebar({ space }: Props) {
             <SidebarMenuItem
               className={`flex flex-row items-center gap-2 p-2 rounded
       ${
-        pathname.includes(`${feature.slug}`) ||
+        pathname.endsWith(`/${feature.slug}`) ||
         pageType.get("page-type") === feature.slug
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

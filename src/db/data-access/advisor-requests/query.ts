@@ -1,10 +1,11 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, desc, eq, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   advisorRequestsTable,
   InsertAdvisorRequest,
   SelectUser
 } from "../../schema"
+import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 
 // Creates a new advisor request row in the database. This is called when a user requests an advisor for their FYP.
 export const CreateAdvisorRequest = async (data: InsertAdvisorRequest) => {
@@ -30,10 +31,22 @@ export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
   return request ?? null
 }
 
+// Fetches the most recently submitted advisor request for a space,
+export const GetLatestAdvisorRequestForSpace = async (spaceId: string) => {
+  const [request] = await db
+    .select()
+    .from(advisorRequestsTable)
+    .where(eq(advisorRequestsTable.space_id, spaceId))
+    .orderBy(desc(advisorRequestsTable.created_at))
+    .limit(1)
+
+  return request ?? null
+}
+
 export const GetRecentPendingAdvisorRequests = async () => {
   try {
     const recentRequests = await db.query.advisorRequestsTable.findMany({
-      where: and(eq(advisorRequestsTable.status, "pending")),
+      where: and(eq(advisorRequestsTable.status, AdvisorRequestStatus.PENDING)),
       with: {
         domain: true,
         requester: true,
@@ -91,7 +104,7 @@ export const AddAdvisorsInRequest = async (
 }
 export const UpdateRequestStatus = async (
   requestId: string,
-  status: string
+  status: AdvisorRequestStatus
 ) => {
   try {
     const res = await db

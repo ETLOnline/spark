@@ -7,6 +7,7 @@ import {
   CreateAdvisorRequest,
   GetActiveAdvisorRequestForSpace,
   GetEligibleAdvisorsForDomain,
+  GetLatestAdvisorRequestForSpace,
   GetRecentPendingAdvisorRequests,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
@@ -17,6 +18,7 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { notifyAdvisorsOfNewAdvisorRequest } from "@/src/services/notify/advisor-request/advisor-request"
+import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 
 const MAX_PROPOSAL_FILE_SIZE = 200 * 1024 * 1024
 const ADVISOR_REQUEST_EXPIRY_DAYS = 14
@@ -49,6 +51,18 @@ export const GetActiveAdvisorRequestForSpaceAction = CreateServerAction(
   async (spaceId: string) => {
     try {
       const request = await GetActiveAdvisorRequestForSpace(spaceId)
+      return { success: true, data: request }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetLatestAdvisorRequestForSpaceAction = CreateServerAction(
+  true,
+  async (spaceId: string) => {
+    try {
+      const request = await GetLatestAdvisorRequestForSpace(spaceId)
       return { success: true, data: request }
     } catch (error) {
       return { success: false, error }
@@ -155,7 +169,10 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
           advisors.map((advisor) => advisor.unique_id)
         )
 
-        await UpdateRequestStatus(request.id, "awaiting_approval")
+        await UpdateRequestStatus(
+          request.id,
+          AdvisorRequestStatus.AWAITING_APPROVAL
+        )
 
         if (!request.space?.channel) return
 

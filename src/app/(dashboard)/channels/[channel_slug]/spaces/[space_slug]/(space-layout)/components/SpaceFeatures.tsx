@@ -11,6 +11,7 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import SpaceChat from "./spaceChat"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import SpaceOverview from "./SpaceOverview"
+import SpaceFYP from "./SpaceFYP"
 import { ProjectScreen } from "@/src/components/Dashboard/Projects"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -64,7 +65,8 @@ function SpaceFeatures({ features, space }: Props) {
     ? permissionChecker.canAccess("space.project.view")
     : false
 
-    const hasAnyFeatureAccess = canViewChat || canViewPost || canViewFileSharing || canViewProject
+  const hasAnyFeatureAccess =
+    canViewChat || canViewPost || canViewFileSharing || canViewProject
   // Function to check if user has permission for a specific feature
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
@@ -92,6 +94,19 @@ function SpaceFeatures({ features, space }: Props) {
       redirect(`./${encodedSpaceSlug}/settings`)
     } else if (featureSlug === "users") {
       redirect(`./${encodedSpaceSlug}/users`)
+    } else if (featureSlug === "fyp") {
+      if (!space.is_FYP_enable) {
+        return (
+          <NoDataCard
+            icon={
+              <EarthLock className="h-16 w-16 text-muted-foreground mb-4" />
+            }
+            title="Feature not found"
+            description="Feature not available at the moment, or might have been disabled by the admin"
+          />
+        )
+      }
+      return <SpaceFYP />
     }
 
     const feature = features.find(
@@ -137,7 +152,13 @@ function SpaceFeatures({ features, space }: Props) {
     return <>{renderFeatureModule(pageType)}</>
   }
 
-  return <SpaceOverview features={features} hasAnyFeatureAccess={hasAnyFeatureAccess} space={space} />
+  return (
+    <SpaceOverview
+      features={features}
+      hasAnyFeatureAccess={hasAnyFeatureAccess}
+      space={space}
+    />
+  )
 }
 
 export default SpaceFeatures
