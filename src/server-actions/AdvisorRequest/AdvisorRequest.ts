@@ -19,6 +19,7 @@ import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { sendAdvisorRequestResponseNotification } from "@/src/services/notifications/AdvisorRequest/utils"
 import { createAdvisorRequestResponseEmailNotification } from "@/src/services/notify/advisorRequest/advisorRequest"
 import { advisorRequestsTable } from "@/src/db/schema"
@@ -218,6 +219,17 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
           success: false,
           error: "This request has already been resolved by another advisor."
         }
+      }
+
+      const attachResult = await AttachSpaceUserAction(
+        request.space_id,
+        user.unique_id
+      )
+      if (!attachResult?.success) {
+        console.error(
+          "Failed to add accepted advisor to space:",
+          attachResult?.error
+        )
       }
 
       try {
