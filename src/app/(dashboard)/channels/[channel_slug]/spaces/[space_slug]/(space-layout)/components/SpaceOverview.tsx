@@ -62,10 +62,28 @@ function SpaceOverview({
     "SPACE",
     space?.id
   )
+  const { permissionChecker: globalPermissionChecker } =
+    usePermissionChecker("global")
 
   const canEditDetails = permissionChecker
     ? permissionChecker.canAccess("space.update")
     : false
+
+  // space editor/admin (scoped grant) AND student (global fyp grant)
+  const canRequestAdvisor = globalPermissionChecker
+    ? globalPermissionChecker.canAccess("fyp.can_request_advisor")
+    : false
+
+  const showRequestAdvisor =
+    space.is_FYP_enable === true && canEditDetails && canRequestAdvisor
+
+  const handleRequestAdvisor = () => {
+    toast({
+      title: "Coming soon",
+      description: "Requesting an advisor will be available soon.",
+      duration: 3000
+    })
+  }
 
   const handleEditDetails = async () => {
     try {
@@ -124,7 +142,13 @@ function SpaceOverview({
             Overview
           </h1>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-2">
+          {showRequestAdvisor && (
+            <Button variant="outline" onClick={handleRequestAdvisor}>
+              <UserPlus className="w-4 h-4" />
+              Request Advisor
+            </Button>
+          )}
           <CreateShortcut
             type="space"
             entity={{

@@ -232,6 +232,10 @@ export const permissions = {
 
   advisor: {
     viewRequests: "view_requests"
+  },
+
+  fyp: {
+    canRequestAdvisor: "can_request_advisor"
   }
 }
 

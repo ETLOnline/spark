@@ -1002,6 +1002,7 @@ export const spacesTable = pgTable("spaces", {
   space_type: varchar(),
   publish_space: integer().notNull().default(0),
   overview: varchar(),
+  is_FYP_enable: boolean().notNull().default(false),
   ...timestamps
 })
 
@@ -1483,6 +1484,7 @@ export const communitiesTable = pgTable("communities", {
   type: varchar().notNull().default("public"),
   created_by: varchar().notNull(),
   cover_image: varchar(),
+  is_FYP_enable: boolean().notNull().default(false),
   ...timestamps
 })
 
