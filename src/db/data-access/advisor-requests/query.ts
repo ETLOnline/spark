@@ -80,7 +80,7 @@ export const AcceptAdvisorRequest = async (
     .where(
       and(
         eq(advisorRequestsTable.id, requestId),
-        eq(advisorRequestsTable.status, "pending")
+        eq(advisorRequestsTable.status, "awaiting_approval")
       )
     )
     .returning()
@@ -93,13 +93,26 @@ export const RejectAdvisorRequest = async (
   advisorId: string,
   reason: string
 ) => {
-  const [request] = await db
+  const request = await db.query.advisorRequestsTable.findFirst({
+    where: eq(advisorRequestsTable.id, requestId)
+  })
+  if (!request) return null
+
+  const rejectedBy = [
+    ...(request.rejected_by ?? []),
+    { advisor_id: advisorId, reason }
+  ]
+  const advisorIds = request.advisor_ids ?? []
+  const isLastAdvisor = rejectedBy.length >= advisorIds.length
+
+  const [updated] = await db
     .update(advisorRequestsTable)
     .set({
-      rejected_by: sql`${advisorRequestsTable.rejected_by} || ${JSON.stringify([{ advisor_id: advisorId, reason }])}::jsonb`
+      rejected_by: rejectedBy,
+      ...(isLastAdvisor && { status: "rejected" })
     })
     .where(eq(advisorRequestsTable.id, requestId))
     .returning()
 
-  return request ?? null
+  return updated ?? null
 }
