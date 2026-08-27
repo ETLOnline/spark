@@ -23,7 +23,8 @@ export const STATUS_BADGE: Record<AdvisorViewerStatus, string> = {
   accepted: "bg-emerald-500/15 text-emerald-500",
   rejected: "bg-red-500/15 text-red-500",
   already_assigned: "bg-foreground/10 text-muted-foreground",
-  expired: "bg-foreground/10 text-muted-foreground"
+  expired: "bg-foreground/10 text-muted-foreground",
+  awaiting_approval: "bg-amber-500/15 text-amber-600"
 }
 
 export const STATUS_LABEL: Record<AdvisorViewerStatus, string> = {
@@ -31,7 +32,8 @@ export const STATUS_LABEL: Record<AdvisorViewerStatus, string> = {
   accepted: "Accepted",
   rejected: "Rejected",
   already_assigned: "Already Assigned",
-  expired: "Expired"
+  expired: "Expired",
+  awaiting_approval: "Awaiting Approval"
 }
 
 interface AdvisorRequestsScreenProps {
@@ -79,6 +81,7 @@ export function AdvisorRequestsScreen({
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="awaiting_approval">Awaiting Approval</TabsTrigger>
           <TabsTrigger value="accepted">Accepted</TabsTrigger>
           <TabsTrigger value="rejected">Rejected</TabsTrigger>
           <TabsTrigger value="already_assigned">Already Assigned</TabsTrigger>

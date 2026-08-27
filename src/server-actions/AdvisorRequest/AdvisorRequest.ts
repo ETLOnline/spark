@@ -169,6 +169,7 @@ export type AdvisorViewerStatus =
   | "rejected"
   | "already_assigned"
   | "expired"
+  | "awaiting_approval"
 
 export type AdvisorRequestListItem =
   typeof advisorRequestsTable.$inferSelect & {
