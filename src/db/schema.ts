@@ -1592,6 +1592,64 @@ export const communityRequestsTable = pgTable("community_requests", {
 export type InsertCommunityRequest = typeof communityRequestsTable.$inferInsert
 export type SelectCommunityRequest = typeof communityRequestsTable.$inferSelect
 
+export const advisorRequestsTable = pgTable("advisor_requests", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  requested_by: varchar().notNull(),
+  group_members: jsonb("group_members")
+    .$type<{ name: string; registration_number: string }[]>()
+    .notNull(),
+  supervisor_name: varchar().notNull(),
+  fyp_title: varchar().notNull(),
+  abstract: text().notNull(),
+  problem_statement: text().notNull(),
+  tech_stack: varchar().notNull(),
+  domain_tag_id: integer()
+    .notNull()
+    .references(() => tagsTable.id),
+  proposal_file_id: integer().references(() => filesTable.id),
+  proposal_link: varchar(),
+  status: varchar().notNull().default("pending"),
+  accepted_by: varchar(),
+  rejected_by: jsonb("rejected_by").$type<string[]>().default([]),
+  advisor_ids: jsonb("advisor_ids").$type<string[]>().default([]),
+  rejection_reason: varchar(),
+  expiry_date: varchar().notNull(),
+  ...timestamps
+})
+
+export const advisorRequestsRelations = relations(
+  advisorRequestsTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [advisorRequestsTable.space_id],
+      references: [spacesTable.id]
+    }),
+    requester: one(usersTable, {
+      fields: [advisorRequestsTable.requested_by],
+      references: [usersTable.unique_id]
+    }),
+    domain: one(tagsTable, {
+      fields: [advisorRequestsTable.domain_tag_id],
+      references: [tagsTable.id]
+    }),
+    proposalFile: one(filesTable, {
+      fields: [advisorRequestsTable.proposal_file_id],
+      references: [filesTable.id]
+    })
+  })
+)
+
+export type InsertAdvisorRequest = typeof advisorRequestsTable.$inferInsert
+export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
+  domain?: SelectTag
+  proposalFile?: SelectFile
+}
+
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })
     .primaryKey()

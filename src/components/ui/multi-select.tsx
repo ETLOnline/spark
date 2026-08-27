@@ -31,6 +31,7 @@ interface MultiSelectProps {
   loading?: boolean
   shouldFilter?: boolean
   disabled?: boolean
+  single?: boolean
 }
 
 export default function MultiSelect({
@@ -42,7 +43,8 @@ export default function MultiSelect({
   className,
   loading = false,
   shouldFilter = true,
-  disabled = false
+  disabled = false,
+  single = false
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -56,6 +58,13 @@ export default function MultiSelect({
 
   const toggleOption = (option: MultiSelectOption) => {
     const exists = selectedValues.includes(option.value)
+
+    if (single) {
+      onChange(exists ? [] : [option])
+      setOpen(false)
+      return
+    }
+
     if (exists) {
       onChange(selected.filter((s) => s.value !== option.value))
     } else {
@@ -134,23 +143,24 @@ export default function MultiSelect({
                 }}
               >
                 <CommandGroup>
-                  {hasAnySelected ? (
-                    <CommandItem
-                      onSelect={deselectAll}
-                      className="text-muted-foreground"
-                    >
-                      <Checkbox checked={hasAnySelected} className="mr-2" />
-                      Deselect All
-                    </CommandItem>
-                  ) : (
-                    <CommandItem
-                      onSelect={selectAll}
-                      className="text-muted-foreground"
-                    >
-                      <Checkbox checked={false} className="mr-2" />
-                      Select All
-                    </CommandItem>
-                  )}
+                  {!single &&
+                    (hasAnySelected ? (
+                      <CommandItem
+                        onSelect={deselectAll}
+                        className="text-muted-foreground"
+                      >
+                        <Checkbox checked={hasAnySelected} className="mr-2" />
+                        Deselect All
+                      </CommandItem>
+                    ) : (
+                      <CommandItem
+                        onSelect={selectAll}
+                        className="text-muted-foreground"
+                      >
+                        <Checkbox checked={false} className="mr-2" />
+                        Select All
+                      </CommandItem>
+                    ))}
                   {options.map((option) => (
                     <CommandItem
                       key={option.value}
