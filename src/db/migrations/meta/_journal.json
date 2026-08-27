@@ -435,6 +435,13 @@
       "when": 1787573155601,
       "tag": "0061_2026_08_24_170553__changing_default_status",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1787810095804,
+      "tag": "0062_2026_08_27_105452__create_project_milestones_table",
+      "breakpoints": true
     }
   ]
 }

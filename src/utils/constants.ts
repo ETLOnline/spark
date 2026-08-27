@@ -232,7 +232,14 @@ export const permissions = {
 
   fyp: {
     canRequestAdvisor: "can_request_advisor",
-    canReceiveAdvisorRequest: "can_receive_advisor_request"
+    canReceiveAdvisorRequest: "can_receive_advisor_request",
+    // Milestone permissions
+    milestoneCreate: "milestone.create",
+    milestoneUpdate: "milestone.update",
+    milestoneDelete: "milestone.delete",
+    milestoneVerify: "milestone.verify", // mark as Completed — advisor/admin only
+    milestoneMarkDone: "milestone.mark_done", // student: submit for review
+    milestoneArtifactAdd: "milestone.artifact.add" // student: add artifact
   }
 }
 
