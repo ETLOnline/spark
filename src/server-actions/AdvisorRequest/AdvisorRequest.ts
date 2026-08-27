@@ -164,7 +164,6 @@ export const CreateAdvisorRequestAction = CreateServerAction(
 )
 
 export type AdvisorViewerStatus =
-  | "pending"
   | "accepted"
   | "rejected"
   | "already_assigned"
@@ -192,7 +191,7 @@ function getAdvisorViewerStatus(
   if (request.rejected_by?.some((r) => r.advisor_id === advisorId))
     return "rejected"
   if (new Date(request.expiry_date) < new Date()) return "expired"
-  return "pending"
+  return "awaiting_approval"
 }
 
 export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(

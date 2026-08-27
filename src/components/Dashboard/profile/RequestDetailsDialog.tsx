@@ -198,7 +198,7 @@ export function RequestDetailsDialog({
                 )}
               </div>
 
-              {request.viewerStatus === "pending" &&
+              {request.viewerStatus === "awaiting_approval" &&
                 (canReject || canAccept) && (
                   <div className="flex items-center justify-end gap-2 pt-1">
                     {canReject && (

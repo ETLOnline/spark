@@ -15,10 +15,13 @@ import type {
   AdvisorRequestListItem,
   AdvisorViewerStatus
 } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
+import type { StudentRequestStatus } from "@/src/db/data-access/advisor-requests/query"
 
 type StatusTab = "all" | AdvisorViewerStatus
 
-export const STATUS_BADGE: Record<AdvisorViewerStatus, string> = {
+type RequestStatus = AdvisorViewerStatus | StudentRequestStatus
+
+export const STATUS_BADGE: Record<RequestStatus, string> = {
   pending: "bg-amber-500/15 text-amber-600",
   accepted: "bg-emerald-500/15 text-emerald-500",
   rejected: "bg-red-500/15 text-red-500",
@@ -27,7 +30,7 @@ export const STATUS_BADGE: Record<AdvisorViewerStatus, string> = {
   awaiting_approval: "bg-amber-500/15 text-amber-600"
 }
 
-export const STATUS_LABEL: Record<AdvisorViewerStatus, string> = {
+export const STATUS_LABEL: Record<RequestStatus, string> = {
   pending: "Pending",
   accepted: "Accepted",
   rejected: "Rejected",
@@ -80,7 +83,6 @@ export function AdvisorRequestsScreen({
       >
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="awaiting_approval">Awaiting Approval</TabsTrigger>
           <TabsTrigger value="accepted">Accepted</TabsTrigger>
           <TabsTrigger value="rejected">Rejected</TabsTrigger>
