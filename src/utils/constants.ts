@@ -230,13 +230,11 @@ export const permissions = {
     addAvailability: "add_availibility"
   },
 
-  advisor: {
-    viewRequests: "view_requests"
+  fyp: {
+    viewAdvisorRequests: "view_advisor_requests",
+    canRequestAdvisor: "can_request_advisor"
   },
 
-  fyp: {
-    canRequestAdvisor: "can_request_advisor"
-  }
 }
 
 export type PageMeta = (typeof pageMeta)[0]

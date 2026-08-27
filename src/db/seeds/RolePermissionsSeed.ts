@@ -67,8 +67,8 @@ const userRolePermissions = [
         actions: [permissions.posting.create, permissions.posting.view]
       },
       {
-        namespace: "advisor",
-        actions: [permissions.advisor.viewRequests]
+        namespace: "fyp",
+        actions: [permissions.fyp.viewAdvisorRequests]
       }
     ]
   },

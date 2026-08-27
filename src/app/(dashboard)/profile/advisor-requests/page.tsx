@@ -18,7 +18,7 @@ export default async function AdvisorRequestsPage() {
     permsResponse.success ? permsResponse.data : null,
     isAdmin
   )
-  if (!permissionChecker.canAccess("advisor.view_requests"))
+  if (!permissionChecker.canAccess("fyp.view_advisor_requests"))
     redirect("/profile")
 
   return (
