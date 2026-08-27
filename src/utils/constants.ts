@@ -230,15 +230,12 @@ export const permissions = {
     addAvailability: "add_availibility"
   },
 
-  advisor: {
-    viewRequests: "view_requests",
-    viewDetails: "view_details",
-    accept: "accept",
-    reject: "reject"
-  },
-
   fyp: {
-    canRequestAdvisor: "can_request_advisor"
+    canRequestAdvisor: "can_request_advisor",
+    advisorViewRequests: "advisor.view_requests",
+    advisorViewDetails: "advisor.view_details",
+    advisorAccept: "advisor.accept",
+    advisorReject: "advisor.reject"
   }
 }
 

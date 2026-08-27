@@ -30,7 +30,7 @@ import {
 } from "@/src/utils/constants"
 
 async function assertAdvisorPermission(
-  action: "advisor.accept" | "advisor.reject"
+  action: "fyp.advisor.accept" | "fyp.advisor.reject"
 ) {
   const user = await AuthUserAction()
   const admin = await isSuperAdmin(user)
@@ -215,7 +215,7 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string) => {
     try {
-      const user = await assertAdvisorPermission("advisor.accept")
+      const user = await assertAdvisorPermission("fyp.advisor.accept")
       const request = await AcceptAdvisorRequest(requestId, user.unique_id)
       if (!request) {
         return {
@@ -276,7 +276,7 @@ export const RejectAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string, reason: string) => {
     try {
-      const user = await assertAdvisorPermission("advisor.reject")
+      const user = await assertAdvisorPermission("fyp.advisor.reject")
 
       const before = await GetAdvisorRequestById(requestId)
       if (!before) {

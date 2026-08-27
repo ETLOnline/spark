@@ -86,7 +86,7 @@ export const siteRoutes: SiteRoutes = {
       title: "Advisor's Requests",
       url: "/profile/advisor-requests",
       icon: Inbox,
-      permission: "advisor.view_requests"
+      permission: "fyp.advisor.view_requests"
     }
   ],
   testNav: [
