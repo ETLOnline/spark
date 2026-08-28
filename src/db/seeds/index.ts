@@ -24,7 +24,6 @@ import { RewardLevelsSeed } from "./RewardLevelsSeed"
 import { BackfillLedgerCommunityIdSeed } from "./BackfillLedgerCommunityIdSeed"
 import { DeduplicateUserRolesSeed } from "./DeduplicateUserRolesSeed"
 import { PersonalEmailDomainsSeed } from "./PersonalEmailDomainsSeed"
-import { EmailTemplatesForAdvisorRequestSeed } from "./EmailTemplatesForAdvisorRequest"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -52,8 +51,7 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   BackfillLedgerCommunityIdSeed,
   DeduplicateUserRolesSeed,
   IdentityVerificationEmailSeed,
-  PersonalEmailDomainsSeed,
-  EmailTemplatesForAdvisorRequestSeed
+  PersonalEmailDomainsSeed
 }
 
 async function runSeeders() {
@@ -74,8 +72,7 @@ async function runSeeders() {
       "JoinInviteEmailSeed",
       "ContactUsEmailTemplatesSeed",
       "BackfillLedgerCommunityIdSeed",
-      "IdentityVerificationEmailSeed",
-      "EmailTemplatesForAdvisorRequestSeed"
+      "IdentityVerificationEmailSeed"
     ]
 
     const seederNames =

@@ -67,7 +67,7 @@ export const GetEligibleAdvisorsForDomain = async (
 ) => {
   const res = await db.execute(
     sql`
-    select DISTINCT u.*
+    select u.*
     from permissions p
     inner join role_permissions rp 
     on rp.permission_id = p.id
