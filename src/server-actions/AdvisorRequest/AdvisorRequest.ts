@@ -2,9 +2,6 @@
 
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
-import { isSuperAdmin } from "@/src/utils/helpers"
 import {
   AcceptAdvisorRequest,
   CreateAdvisorRequest,
@@ -28,25 +25,6 @@ import {
   ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
-
-async function assertAdvisorPermission(
-  action: "fyp.advisor.accept" | "fyp.advisor.reject"
-) {
-  const user = await AuthUserAction()
-  const admin = await isSuperAdmin(user)
-  const permsResponse = await GetUserPermissionsParsedAction(user.unique_id)
-  const permissionChecker = new PermissionChecker(
-    "global",
-    permsResponse.success ? permsResponse.data : null,
-    admin
-  )
-
-  if (!permissionChecker.canAccess(action)) {
-    throw new Error("You do not have permission to perform this action")
-  }
-
-  return user
-}
 
 
 const ADVISOR_REQUEST_EXPIRY_DAYS = 14
@@ -215,7 +193,7 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string) => {
     try {
-      const user = await assertAdvisorPermission("fyp.advisor.accept")
+      const user = await AuthUserAction()
       const request = await AcceptAdvisorRequest(requestId, user.unique_id)
       if (!request) {
         return {
@@ -276,7 +254,7 @@ export const RejectAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string, reason: string) => {
     try {
-      const user = await assertAdvisorPermission("fyp.advisor.reject")
+      const user = await AuthUserAction()
 
       const before = await GetAdvisorRequestById(requestId)
       if (!before) {
