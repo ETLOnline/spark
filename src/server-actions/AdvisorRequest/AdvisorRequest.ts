@@ -11,7 +11,6 @@ import {
   GetRecentPendingAdvisorRequests,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
-import { HasUsersWithTagId } from "@/src/db/data-access/tag/query"
 import { permissions } from "@/src/utils/constants"
 import {
   base64ToBuffer,
@@ -93,11 +92,15 @@ export const CreateAdvisorRequestAction = CreateServerAction(
         }
       }
 
-      const hasUsersInDomain = await HasUsersWithTagId(formData.domain_tag_id)
-      if (!hasUsersInDomain) {
+      const eligibleAdvisors = await GetEligibleAdvisorsForDomain(
+        formData.domain_tag_id,
+        "fyp",
+        permissions.fyp.viewAdvisorRequests
+      )
+      if (!eligibleAdvisors.length) {
         return {
           success: false,
-          error: "There are no users in this domain.",
+          error: "There are no advisors in this domain.",
           field: "domain_tag_id"
         }
       }
