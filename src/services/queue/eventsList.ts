@@ -23,6 +23,7 @@ import {
   processIdentityVerificationOtpNotification,
   processIdentityVerifiedNotification
 } from "./processors/identityVerification"
+import { processAdvisorRequestNotification } from "./processors/advisor-request"
 
 interface EventJob {
   sendingTo: string[]
@@ -54,5 +55,6 @@ export const eventsList: Record<string, EventProcessor> = {
   identity_verification_otp: processIdentityVerificationOtpNotification,
   identity_verified: processIdentityVerifiedNotification,
   advisor_request_accepted: processSessionRequestEmailNotification,
-  advisor_request_rejected: processSessionRequestEmailNotification
+  advisor_request_rejected: processSessionRequestEmailNotification,
+  new_advisor_request: processAdvisorRequestNotification
 }

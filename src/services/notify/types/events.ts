@@ -25,5 +25,6 @@ export enum NotificationEvent {
   IDENTITY_VERIFICATION_OTP = "identity_verification_otp",
   IDENTITY_VERIFIED = "identity_verified",
   ADVISOR_REQUEST_ACCEPTED = "advisor_request_accepted",
-  ADVISOR_REQUEST_REJECTED = "advisor_request_rejected"
+  ADVISOR_REQUEST_REJECTED = "advisor_request_rejected",
+  NEW_ADVISOR_REQUEST = "new_advisor_request"
 }
