@@ -227,7 +227,8 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
 
       const attachResult = await AttachSpaceUserAction(
         request.space_id,
-        user.unique_id
+        user.unique_id,
+        "space_editor"
       )
       if (!attachResult?.success) {
         console.error(
