@@ -114,6 +114,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.IDENTITY_VERIFIED,
     subject: "Your identity has been verified",
     body: loadTemplate("identity_verified_success.html")
+  },
+  {
+    name: NotificationEvent.NEW_ADVISOR_REQUEST,
+    subject: "New Advisor Request in {{domainName}}",
+    body: loadTemplate("new_advisor_request.html")
   }
 ]
 
