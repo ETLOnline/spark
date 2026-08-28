@@ -10,11 +10,12 @@ import {
   TabsList,
   TabsTrigger
 } from "@/src/components/ui/tabs"
+import { RequestDetailsDialog } from "./RequestDetailsDialog"
 
-type RequestStatus = "pending" | "accepted" | "rejected" | "expired"
+export type RequestStatus = "pending" | "accepted" | "rejected" | "expired"
 type StatusTab = "all" | RequestStatus
 
-interface AdvisorRequest {
+export interface AdvisorRequest {
   id: string
   studentName: string
   initials: string
@@ -22,6 +23,12 @@ interface AdvisorRequest {
   domain: string
   submittedOn: string
   status: RequestStatus
+  groupMembers: { name: string; regNo: string }[]
+  universitySupervisor: string
+  abstract: string
+  problemStatement: string
+  techStack: string
+  proposalFile: { name: string; size: string }
 }
 
 // TODO: replace with real data once the advisor_requests table/server actions exist.
@@ -33,7 +40,18 @@ const MOCK_REQUESTS: AdvisorRequest[] = [
     fypTitle: "AI-Powered Campus Navigation System",
     domain: "AI / Machine Learning",
     submittedOn: "Aug 15, 2026",
-    status: "pending"
+    status: "pending",
+    groupMembers: [
+      { name: "Hamza Khalid", regNo: "FA21-BCS-045" },
+      { name: "Zainab Riaz", regNo: "FA21-BCS-061" }
+    ],
+    universitySupervisor: "Dr. Sana Malik",
+    abstract:
+      "This project proposes an AI-powered navigation system that helps students and visitors find their way around campus using real-time indoor positioning and personalized route suggestions.",
+    problemStatement:
+      "Large university campuses often lack intuitive indoor navigation, leading to wasted time and confusion for new students, especially during the first few weeks of the semester.",
+    techStack: "React, Node.js, PostgreSQL, TensorFlow",
+    proposalFile: { name: "Proposal_HamzaKhalid.pdf", size: "2.4 MB" }
   },
   {
     id: "2",
@@ -42,7 +60,15 @@ const MOCK_REQUESTS: AdvisorRequest[] = [
     fypTitle: "Blockchain-Based Voting System",
     domain: "Blockchain",
     submittedOn: "Aug 12, 2026",
-    status: "pending"
+    status: "pending",
+    groupMembers: [{ name: "Ayesha Noor", regNo: "FA21-BCS-018" }],
+    universitySupervisor: "Dr. Imran Sheikh",
+    abstract:
+      "A blockchain-based voting system designed to provide a transparent, tamper-proof mechanism for student council elections.",
+    problemStatement:
+      "Current manual/paper-based voting for student elections is prone to disputes over tampering and lacks a verifiable audit trail.",
+    techStack: "Solidity, React, Ethers.js, Hardhat",
+    proposalFile: { name: "Proposal_AyeshaNoor.pdf", size: "1.8 MB" }
   },
   {
     id: "3",
@@ -51,7 +77,18 @@ const MOCK_REQUESTS: AdvisorRequest[] = [
     fypTitle: "Smart Traffic Management using IoT",
     domain: "IoT / Embedded Systems",
     submittedOn: "Aug 5, 2026",
-    status: "accepted"
+    status: "accepted",
+    groupMembers: [
+      { name: "Bilal Ahmed", regNo: "FA21-BCS-022" },
+      { name: "Hassan Raza", regNo: "FA21-BCS-029" }
+    ],
+    universitySupervisor: "Dr. Sana Malik",
+    abstract:
+      "An IoT-based smart traffic management system that dynamically adjusts signal timing using live congestion data from road-side sensors.",
+    problemStatement:
+      "Fixed-timing traffic signals cause unnecessary congestion at intersections during off-peak hours and fail to adapt to real-time traffic conditions.",
+    techStack: "Arduino, Python, MQTT, Node.js",
+    proposalFile: { name: "Proposal_BilalAhmed.pdf", size: "3.1 MB" }
   },
   {
     id: "4",
@@ -60,7 +97,15 @@ const MOCK_REQUESTS: AdvisorRequest[] = [
     fypTitle: "E-Commerce Fraud Detection Model",
     domain: "AI / Machine Learning",
     submittedOn: "Aug 3, 2026",
-    status: "rejected"
+    status: "rejected",
+    groupMembers: [{ name: "Sara Fatima", regNo: "FA21-BCS-051" }],
+    universitySupervisor: "Dr. Imran Sheikh",
+    abstract:
+      "A machine learning model that flags fraudulent transactions on e-commerce platforms in real time using behavioral and transactional features.",
+    problemStatement:
+      "Rising fraudulent transactions on e-commerce platforms result in significant financial losses and erode customer trust.",
+    techStack: "Python, scikit-learn, FastAPI, PostgreSQL",
+    proposalFile: { name: "Proposal_SaraFatima.pdf", size: "2.0 MB" }
   },
   {
     id: "5",
@@ -69,18 +114,29 @@ const MOCK_REQUESTS: AdvisorRequest[] = [
     fypTitle: "AR-Based Campus Tour Guide App",
     domain: "AR / VR",
     submittedOn: "Jul 28, 2026",
-    status: "expired"
+    status: "expired",
+    groupMembers: [
+      { name: "Usman Tariq", regNo: "FA21-BCS-037" },
+      { name: "Noman Aslam", regNo: "FA21-BCS-040" }
+    ],
+    universitySupervisor: "Dr. Sana Malik",
+    abstract:
+      "An augmented reality mobile app that provides an interactive, self-guided campus tour for prospective students and visitors.",
+    problemStatement:
+      "New visitors and prospective students often struggle to explore campus facilities without a guided tour, which isn't always available.",
+    techStack: "Unity, ARKit, ARCore, Firebase",
+    proposalFile: { name: "Proposal_UsmanTariq.pdf", size: "4.5 MB" }
   }
 ]
 
-const STATUS_BADGE: Record<RequestStatus, string> = {
+export const STATUS_BADGE: Record<RequestStatus, string> = {
   pending: "bg-amber-500/15 text-amber-600",
   accepted: "bg-emerald-500/15 text-emerald-500",
   rejected: "bg-red-500/15 text-red-500",
   expired: "bg-foreground/10 text-muted-foreground"
 }
 
-const STATUS_LABEL: Record<RequestStatus, string> = {
+export const STATUS_LABEL: Record<RequestStatus, string> = {
   pending: "Pending",
   accepted: "Accepted",
   rejected: "Rejected",
@@ -89,6 +145,9 @@ const STATUS_LABEL: Record<RequestStatus, string> = {
 
 export function AdvisorRequestsScreen() {
   const [activeTab, setActiveTab] = useState<StatusTab>("all")
+  const [selectedRequest, setSelectedRequest] = useState<AdvisorRequest | null>(
+    null
+  )
 
   const requests = useMemo(() => {
     if (activeTab === "all") return MOCK_REQUESTS
@@ -148,7 +207,11 @@ export function AdvisorRequestsScreen() {
                   >
                     {STATUS_LABEL[request.status]}
                   </span>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedRequest(request)}
+                  >
                     View Details
                   </Button>
                 </div>
@@ -157,6 +220,13 @@ export function AdvisorRequestsScreen() {
           ))}
         </TabsContent>
       </Tabs>
+
+      <RequestDetailsDialog
+        request={selectedRequest}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRequest(null)
+        }}
+      />
     </div>
   )
 }
