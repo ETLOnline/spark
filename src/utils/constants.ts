@@ -383,7 +383,7 @@ export const DAYS = [
 export const DAY_HEADERS = DAYS.map((d) => d.slice(0, 3))
 
 /** Max size (in bytes) for an advisor request's proposal file. */
-export const ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE = 200 * 1024 * 1024
+export const ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE = 50 * 1024 * 1024
 
 /** Mime types accepted for an advisor request's proposal file. */
 export const ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES = [
