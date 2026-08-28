@@ -129,11 +129,9 @@ const permissionSeedList = [
   { namespace: "mentorship", action: permissions.mentorship.sessionRequest },
   { namespace: "mentorship", action: permissions.mentorship.addAvailability },
 
-  // Advisor
-  { namespace: "fyp", action: permissions.fyp.viewAdvisorRequests },
-
   // FYP
-  { namespace: "fyp", action: permissions.fyp.canRequestAdvisor }
+  { namespace: "fyp", action: permissions.fyp.canRequestAdvisor },
+  { namespace: "fyp", action: permissions.fyp.canReceiveAdvisorRequest }
 ]
 
 export const PermissionsSeed = async () => {

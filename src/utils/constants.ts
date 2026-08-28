@@ -231,10 +231,9 @@ export const permissions = {
   },
 
   fyp: {
-    viewAdvisorRequests: "view_advisor_requests",
-    canRequestAdvisor: "can_request_advisor"
-  },
-
+    canRequestAdvisor: "can_request_advisor",
+    canReceiveAdvisorRequest: "can_receive_advisor_request"
+  }
 }
 
 export type PageMeta = (typeof pageMeta)[0]

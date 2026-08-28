@@ -68,7 +68,7 @@ const userRolePermissions = [
       },
       {
         namespace: "fyp",
-        actions: [permissions.fyp.viewAdvisorRequests]
+        actions: [permissions.fyp.canReceiveAdvisorRequest]
       }
     ]
   },

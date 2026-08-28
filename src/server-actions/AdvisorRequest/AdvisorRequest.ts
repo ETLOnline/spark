@@ -3,14 +3,22 @@
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
+  AddAdvisorsInRequest,
   CreateAdvisorRequest,
-  GetActiveAdvisorRequestForSpace
+  GetActiveAdvisorRequestForSpace,
+  GetEligibleAdvisorsForDomain,
+  GetLatestAdvisorRequestForSpace,
+  GetRecentPendingAdvisorRequests,
+  UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
 import { HasUsersWithTagId } from "@/src/db/data-access/tag/query"
+import { permissions } from "@/src/utils/constants"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { notifyAdvisorsOfNewAdvisorRequest } from "@/src/services/notify/advisor-request/advisor-request"
+import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
   ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
@@ -41,6 +49,18 @@ export const GetActiveAdvisorRequestForSpaceAction = CreateServerAction(
   async (spaceId: string) => {
     try {
       const request = await GetActiveAdvisorRequestForSpace(spaceId)
+      return { success: true, data: request }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetLatestAdvisorRequestForSpaceAction = CreateServerAction(
+  true,
+  async (spaceId: string) => {
+    try {
+      const request = await GetLatestAdvisorRequestForSpace(spaceId)
       return { success: true, data: request }
     } catch (error) {
       return { success: false, error }
@@ -124,6 +144,42 @@ export const CreateAdvisorRequestAction = CreateServerAction(
       })
 
       return { success: true, data: request }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const getEligibleRequestAdvisorsAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const recentRequests = await GetRecentPendingAdvisorRequests()
+      if (!recentRequests.length) {
+        return { success: false, error: "No recent pending advisor requests." }
+      }
+
+      const proccessingRequest = recentRequests.map(async (request) => {
+        const advisors = await GetEligibleAdvisorsForDomain(
+          request.domain_tag_id,
+          "fyp",
+          permissions.fyp.canReceiveAdvisorRequest
+        )
+
+        await AddAdvisorsInRequest(
+          request.id,
+          advisors.map((advisor) => advisor.unique_id)
+        )
+
+        await UpdateRequestStatus(
+          request.id,
+          AdvisorRequestStatus.AWAITING_APPROVAL
+        )
+
+        if (!request.space?.channel) return
+
+        await notifyAdvisorsOfNewAdvisorRequest(advisors, request)
+      })
     } catch (error) {
       return { success: false, error }
     }

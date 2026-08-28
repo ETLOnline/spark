@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
+import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
   integer,
   pgTable,
@@ -1613,7 +1614,7 @@ export const advisorRequestsTable = pgTable("advisor_requests", {
     .references(() => tagsTable.id),
   proposal_file_id: integer().references(() => filesTable.id),
   proposal_link: varchar(),
-  status: varchar().notNull().default("pending"),
+  status: varchar().notNull().default(AdvisorRequestStatus.PENDING),
   accepted_by: varchar(),
   rejected_by: jsonb("rejected_by").$type<string[]>().default([]),
   advisor_ids: jsonb("advisor_ids").$type<string[]>().default([]),
@@ -1648,6 +1649,8 @@ export type InsertAdvisorRequest = typeof advisorRequestsTable.$inferInsert
 export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
   domain?: SelectTag
   proposalFile?: SelectFile
+  space?: SelectSpace
+  requester?: SelectUser
 }
 
 export const shortcutsTable = pgTable("shortcuts", {
