@@ -161,12 +161,14 @@ export const CreateAdvisorRequestAction = CreateServerAction(
   }
 )
 
+// "already_assigned" isn't one of the request's own stored states — it's a
+// viewer-relative status meaning "a different advisor already accepted this."
 export type AdvisorViewerStatus =
-  | "accepted"
-  | "rejected"
+  | AdvisorRequestStatus.ACCEPTED
+  | AdvisorRequestStatus.REJECTED
+  | AdvisorRequestStatus.EXPIRED
+  | AdvisorRequestStatus.AWAITING_APPROVAL
   | "already_assigned"
-  | "expired"
-  | "awaiting_approval"
 
 export type AdvisorRequestListItem =
   typeof advisorRequestsTable.$inferSelect & {
@@ -184,12 +186,13 @@ function getAdvisorViewerStatus(
   },
   advisorId: string
 ): AdvisorViewerStatus {
-  if (request.accepted_by === advisorId) return "accepted"
+  if (request.accepted_by === advisorId) return AdvisorRequestStatus.ACCEPTED
   if (request.accepted_by) return "already_assigned"
   if (request.rejected_by?.some((r) => r.advisor_id === advisorId))
-    return "rejected"
-  if (new Date(request.expiry_date) < new Date()) return "expired"
-  return "awaiting_approval"
+    return AdvisorRequestStatus.REJECTED
+  if (new Date(request.expiry_date) < new Date())
+    return AdvisorRequestStatus.EXPIRED
+  return AdvisorRequestStatus.AWAITING_APPROVAL
 }
 
 export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(
@@ -280,7 +283,8 @@ export const RejectAdvisorRequestAction = CreateServerAction(
       if (!before) {
         return { success: false, error: "Request not found." }
       }
-      const wasAlreadyRejected = getStudentRequestStatus(before) === "rejected"
+      const wasAlreadyRejected =
+        getStudentRequestStatus(before) === AdvisorRequestStatus.REJECTED
 
       const request = await RejectAdvisorRequest(
         requestId,
@@ -293,7 +297,7 @@ export const RejectAdvisorRequestAction = CreateServerAction(
         if (
           after &&
           !wasAlreadyRejected &&
-          getStudentRequestStatus(after) === "rejected"
+          getStudentRequestStatus(after) === AdvisorRequestStatus.REJECTED
         ) {
           const notifyContext = {
             requested_by: after.requested_by,

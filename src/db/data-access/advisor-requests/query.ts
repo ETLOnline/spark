@@ -17,10 +17,10 @@ export const CreateAdvisorRequest = async (data: InsertAdvisorRequest) => {
 }
 
 export type StudentRequestStatus =
-  | "pending"
-  | "accepted"
-  | "rejected"
-  | "expired"
+  | AdvisorRequestStatus.PENDING
+  | AdvisorRequestStatus.ACCEPTED
+  | AdvisorRequestStatus.REJECTED
+  | AdvisorRequestStatus.EXPIRED
 
 export function getStudentRequestStatus(request: {
   status: string
@@ -29,7 +29,8 @@ export function getStudentRequestStatus(request: {
   advisor_ids: string[] | null
   expiry_date: string
 }): StudentRequestStatus {
-  if (request.status === "accepted" || request.accepted_by) return "accepted"
+  if (request.status === AdvisorRequestStatus.ACCEPTED || request.accepted_by)
+    return AdvisorRequestStatus.ACCEPTED
 
   const advisorIds = request.advisor_ids ?? []
   const rejectedCount = request.rejected_by?.length ?? 0
@@ -37,10 +38,10 @@ export function getStudentRequestStatus(request: {
     advisorIds.length > 0 && rejectedCount >= advisorIds.length
   const isPastDeadline = new Date(request.expiry_date) < new Date()
 
-  if (allRejected) return "rejected"
-  if (isPastDeadline && rejectedCount > 0) return "rejected"
-  if (isPastDeadline) return "expired"
-  return "pending"
+  if (allRejected) return AdvisorRequestStatus.REJECTED
+  if (isPastDeadline && rejectedCount > 0) return AdvisorRequestStatus.REJECTED
+  if (isPastDeadline) return AdvisorRequestStatus.EXPIRED
+  return AdvisorRequestStatus.PENDING
 }
 
 // Fetches the most recently submitted advisor request for a space, including its domain and proposal file.
@@ -58,7 +59,9 @@ export const GetLatestAdvisorRequestForSpace = async (spaceId: string) => {
 export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
   const request = await GetLatestAdvisorRequestForSpace(spaceId)
   if (!request) return null
-  return getStudentRequestStatus(request) === "pending" ? request : null
+  return getStudentRequestStatus(request) === AdvisorRequestStatus.PENDING
+    ? request
+    : null
 }
 
 export const GetAdvisorRequestById = async (requestId: string) => {
@@ -88,11 +91,11 @@ export const AcceptAdvisorRequest = async (
 ) => {
   const [request] = await db
     .update(advisorRequestsTable)
-    .set({ status: "accepted", accepted_by: advisorId })
+    .set({ status: AdvisorRequestStatus.ACCEPTED, accepted_by: advisorId })
     .where(
       and(
         eq(advisorRequestsTable.id, requestId),
-        eq(advisorRequestsTable.status, "awaiting_approval")
+        eq(advisorRequestsTable.status, AdvisorRequestStatus.AWAITING_APPROVAL)
       )
     )
     .returning()
@@ -121,7 +124,7 @@ export const RejectAdvisorRequest = async (
     .update(advisorRequestsTable)
     .set({
       rejected_by: rejectedBy,
-      ...(isLastAdvisor && { status: "rejected" })
+      ...(isLastAdvisor && { status: AdvisorRequestStatus.REJECTED })
     })
     .where(eq(advisorRequestsTable.id, requestId))
     .returning()
