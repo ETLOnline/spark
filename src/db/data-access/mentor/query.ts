@@ -21,7 +21,6 @@ import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
-  permissionsTable,
   profileTable,
   sessionRequestsTable,
   spacesTable,
@@ -32,6 +31,7 @@ import {
   usersTable
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
+import { getRoleIdsWithPermission } from "../permissions/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -184,26 +184,16 @@ const buildAvailabilityCondition = (
   )
 }
 
-const getRoleIdsWithMentorshipPermission = async () => {
-  const permission = await db.query.permissionsTable.findFirst({
-    where: and(
-      eq(permissionsTable.namespace, "mentorship"),
-      eq(permissionsTable.action, permissions.mentorship.addAvailability)
-    ),
-    with: {
-      roles: { columns: { role_id: true } }
-    }
-  })
-  return permission?.roles.map((row) => row.role_id) ?? []
-}
-
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    const roleIds = await getRoleIdsWithMentorshipPermission()
+    const roleIds = await getRoleIdsWithPermission(
+      "mentorship",
+      permissions.mentorship.addAvailability
+    )
 
     if (!roleIds.length) {
       return {
