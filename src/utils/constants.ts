@@ -232,7 +232,8 @@ export const permissions = {
 
   fyp: {
     canRequestAdvisor: "can_request_advisor",
-    canReceiveAdvisorRequest: "can_receive_advisor_request"
+    canReceiveAdvisorRequest: "can_receive_advisor_request",
+    viewAdvisorRequests: "view_advisor_requests"
   }
 }
 
