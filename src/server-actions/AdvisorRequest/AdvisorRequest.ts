@@ -137,7 +137,7 @@ export const CreateAdvisorRequestAction = CreateServerAction(
 )
 
 export const getEligibleRequestAdvisorsAction = CreateServerAction(
-  true,
+  false,
   async () => {
     try {
       const recentRequests = await GetRecentPendingAdvisorRequests()
