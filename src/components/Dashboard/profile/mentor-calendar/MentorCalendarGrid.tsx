@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Clock,
   Lock,
-  Plus,
   RefreshCw,
   Sparkles,
   User,
@@ -39,7 +38,6 @@ interface MentorCalendarGridProps {
   mentorPendingRequests: SelectSessionRequest[]
   mentorAcceptedRequests: SelectSessionRequest[]
   onSelectDate: (date: Date) => void
-  onNewSlotClick: () => void
 }
 
 export function MentorCalendarGrid({
@@ -50,8 +48,7 @@ export function MentorCalendarGrid({
   bookedRequests,
   mentorPendingRequests,
   mentorAcceptedRequests,
-  onSelectDate,
-  onNewSlotClick
+  onSelectDate
 }: MentorCalendarGridProps) {
   const [view, setView] = useState<ViewType>("month")
   const [currentDate, setCurrentDate] = useState(
@@ -339,7 +336,7 @@ export function MentorCalendarGrid({
           </div>
         </div>
 
-        {/* Right: toggle (desktop) + New Slot */}
+        {/* Right: toggle (desktop) */}
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex rounded-md border border-foreground/10 overflow-hidden">
             {(["month", "week"] as ViewType[]).map((v, i) => (
@@ -356,16 +353,6 @@ export function MentorCalendarGrid({
               </button>
             ))}
           </div>
-
-          {isMyProfile && (
-            <button
-              onClick={onNewSlotClick}
-              className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-[min(var(--radius-md),12px)] bg-primary text-primary-foreground text-[0.8rem] font-medium transition-colors hover:bg-primary/80 whitespace-nowrap"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New Slot</span>
-            </button>
-          )}
         </div>
       </div>
 
