@@ -182,7 +182,10 @@ function SpaceSidebar({ space }: Props) {
       case "chat":
         return canViewChat
       case "fyp":
-        return (currentSpace ?? space).is_FYP_enable === true
+        return (
+          (currentSpace ?? space).is_FYP_enable === true &&
+          (isSpaceMember || isSuperAdmin)
+        )
       default:
         return false
     }
