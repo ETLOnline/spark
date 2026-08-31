@@ -217,7 +217,7 @@ export default function ProfileScreen({
           permissionChecker.canAccess("mentorship.add_availibility")
         )
         setHasAdvisorRequestPermission(
-          permissionChecker.canAccess("fyp.view_advisor_requests")
+          permissionChecker.canAccess("fyp.advisor.view_requests")
         )
       }
     }
@@ -601,7 +601,7 @@ export default function ProfileScreen({
               <EmailVerificationCard userId={user.unique_id} />
             ) : null}
 
-            {/* Advisor Requests — shown to the owner only, gated by the "fyp.view_advisor_requests" permission */}
+            {/* Advisor Requests — shown to the owner only, gated by the "fyp.advisor.view_requests" permission */}
             {isMyProfile && hasAdvisorRequestPermission && (
               <Card>
                 <CardHeader>

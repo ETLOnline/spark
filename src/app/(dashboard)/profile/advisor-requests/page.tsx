@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { GetUserPermissionsParsedAction } from "@/src/server-actions/UserRoles/UserRole"
+import { GetAdvisorRequestsForAdvisorAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { AdvisorRequestsScreen } from "@/src/components/Dashboard/profile/AdvisorRequestsScreen"
@@ -18,8 +19,15 @@ export default async function AdvisorRequestsPage() {
     permsResponse.success ? permsResponse.data : null,
     isAdmin
   )
-  if (!permissionChecker.canAccess("fyp.view_advisor_requests"))
+  if (!permissionChecker.canAccess("fyp.advisor.view_requests"))
     redirect("/profile")
+
+  const canViewDetails = permissionChecker.canAccess("fyp.advisor.view_details")
+  const canAccept = permissionChecker.canAccess("fyp.advisor.accept")
+  const canReject = permissionChecker.canAccess("fyp.advisor.reject")
+
+  const requestsResponse = await GetAdvisorRequestsForAdvisorAction()
+  const requests = (requestsResponse.success ? requestsResponse.data : []) ?? []
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
@@ -39,7 +47,12 @@ export default async function AdvisorRequestsPage() {
       </div>
 
       <div className="flex-1 min-h-0">
-        <AdvisorRequestsScreen />
+        <AdvisorRequestsScreen
+          requests={requests}
+          canViewDetails={canViewDetails}
+          canAccept={canAccept}
+          canReject={canReject}
+        />
       </div>
     </div>
   )
