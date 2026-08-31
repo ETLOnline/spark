@@ -24,5 +24,6 @@ export enum NotificationEvent {
   SESSION_REQUEST_REJECTED = "session_request_rejected",
   IDENTITY_VERIFICATION_OTP = "identity_verification_otp",
   IDENTITY_VERIFIED = "identity_verified",
-  NEW_ADVISOR_REQUEST = "new_advisor_request"
+  NEW_ADVISOR_REQUEST = "new_advisor_request",
+  MILESTONE_DONE_PENDING = "milestone_done_pending"
 }

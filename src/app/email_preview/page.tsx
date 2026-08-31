@@ -124,6 +124,11 @@ const emailTemplates = [
     value: "new_advisor_request",
     label: "New Advisor Request Email",
     file: "new_advisor_request.html"
+  },
+  {
+    value: "milestone_done_pending",
+    label: "Milestone Ready for Verification",
+    file: "milestone_done_pending.html"
   }
 ]
 

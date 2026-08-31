@@ -1662,6 +1662,11 @@ export enum MilestoneStatus {
   COMPLETED = "completed"
 }
 
+// Artifact entries stored as a JSON array on each milestone
+export type MilestoneArtifactEntry =
+  | { type: "file"; file_id: number; file_name: string; file_path: string }
+  | { type: "link"; url: string }
+
 export const projectMilestonesTable = pgTable("project_milestones", {
   id: varchar("id", { length: 36 })
     .primaryKey()
@@ -1675,6 +1680,11 @@ export const projectMilestonesTable = pgTable("project_milestones", {
   end_date: varchar(),
   order_index: integer().notNull().default(0),
   created_by: varchar().notNull(),
+  // Artifacts — JSON array; at least one required before marking as Done
+  artifacts: json()
+    .$type<MilestoneArtifactEntry[]>()
+    .notNull()
+    .default(sql`'[]'::json`),
   ...timestamps
 })
 

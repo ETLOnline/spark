@@ -119,6 +119,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.NEW_ADVISOR_REQUEST,
     subject: "New Advisor Request in {{domainName}}",
     body: loadTemplate("new_advisor_request.html")
+  },
+  {
+    name: NotificationEvent.MILESTONE_DONE_PENDING,
+    subject: "{{studentName}} submitted a milestone for review",
+    body: loadTemplate("milestone_done_pending.html")
   }
 ]
 
