@@ -4,6 +4,7 @@ import {
   Beaker,
   Boxes,
   Calendar,
+  Inbox,
   LayoutDashboard,
   LifeBuoy,
   Lightbulb,
@@ -80,6 +81,12 @@ export const siteRoutes: SiteRoutes = {
       title: "Find a Mentor",
       url: "/mentors",
       icon: SearchCheck
+    },
+    {
+      title: "Advisor's Requests",
+      url: "/profile/advisor-requests",
+      icon: Inbox,
+      permission: "fyp.advisor.view_requests"
     }
   ],
   testNav: [

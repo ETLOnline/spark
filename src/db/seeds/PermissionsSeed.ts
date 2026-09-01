@@ -140,7 +140,12 @@ const permissionSeedList = [
   { namespace: "fyp", action: permissions.fyp.milestoneVerify },
   { namespace: "fyp", action: permissions.fyp.milestoneRevert },
   { namespace: "fyp", action: permissions.fyp.milestoneMarkDone },
-  { namespace: "fyp", action: permissions.fyp.milestoneArtifactAdd }
+  { namespace: "fyp", action: permissions.fyp.milestoneArtifactAdd },
+
+  { namespace: "fyp", action: permissions.fyp.advisorViewRequests },
+  { namespace: "fyp", action: permissions.fyp.advisorViewDetails },
+  { namespace: "fyp", action: permissions.fyp.advisorAccept },
+  { namespace: "fyp", action: permissions.fyp.advisorReject }
 ]
 
 export const PermissionsSeed = async () => {

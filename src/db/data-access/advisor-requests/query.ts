@@ -16,31 +16,120 @@ export const CreateAdvisorRequest = async (data: InsertAdvisorRequest) => {
   }
 }
 
-// Fetches the active advisor request for a given space. Returns null if no active request exists.
-export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
-  const [request] = await db
-    .select()
-    .from(advisorRequestsTable)
-    .where(
-      and(
-        eq(advisorRequestsTable.space_id, spaceId),
-        eq(advisorRequestsTable.status, "active")
-      )
-    )
+export type StudentRequestStatus =
+  | AdvisorRequestStatus.PENDING
+  | AdvisorRequestStatus.ACCEPTED
+  | AdvisorRequestStatus.REJECTED
+  | AdvisorRequestStatus.EXPIRED
+
+export function getStudentRequestStatus(request: {
+  status: string
+  accepted_by: string | null
+  rejected_by: { advisor_id: string; reason: string }[] | null
+  advisor_ids: string[] | null
+  expiry_date: string
+}): StudentRequestStatus {
+  if (request.status === AdvisorRequestStatus.ACCEPTED || request.accepted_by)
+    return AdvisorRequestStatus.ACCEPTED
+
+  const advisorIds = request.advisor_ids ?? []
+  const rejectedCount = request.rejected_by?.length ?? 0
+  const allRejected =
+    advisorIds.length > 0 && rejectedCount >= advisorIds.length
+  const isPastDeadline = new Date(request.expiry_date) < new Date()
+
+  if (allRejected) return AdvisorRequestStatus.REJECTED
+  if (isPastDeadline && rejectedCount > 0) return AdvisorRequestStatus.REJECTED
+  if (isPastDeadline) return AdvisorRequestStatus.EXPIRED
+  return AdvisorRequestStatus.PENDING
+}
+
+// Fetches the most recently submitted advisor request for a space, including its domain and proposal file.
+export const GetLatestAdvisorRequestForSpace = async (spaceId: string) => {
+  const request = await db.query.advisorRequestsTable.findFirst({
+    where: eq(advisorRequestsTable.space_id, spaceId),
+    with: { domain: true, proposalFile: true },
+    orderBy: [desc(advisorRequestsTable.created_at)]
+  })
 
   return request ?? null
 }
 
-// Fetches the most recently submitted advisor request for a space,
-export const GetLatestAdvisorRequestForSpace = async (spaceId: string) => {
-  const [request] = await db
-    .select()
-    .from(advisorRequestsTable)
-    .where(eq(advisorRequestsTable.space_id, spaceId))
-    .orderBy(desc(advisorRequestsTable.created_at))
-    .limit(1)
+// Fetches the active advisor request for a given space. Returns null if no active request exists.
+export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
+  const request = await GetLatestAdvisorRequestForSpace(spaceId)
+  if (!request) return null
+  return getStudentRequestStatus(request) === AdvisorRequestStatus.PENDING
+    ? request
+    : null
+}
+
+export const GetAdvisorRequestById = async (requestId: string) => {
+  const request = await db.query.advisorRequestsTable.findFirst({
+    where: eq(advisorRequestsTable.id, requestId),
+    with: { space: { with: { channel: true } } }
+  })
 
   return request ?? null
+}
+
+export const GetAdvisorRequestsForAdvisor = async (advisorId: string) => {
+  return await db.query.advisorRequestsTable.findMany({
+    where: sql`${advisorRequestsTable.advisor_ids} @> ${JSON.stringify([advisorId])}::jsonb`,
+    with: {
+      requester: true,
+      domain: true,
+      proposalFile: true
+    },
+    orderBy: [desc(advisorRequestsTable.created_at)]
+  })
+}
+
+export const AcceptAdvisorRequest = async (
+  requestId: string,
+  advisorId: string
+) => {
+  const [request] = await db
+    .update(advisorRequestsTable)
+    .set({ status: AdvisorRequestStatus.ACCEPTED, accepted_by: advisorId })
+    .where(
+      and(
+        eq(advisorRequestsTable.id, requestId),
+        eq(advisorRequestsTable.status, AdvisorRequestStatus.AWAITING_APPROVAL)
+      )
+    )
+    .returning()
+
+  return request ?? null
+}
+
+export const RejectAdvisorRequest = async (
+  requestId: string,
+  advisorId: string,
+  reason: string
+) => {
+  const request = await db.query.advisorRequestsTable.findFirst({
+    where: eq(advisorRequestsTable.id, requestId)
+  })
+  if (!request) return null
+
+  const rejectedBy = [
+    ...(request.rejected_by ?? []),
+    { advisor_id: advisorId, reason }
+  ]
+  const advisorIds = request.advisor_ids ?? []
+  const isLastAdvisor = rejectedBy.length >= advisorIds.length
+
+  const [updated] = await db
+    .update(advisorRequestsTable)
+    .set({
+      rejected_by: rejectedBy,
+      ...(isLastAdvisor && { status: AdvisorRequestStatus.REJECTED })
+    })
+    .where(eq(advisorRequestsTable.id, requestId))
+    .returning()
+
+  return updated ?? null
 }
 
 export const GetRecentPendingAdvisorRequests = async () => {
@@ -67,15 +156,15 @@ export const GetEligibleAdvisorsForDomain = async (
 ) => {
   const res = await db.execute(
     sql`
-    select DISTINCT u.*
+    select u.*
     from permissions p
-    inner join role_permissions rp 
+    inner join role_permissions rp
     on rp.permission_id = p.id
-    inner join user_roles ur 
+    inner join user_roles ur
     on ur.role_id = rp.role_id
-    inner join users u 
+    inner join users u
     on u.unique_id = ur.user_id
-    inner join user_tags ut 
+    inner join user_tags ut
     on ut.user_id = ur.user_id
     where p.namespace = ${namespace} and p.action = ${action} and ut.tag_id = ${domainTagId}
   `

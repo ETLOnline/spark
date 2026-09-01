@@ -658,6 +658,7 @@ async function fetchViewerRole(roleSlug: EntityType, entityId: string) {
 export type EntityType =
   | "channel_viewer"
   | "space_viewer"
+  | "space_editor"
   | "project_viewer"
   | "community_viewer"
   | "community_admin"

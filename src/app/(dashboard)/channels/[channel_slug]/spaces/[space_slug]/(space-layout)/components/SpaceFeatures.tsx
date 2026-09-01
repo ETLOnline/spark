@@ -6,7 +6,7 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import { EarthLock } from "lucide-react"
 import FileSharing from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileSharing"
 import { useLayoutEffect, useState } from "react"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import SpaceChat from "./spaceChat"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
@@ -15,6 +15,8 @@ import SpaceFYP from "./SpaceFYP"
 import { ProjectScreen } from "@/src/components/Dashboard/Projects"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { userStore } from "@/src/store/user/userStore"
+import { isEntityUser } from "@/src/utils/clientHelper"
 
 interface Props {
   features: SelectSpaceFeature[]
@@ -27,6 +29,11 @@ function SpaceFeatures({ features, space }: Props) {
     "SPACE",
     space?.id
   )
+  const authUser = useAtomValue(userStore.AuthUser)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const isSpaceMember = authUser?.unique_id
+    ? isEntityUser(space, authUser.unique_id)
+    : false
 
   const params = useSearchParams()
   const pageType = params.get("page-type") || null
@@ -103,6 +110,17 @@ function SpaceFeatures({ features, space }: Props) {
             }
             title="Feature not found"
             description="Feature not available at the moment, or might have been disabled by the admin"
+          />
+        )
+      }
+      if (!isSpaceMember && !isSuperAdmin) {
+        return (
+          <NoDataCard
+            icon={
+              <EarthLock className="h-16 w-16 text-muted-foreground mb-4" />
+            }
+            title="Access Denied"
+            description="Join this Space to access the FYP feature."
           />
         )
       }

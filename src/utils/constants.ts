@@ -233,6 +233,7 @@ export const permissions = {
   fyp: {
     canRequestAdvisor: "can_request_advisor",
     canReceiveAdvisorRequest: "can_receive_advisor_request",
+
     // Milestone permissions
     milestoneCreate: "milestone.create",
     milestoneUpdate: "milestone.update",
@@ -240,7 +241,12 @@ export const permissions = {
     milestoneVerify: "milestone.verify", // mark as Completed — advisor/admin only
     milestoneRevert: "milestone.revert", // revert status — advisor/admin only
     milestoneMarkDone: "milestone.mark_done", // student: submit for review
-    milestoneArtifactAdd: "milestone.artifact.add" // student: add artifact
+    milestoneArtifactAdd: "milestone.artifact.add", // student: add artifact
+
+    advisorViewRequests: "advisor.view_requests",
+    advisorViewDetails: "advisor.view_details",
+    advisorAccept: "advisor.accept",
+    advisorReject: "advisor.reject"
   }
 }
 
@@ -390,3 +396,21 @@ export const DAYS = [
 ]
 
 export const DAY_HEADERS = DAYS.map((d) => d.slice(0, 3))
+
+/** Max size (in bytes) for an advisor request's proposal file. */
+export const ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE = 200 * 1024 * 1024
+
+/** Mime types accepted for an advisor request's proposal file. */
+export const ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+]
+
+/** `accept` attribute value for the proposal file upload input. */
+export const ADVISOR_REQUEST_PROPOSAL_ACCEPT = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ...ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES
+].join(",")
