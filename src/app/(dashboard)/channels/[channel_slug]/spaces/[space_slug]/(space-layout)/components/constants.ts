@@ -47,8 +47,9 @@ export const CUSTOM_MILESTONE_FEATURES = [
 
 export const MILESTONE_STATUS_TOAST: Record<string, string> = {
   in_progress: "Milestone marked as In Progress.",
-  done_pending_verification: "Milestone submitted for verification.",
-  completed: "Milestone marked as Completed."
+  completed_pending_verification:
+    "Milestone marked as Completed (Pending Verification).",
+  verified: "Milestone verified successfully."
 }
 
 // ─── Milestone Artifact Upload Constraints ────────────────────────────────────

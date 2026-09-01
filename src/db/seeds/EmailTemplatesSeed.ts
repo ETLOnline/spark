@@ -131,9 +131,10 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("new_advisor_request.html")
   },
   {
-    name: NotificationEvent.MILESTONE_DONE_PENDING,
-    subject: "{{studentName}} submitted a milestone for review",
-    body: loadTemplate("milestone_done_pending.html")
+    name: NotificationEvent.MILESTONE_COMPLETED_PENDING_VERIFICATION,
+    subject:
+      "{{studentName}} marked a milestone as Complete (Pending Verification)",
+    body: loadTemplate("milestone_completed_pending_verification.html")
   }
 ]
 

@@ -81,12 +81,12 @@ export function ArtifactManageDialog({
   // Students can add/replace artifacts until advisor marks as Completed
   const canEdit =
     isStudent &&
-    status !== MilestoneStatus.COMPLETED &&
+    status !== MilestoneStatus.VERIFIED &&
     status !== MilestoneStatus.INCOMPLETE
 
   // Students can delete until the milestone is fully Completed (advisor verified)
   // Advisors can also delete until Completed
-  const canDelete = status !== MilestoneStatus.COMPLETED
+  const canDelete = status !== MilestoneStatus.VERIFIED
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -210,12 +210,14 @@ export function ArtifactManageDialog({
     setIsMarkingDone(true)
     try {
       const res = await updateMilestone(milestoneId, {
-        status: MilestoneStatus.DONE_PENDING_VERIFICATION
+        status: MilestoneStatus.COMPLETED_PENDING_VERIFICATION
       })
       if (res?.success) {
         toast({
           title:
-            MILESTONE_STATUS_TOAST[MilestoneStatus.DONE_PENDING_VERIFICATION]
+            MILESTONE_STATUS_TOAST[
+              MilestoneStatus.COMPLETED_PENDING_VERIFICATION
+            ]
         })
         onMarkDone()
         handleClose()
@@ -237,10 +239,10 @@ export function ArtifactManageDialog({
     setIsMarkingCompleted(true)
     try {
       const res = await updateMilestone(milestoneId, {
-        status: MilestoneStatus.COMPLETED
+        status: MilestoneStatus.VERIFIED
       })
       if (res?.success) {
-        toast({ title: MILESTONE_STATUS_TOAST[MilestoneStatus.COMPLETED] })
+        toast({ title: MILESTONE_STATUS_TOAST[MilestoneStatus.VERIFIED] })
         onMarkCompleted?.()
         handleClose()
       } else {
@@ -404,7 +406,7 @@ export function ArtifactManageDialog({
             Close
           </Button>
 
-          {/* Student: Mark as Done */}
+          {/* Student: Complete (Pending Verification) */}
           {isStudent && status === MilestoneStatus.IN_PROGRESS && (
             <Button
               onClick={handleMarkDone}
@@ -416,13 +418,13 @@ export function ArtifactManageDialog({
               ) : (
                 <CheckCircle2 className="h-4 w-4 mr-2" />
               )}
-              Mark as Done
+              Complete (Pending Verification)
             </Button>
           )}
 
-          {/* Advisor / Admin: Mark as Completed */}
+          {/* Advisor / Admin: Verify */}
           {!isStudent &&
-            status === MilestoneStatus.DONE_PENDING_VERIFICATION && (
+            status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
               <Button
                 onClick={handleMarkCompleted}
                 disabled={isMarkingCompleted}
@@ -433,7 +435,7 @@ export function ArtifactManageDialog({
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                 )}
-                Mark as Completed
+                Verify
               </Button>
             )}
         </DialogFooter>

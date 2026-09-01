@@ -16,31 +16,31 @@ export interface MilestoneDoneContext {
   deepLink: string
 }
 
-/** In-app + email notification to advisors/admins: student submitted milestone for review. */
+/** In-app + email notification to space users: student marked milestone as Complete (Pending Verification). */
 export async function notifyManagersMilestoneDone(
-  managers: MilestoneManagerRecipient[],
+  recipients: MilestoneManagerRecipient[],
   ctx: MilestoneDoneContext
 ) {
-  if (!managers.length) return
+  if (!recipients.length) return
 
   // In-app
   await SendSystemNotification({
     user_id: ctx.studentId,
-    receivers: managers.map((m) => m.unique_id),
+    receivers: recipients.map((r) => r.unique_id),
     template: {
-      title: "Milestone ready for verification",
-      body: `${ctx.studentName} submitted "${ctx.milestoneName}" for review.`,
+      title: "Milestone Complete (Pending Verification)",
+      body: `${ctx.studentName} marked "${ctx.milestoneName}" as Complete (Pending Verification).`,
       deep_link: ctx.deepLink
     }
   })
 
   // Email
-  const emails = managers.map((m) => m.email).filter(Boolean)
+  const emails = recipients.map((r) => r.email).filter(Boolean)
   if (!emails.length) return
 
   await AddToQueue({
     sendingTo: emails,
-    event: NotificationEvent.MILESTONE_DONE_PENDING,
+    event: NotificationEvent.MILESTONE_COMPLETED_PENDING_VERIFICATION,
     payload: {
       logoUrl: getSiteLogoUrl(),
       studentName: ctx.studentName,

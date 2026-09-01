@@ -160,66 +160,91 @@ export const UpdateMilestoneAction = CreateServerAction(
       const user = await AuthUserAction()
       if (!user) return { success: false, message: "Unauthorized" }
 
-      if (data.status === MilestoneStatus.DONE_PENDING_VERIFICATION) {
-        // Enforce artifact requirement
+      if (data.status) {
         const ctx = await GetMilestoneWithSpace(id)
         if (!ctx) return { success: false, message: "Milestone not found" }
-        const artifacts =
-          (ctx.milestone.artifacts as MilestoneArtifactEntry[]) ?? []
-        if (artifacts.length === 0) {
-          return {
-            success: false,
-            message: "Please add at least one artifact before marking as Done."
+
+        const currentStatus = ctx.milestone.status as MilestoneStatus
+        const newStatus = data.status as MilestoneStatus
+
+        // Enforce strict forward order:
+        // incomplete → in_progress → completed_pending_verification → verified
+        const FLOW: MilestoneStatus[] = [
+          MilestoneStatus.INCOMPLETE,
+          MilestoneStatus.IN_PROGRESS,
+          MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
+          MilestoneStatus.VERIFIED
+        ]
+        const currentIdx = FLOW.indexOf(currentStatus)
+        const newIdx = FLOW.indexOf(newStatus)
+        if (newIdx !== currentIdx + 1) {
+          return { success: false, message: "Invalid status transition." }
+        }
+
+        // Require ≥1 artifact before Completed (Pending Verification) or Verified
+        if (
+          newStatus === MilestoneStatus.COMPLETED_PENDING_VERIFICATION ||
+          newStatus === MilestoneStatus.VERIFIED
+        ) {
+          const artifacts =
+            (ctx.milestone.artifacts as MilestoneArtifactEntry[]) ?? []
+          if (artifacts.length === 0) {
+            return {
+              success: false,
+              message:
+                newStatus === MilestoneStatus.VERIFIED
+                  ? "At least one artifact is required before verifying this milestone."
+                  : "Please add at least one artifact before marking as Completed."
+            }
           }
         }
 
         const updated = await UpdateMilestone(id, data)
 
-        // Fire-and-forget: notify advisors/admins
-        ;(async () => {
-          try {
-            const user = await AuthUserAction()
-            if (!user) return
+        // Notify advisors/admins when student submits for verification
+        if (newStatus === MilestoneStatus.COMPLETED_PENDING_VERIFICATION) {
+          ;(async () => {
+            try {
+              const deepLink =
+                ctx.channelSlug && ctx.spaceSlug
+                  ? `/channels/${ctx.channelSlug}/spaces/${ctx.spaceSlug}?page-type=fyp`
+                  : "/"
 
-            const deepLink =
-              ctx.channelSlug && ctx.spaceSlug
-                ? `/channels/${ctx.channelSlug}/spaces/${ctx.spaceSlug}?page-type=fyp`
-                : "/"
-
-            const spaceUsers = await getSpaceUsers(ctx.milestone.space_id)
-            const managers = spaceUsers
-              .filter((su) =>
-                su.user?.roles?.some(
-                  (ur) =>
-                    ur.role?.slug === "industry_partner" ||
-                    ur.role?.slug === "community_admin"
+              const spaceUsers = await getSpaceUsers(ctx.milestone.space_id)
+              const usersToNotify = spaceUsers
+                .map((su) => su.user)
+                .filter(
+                  (u): u is NonNullable<typeof u> =>
+                    !!u &&
+                    !!u.unique_id &&
+                    !!u.email &&
+                    u.unique_id !== user.unique_id
                 )
-              )
-              .map((su) => su.user)
-              .filter(
-                (u): u is NonNullable<typeof u> =>
-                  !!u && !!u.unique_id && !!u.email
-              )
 
-            await notifyManagersMilestoneDone(
-              managers.map((m) => ({ unique_id: m.unique_id, email: m.email })),
-              {
-                milestoneName: ctx.milestone.name,
-                studentId: user.unique_id,
-                studentName:
-                  `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
-                spaceName: ctx.spaceName,
-                deepLink
-              }
-            )
-          } catch {
-            // notifications are non-critical
-          }
-        })()
+              await notifyManagersMilestoneDone(
+                usersToNotify.map((m) => ({
+                  unique_id: m.unique_id,
+                  email: m.email
+                })),
+                {
+                  milestoneName: ctx.milestone.name,
+                  studentId: user.unique_id,
+                  studentName:
+                    `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
+                  spaceName: ctx.spaceName,
+                  deepLink
+                }
+              )
+            } catch {
+              // notifications are non-critical
+            }
+          })()
+        }
 
         return { success: true, data: updated }
       }
 
+      // Metadata-only update (name, dates, order)
       const updated = await UpdateMilestone(id, data)
       return { success: true, data: updated }
     } catch (error) {
@@ -259,6 +284,15 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
 
       const milestone = await GetMilestoneById(milestoneId)
       if (!milestone) return { success: false, message: "Milestone not found" }
+
+      // Block artifact submission once milestone is verified
+      if ((milestone.status as MilestoneStatus) === MilestoneStatus.VERIFIED) {
+        return {
+          success: false,
+          message:
+            "Artifacts cannot be added to a verified milestone. Contact your Advisor or University Admin."
+        }
+      }
 
       const current: MilestoneArtifactEntry[] =
         (milestone.artifacts as MilestoneArtifactEntry[]) ?? []
@@ -307,8 +341,7 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
 
 // ─── Delete artifact ──────────────────────────────────────────────────────────
 // Removes one artifact by index.
-// Students: blocked once submitted for review (DONE_PENDING_VERIFICATION or COMPLETED).
-// Advisors/admins (milestoneRevert permission): blocked only on COMPLETED.
+// Nobody can delete artifacts once the milestone is Verified.
 
 export const DeleteMilestoneArtifactAction = CreateServerAction(
   true,
@@ -322,11 +355,11 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
 
       const status = milestone.status as MilestoneStatus
 
-      // Nobody (student or advisor) can delete artifacts once the milestone is Completed
-      if (status === MilestoneStatus.COMPLETED) {
+      // Block deletions on verified milestones
+      if (status === MilestoneStatus.VERIFIED) {
         return {
           success: false,
-          message: "Artifacts cannot be removed from a completed milestone."
+          message: "Artifacts cannot be removed from a verified milestone."
         }
       }
 
@@ -347,12 +380,13 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
 // ─── Revert milestone status ───────────────────────────────────────────────────
 // Advisor / Admin only. Moves status back and notifies the student.
 // Allowed reversions:
-//   DONE_PENDING_VERIFICATION → IN_PROGRESS
-//   COMPLETED               → DONE_PENDING_VERIFICATION
+//   completed_pending_verification → in_progress
+//   verified                       → completed_pending_verification
 
 const ALLOWED_REVERSIONS: Partial<Record<MilestoneStatus, MilestoneStatus>> = {
-  [MilestoneStatus.DONE_PENDING_VERIFICATION]: MilestoneStatus.IN_PROGRESS,
-  [MilestoneStatus.COMPLETED]: MilestoneStatus.DONE_PENDING_VERIFICATION
+  [MilestoneStatus.VERIFIED]: MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
+  [MilestoneStatus.COMPLETED_PENDING_VERIFICATION]: MilestoneStatus.IN_PROGRESS,
+  [MilestoneStatus.IN_PROGRESS]: MilestoneStatus.INCOMPLETE
 }
 
 export const RevertMilestoneAction = CreateServerAction(

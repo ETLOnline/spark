@@ -1659,8 +1659,8 @@ export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
 export enum MilestoneStatus {
   INCOMPLETE = "incomplete",
   IN_PROGRESS = "in_progress",
-  DONE_PENDING_VERIFICATION = "done_pending_verification",
-  COMPLETED = "completed"
+  COMPLETED_PENDING_VERIFICATION = "completed_pending_verification",
+  VERIFIED = "verified"
 }
 
 // Artifact entries stored as a JSON array on each milestone

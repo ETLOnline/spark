@@ -56,7 +56,7 @@ export const eventsList: Record<string, EventProcessor> = {
   identity_verification_otp: processIdentityVerificationOtpNotification,
   identity_verified: processIdentityVerifiedNotification,
   new_advisor_request: processAdvisorRequestNotification,
-  milestone_done_pending: processMilestoneDoneNotification,
+  milestone_completed_pending_verification: processMilestoneDoneNotification,
   advisor_request_accepted: processSessionRequestEmailNotification,
   advisor_request_rejected: processSessionRequestEmailNotification
 }

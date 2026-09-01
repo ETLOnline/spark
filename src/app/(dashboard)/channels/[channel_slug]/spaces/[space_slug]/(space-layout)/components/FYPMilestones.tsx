@@ -100,9 +100,9 @@ interface LocalMilestone {
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 function StatusIcon({ status }: { status: string }) {
-  if (status === MilestoneStatus.COMPLETED)
+  if (status === MilestoneStatus.VERIFIED)
     return <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-  if (status === MilestoneStatus.DONE_PENDING_VERIFICATION)
+  if (status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
     return <Clock className="h-5 w-5 text-amber-500" />
   if (status === MilestoneStatus.IN_PROGRESS)
     return <Clock className="h-5 w-5 text-blue-500" />
@@ -111,12 +111,12 @@ function StatusIcon({ status }: { status: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    [MilestoneStatus.COMPLETED]: {
-      label: "Completed",
+    [MilestoneStatus.VERIFIED]: {
+      label: "Verified",
       className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20"
     },
-    [MilestoneStatus.DONE_PENDING_VERIFICATION]: {
-      label: "Done (Pending Verification)",
+    [MilestoneStatus.COMPLETED_PENDING_VERIFICATION]: {
+      label: "Completed (Pending Verification)",
       className: "bg-amber-500/10 text-amber-600 border-amber-500/20"
     },
     [MilestoneStatus.IN_PROGRESS]: {
@@ -144,10 +144,10 @@ function MilestoneStepper({
   milestones: SelectProjectMilestone[]
 }) {
   const completed = milestones.filter(
-    (m) => m.status === MilestoneStatus.COMPLETED
+    (m) => m.status === MilestoneStatus.VERIFIED
   ).length
   const pending = milestones.filter(
-    (m) => m.status === MilestoneStatus.DONE_PENDING_VERIFICATION
+    (m) => m.status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
   ).length
   const inProgress = milestones.filter(
     (m) => m.status === MilestoneStatus.IN_PROGRESS
@@ -167,7 +167,7 @@ function MilestoneStepper({
           {pending > 0 && (
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-amber-400 inline-block" />
-              {pending} Pending review
+              {pending} Pending Verification
             </span>
           )}
           {inProgress > 0 && (
@@ -197,9 +197,9 @@ function MilestoneStepper({
       {/* Step nodes */}
       <div className="flex items-start overflow-x-auto pb-1 pt-1">
         {milestones.map((m, i) => {
-          const isCompleted = m.status === MilestoneStatus.COMPLETED
+          const isCompleted = m.status === MilestoneStatus.VERIFIED
           const isPending =
-            m.status === MilestoneStatus.DONE_PENDING_VERIFICATION
+            m.status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
           const isInProgress = m.status === MilestoneStatus.IN_PROGRESS
           const isLast = i === milestones.length - 1
 
@@ -223,12 +223,12 @@ function MilestoneStepper({
 
           // Status badge text
           const statusText = isCompleted
-            ? "Completed"
+            ? "Verified"
             : isPending
-              ? "Pending review"
+              ? "Pending Verification"
               : isInProgress
-                ? "In progress"
-                : "Not started"
+                ? "In Progress"
+                : "Not Started"
 
           // Connector line: solid green only after a completed step
           const lineClass = isCompleted
@@ -892,6 +892,18 @@ function MilestoneView({
 
       <MilestoneStepper milestones={milestones} />
 
+      {!canManage &&
+        milestones.some((m) => m.status === MilestoneStatus.VERIFIED) && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-600 dark:text-amber-400 -mt-3">
+            <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <p>
+              Verified milestones are locked. To remove or replace an artifact,
+              contact your <span className="font-semibold">Advisor</span> or{" "}
+              <span className="font-semibold">University Admin</span>.
+            </p>
+          </div>
+        )}
+
       <div className="rounded-xl border overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
@@ -1095,20 +1107,20 @@ function MilestoneView({
                                   } else {
                                     handleStatusChange(
                                       m.id,
-                                      MilestoneStatus.DONE_PENDING_VERIFICATION
+                                      MilestoneStatus.COMPLETED_PENDING_VERIFICATION
                                     )
                                   }
                                 }}
                               >
                                 <Clock className="h-3.5 w-3.5 mr-2 text-primary" />
-                                Mark as Done
+                                Complete (Pending Verification)
                               </DropdownMenuItem>
                             </>
                           ) : (
                             <>
                               {/* Show Manage Artifacts for DONE_PENDING_VERIFICATION */}
                               {m.status ===
-                                MilestoneStatus.DONE_PENDING_VERIFICATION && (
+                                MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
                                 <>
                                   <DropdownMenuItem
                                     className="cursor-pointer"
@@ -1131,7 +1143,7 @@ function MilestoneView({
                                 </>
                               )}
                               {/* Show View Artifacts for COMPLETED */}
-                              {m.status === MilestoneStatus.COMPLETED && (
+                              {m.status === MilestoneStatus.VERIFIED && (
                                 <DropdownMenuItem
                                   className="cursor-pointer"
                                   onClick={() => setArtifactDialogId(m.id)}
@@ -1153,12 +1165,12 @@ function MilestoneView({
                               {m.status !== MilestoneStatus.INCOMPLETE && (
                                 <div className="px-2 py-2 space-y-0.5">
                                   <p className="text-xs font-medium text-muted-foreground/60">
-                                    {m.status === MilestoneStatus.COMPLETED
-                                      ? "Milestone Completed"
-                                      : "Mark as Done"}
+                                    {m.status === MilestoneStatus.VERIFIED
+                                      ? "Milestone Verified"
+                                      : "Complete (Pending Verification)"}
                                   </p>
                                   <p className="text-xs text-muted-foreground/50 leading-snug">
-                                    {m.status === MilestoneStatus.COMPLETED
+                                    {m.status === MilestoneStatus.VERIFIED
                                       ? "Verified and approved by your advisor."
                                       : "Already submitted for verification."}
                                   </p>
@@ -1191,25 +1203,26 @@ function MilestoneView({
                             )}
                             {canVerifyMilestone &&
                               m.status ===
-                                MilestoneStatus.DONE_PENDING_VERIFICATION && (
+                                MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
                                 <DropdownMenuItem
                                   className="cursor-pointer"
                                   onClick={() =>
                                     handleStatusChange(
                                       m.id,
-                                      MilestoneStatus.COMPLETED
+                                      MilestoneStatus.VERIFIED
                                     )
                                   }
                                 >
                                   <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-emerald-500" />
-                                  Mark as Completed
+                                  Verify
                                 </DropdownMenuItem>
                               )}
 
                             {canRevertMilestone &&
-                              (m.status ===
-                                MilestoneStatus.DONE_PENDING_VERIFICATION ||
-                                m.status === MilestoneStatus.COMPLETED) && (
+                              (m.status === MilestoneStatus.IN_PROGRESS ||
+                                m.status ===
+                                  MilestoneStatus.COMPLETED_PENDING_VERIFICATION ||
+                                m.status === MilestoneStatus.VERIFIED) && (
                                 <DropdownMenuItem
                                   className="cursor-pointer text-amber-600 focus:text-amber-600"
                                   onClick={() => handleRevert(m.id, m.status)}
@@ -1220,7 +1233,7 @@ function MilestoneView({
                               )}
 
                             {canUpdateMilestone &&
-                              m.status !== MilestoneStatus.COMPLETED && (
+                              m.status !== MilestoneStatus.VERIFIED && (
                                 <DropdownMenuItem
                                   className="cursor-pointer"
                                   onClick={() => handleStartEdit(m)}
@@ -1272,12 +1285,12 @@ function MilestoneView({
               }
               onMarkDone={() =>
                 updateDialogMilestone(artifactDialogId, {
-                  status: MilestoneStatus.DONE_PENDING_VERIFICATION
+                  status: MilestoneStatus.COMPLETED_PENDING_VERIFICATION
                 })
               }
               onMarkCompleted={() =>
                 updateDialogMilestone(artifactDialogId, {
-                  status: MilestoneStatus.COMPLETED
+                  status: MilestoneStatus.VERIFIED
                 })
               }
             />
