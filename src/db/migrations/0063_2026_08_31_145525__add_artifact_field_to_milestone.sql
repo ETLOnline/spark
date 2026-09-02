@@ -1,1 +1,0 @@
-ALTER TABLE "project_milestones" ADD COLUMN "artifacts" json DEFAULT '[]'::json NOT NULL;

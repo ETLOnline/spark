@@ -12,7 +12,7 @@ import {
   UpdateMilestone
 } from "@/src/db/data-access/milestones/query"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
-import { InsertProjectMilestone } from "@/src/db/schema"
+import { InsertFypMilestone } from "@/src/db/schema"
 import {
   MilestoneArtifactEntry,
   MilestoneStatus
@@ -49,7 +49,7 @@ export const SetupMilestonesAction = CreateServerAction(
   async (
     spaceId: string,
     inputs: Pick<
-      InsertProjectMilestone,
+      InsertFypMilestone,
       "name" | "start_date" | "end_date" | "order_index"
     >[]
   ) => {
@@ -57,7 +57,7 @@ export const SetupMilestonesAction = CreateServerAction(
       const user = await AuthUserAction()
       if (!user) return { success: false, message: "Unauthorized" }
 
-      const rows: InsertProjectMilestone[] = inputs.map((m) => ({
+      const rows: InsertFypMilestone[] = inputs.map((m) => ({
         space_id: spaceId,
         name: m.name,
         status: MilestoneStatus.INCOMPLETE,
@@ -85,7 +85,7 @@ export const ReconfigureMilestonesAction = CreateServerAction(
   async (
     spaceId: string,
     inputs: Pick<
-      InsertProjectMilestone,
+      InsertFypMilestone,
       "id" | "name" | "start_date" | "end_date" | "order_index"
     >[]
   ) => {
@@ -113,7 +113,7 @@ export const ReconfigureMilestonesAction = CreateServerAction(
           }
         }))
 
-      const toCreate: InsertProjectMilestone[] = inputs
+      const toCreate: InsertFypMilestone[] = inputs
         .filter((i) => !i.id)
         .map((m) => ({
           space_id: spaceId,

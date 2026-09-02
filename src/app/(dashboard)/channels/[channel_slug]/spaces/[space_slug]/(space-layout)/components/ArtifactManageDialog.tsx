@@ -33,7 +33,7 @@ import {
   SubmitMilestoneArtifactAction,
   UpdateMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
-import { SelectProjectMilestone } from "@/src/db/schema"
+import { SelectFypMilestone } from "@/src/db/schema"
 import {
   MilestoneArtifactEntry,
   MilestoneStatus
@@ -104,7 +104,7 @@ function ArtifactAddDialog({
         const res = await submitArtifact(milestoneId, { link: link.trim() })
         if (res?.success && res.data) {
           onAdded(
-            (res.data as SelectProjectMilestone)
+            (res.data as SelectFypMilestone)
               .artifacts as MilestoneArtifactEntry[]
           )
           toast({ title: "Link added" })
@@ -143,7 +143,7 @@ function ArtifactAddDialog({
         })
         if (res?.success && res.data) {
           onAdded(
-            (res.data as SelectProjectMilestone)
+            (res.data as SelectFypMilestone)
               .artifacts as MilestoneArtifactEntry[]
           )
           toast({ title: "File uploaded" })
@@ -284,8 +284,7 @@ export function ArtifactManageDialog({
       const res = await deleteArtifact(milestoneId, index)
       if (res?.success && res.data) {
         onArtifactsChanged(
-          (res.data as SelectProjectMilestone)
-            .artifacts as MilestoneArtifactEntry[]
+          (res.data as SelectFypMilestone).artifacts as MilestoneArtifactEntry[]
         )
         toast({ title: "Artifact removed" })
       } else {
