@@ -11,7 +11,10 @@ import {
   UpdateCoverImage,
   getSuperAdmins
 } from "@/src/db/data-access/user/query"
-import { GetMentors } from "@/src/db/data-access/mentor/query"
+import {
+  GetMentors,
+  RecalculateMentorActiveStatus
+} from "@/src/db/data-access/mentor/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
@@ -66,6 +69,10 @@ export const SaveUserProfileAction = CreateServerAction(
           ...profileUpdate
         })
       }
+
+      // Mentor fields and availability can be completed in any order — always
+      // recheck is_mentor_active here so it never gets stuck stale.
+      await RecalculateMentorActiveStatus(profileData.userId)
 
       const allTags = [...profileData.interests, ...profileData.skills]
 

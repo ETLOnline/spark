@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Plus } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -10,6 +10,14 @@ import {
   DialogHeader,
   DialogTitle
 } from "../../ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "../../ui/sheet"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSessionRequestAction,
@@ -74,7 +82,15 @@ export function MentorCalendar({
 
   // Popup state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [isListOpen, setIsListOpen] = useState(false)
+  const [isSlotFormOpen, setIsSlotFormOpen] = useState(false)
+  const [editingSlotId, setEditingSlotId] = useState<number | null>(null)
+  const [editingScope, setEditingScope] = useState<"series" | "occurrence">(
+    "series"
+  )
+  const [editingOccurrenceDate, setEditingOccurrenceDate] = useState<
+    string | null
+  >(null)
   const [newDate, setNewDate] = useState(moment(today).format("YYYY-MM-DD"))
   const [newStart, setNewStart] = useState("09:00")
   const [newEnd, setNewEnd] = useState("10:00")
@@ -85,6 +101,7 @@ export function MentorCalendar({
   const [slotError, setSlotError] = useState("")
   const [saving, setSaving] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+  const [pendingEditId, setPendingEditId] = useState<number | null>(null)
 
   // Request-a-session form state (viewer only)
   const [viewerRp, setViewerRp] = useState(0)
@@ -207,6 +224,7 @@ export function MentorCalendar({
 
   const resetPopupForm = (date: Date) => {
     setPendingDeleteId(null)
+    setPendingEditId(null)
     setRequestFormSlot(null)
     setRequestError("")
     const dateStr = moment(date).format("YYYY-MM-DD")
@@ -228,7 +246,79 @@ export function MentorCalendar({
       return
     setSelectedDate(date)
     resetPopupForm(date)
-    setIsPopupOpen(true)
+    setIsListOpen(true)
+  }
+
+  /** The list Sheet and the Add/Edit/Request Dialogs all sit on Radix's
+   * Dialog.Root primitive. Closing one and opening another in the same tick
+   * races Radix's exit-animation/body-lock cleanup and can leave the page
+   * stuck (unresponsive clicks, a frozen overlay). Always close whatever is
+   * open first, then open the next one only after the close animation has
+   * actually finished. */
+  const OVERLAY_TRANSITION_MS = 320
+
+  const switchOverlay = (openNext: () => void) => {
+    setIsListOpen(false)
+    setIsSlotFormOpen(false)
+    setRequestFormSlot(null)
+    setTimeout(openNext, OVERLAY_TRANSITION_MS)
+  }
+
+  /** Opens the Add/Edit slot dialog on top of (in place of) the list sheet. */
+  const openAddSlot = () => {
+    const date = selectedDate ?? today
+    resetPopupForm(date)
+    setEditingSlotId(null)
+    setEditingScope("series")
+    setEditingOccurrenceDate(null)
+    switchOverlay(() => setIsSlotFormOpen(true))
+  }
+
+  /** Edits the whole recurring series (or the sole date of a one-off slot). */
+  const openEditSlot = (slot: SelectMentorAvailability) => {
+    setNewDate(slot.date)
+    setNewStart(slot.start_time)
+    setNewEnd(slot.end_time)
+    setNewSession(slot.session_type as SessionType)
+    setNewRepeat(slot.repeat_type as RepeatType)
+    setNewRepeatDays([moment(slot.date, "YYYY-MM-DD").day()])
+    setNewRepeatEnd(slot.repeat_end_date ?? "")
+    setSlotError("")
+    setEditingSlotId(slot.id)
+    setEditingScope("series")
+    setEditingOccurrenceDate(null)
+    setPendingEditId(null)
+    switchOverlay(() => setIsSlotFormOpen(true))
+  }
+
+  /** Edits only the single occurrence on `date`, splitting it out of the
+   * recurring series so the rest of the series is unaffected. */
+  const openEditOccurrence = (
+    slot: SelectMentorAvailability,
+    date: Date
+  ) => {
+    const occStr = moment(date).format("YYYY-MM-DD")
+    setNewDate(occStr)
+    setNewStart(slot.start_time)
+    setNewEnd(slot.end_time)
+    setNewSession(slot.session_type as SessionType)
+    setNewRepeat("none")
+    setNewRepeatDays([date.getDay()])
+    setNewRepeatEnd("")
+    setSlotError("")
+    setEditingSlotId(slot.id)
+    setEditingScope("occurrence")
+    setEditingOccurrenceDate(occStr)
+    setPendingEditId(null)
+    switchOverlay(() => setIsSlotFormOpen(true))
+  }
+
+  /** Closes the Add/Edit dialog and returns to the list sheet. */
+  const closeSlotForm = () => {
+    setEditingSlotId(null)
+    setEditingScope("series")
+    setEditingOccurrenceDate(null)
+    switchOverlay(() => setIsListOpen(true))
   }
 
   const handleAddSlot = async () => {
@@ -249,6 +339,11 @@ export function MentorCalendar({
       setSlotError("Select at least one day")
       return
     }
+
+    // When editing, exclude the slot being edited from its own overlap check
+    const otherSlots = editingSlotId
+      ? slots.filter((s) => s.id !== editingSlotId)
+      : slots
 
     // Overlap check — slots conflict if they share a day, overlapping times, AND overlapping date ranges
     const timesOverlap = (s: SelectMentorAvailability) =>
@@ -286,7 +381,7 @@ export function MentorCalendar({
     }
 
     const hasConflict = (dow: number) =>
-      slots.some(
+      otherSlots.some(
         (s) =>
           dayOverlaps(s, dow) && timesOverlap(s) && dateRangesOverlap(s, dow)
       )
@@ -331,27 +426,34 @@ export function MentorCalendar({
             }
           ]
 
-    const existing = slots.map((s) => ({
-      date: s.date,
-      start_time: s.start_time,
-      end_time: s.end_time,
-      session_type: s.session_type,
-      repeat_type: s.repeat_type,
-      repeat_end_date: s.repeat_end_date ?? null
-    }))
+    const existing = serializeSlots(otherSlots)
+
+    // Editing a single occurrence: keep the rest of the original series by
+    // splicing it around the date being edited (same split used on delete).
+    const originalSlot = slots.find((s) => s.id === editingSlotId)
+    const seriesRemnants =
+      editingScope === "occurrence" && originalSlot && editingOccurrenceDate
+        ? splitSeriesExcludingDate(
+            originalSlot,
+            moment(editingOccurrenceDate, "YYYY-MM-DD").toDate()
+          )
+        : []
 
     const res = await updateAvailability({
       mentorId: userId,
-      slots: [...existing, ...newSlots]
+      slots: [...existing, ...seriesRemnants, ...newSlots]
     })
     if (res?.success) {
       setSlotError("")
       await loadSlots()
-      setIsPopupOpen(false)
-      toast({ title: "Slot added", duration: 2000 })
+      closeSlotForm()
+      toast({
+        title: editingSlotId ? "Slot updated" : "Slot added",
+        duration: 2000
+      })
     } else {
       toast({
-        title: "Failed to add slot",
+        title: editingSlotId ? "Failed to update slot" : "Failed to add slot",
         variant: "destructive",
         duration: 2000
       })
@@ -360,7 +462,6 @@ export function MentorCalendar({
   }
 
   const openRequestForm = (slot: SelectMentorAvailability) => {
-    setRequestFormSlot(slot)
     setRequestTopic("")
     setRequestDescription("")
     setRequestRecurring(false)
@@ -379,6 +480,7 @@ export function MentorCalendar({
     setRequestStartTime(firstStart)
     const fitting = getDurationOptions(slot, firstStart, unavailable)
     setRequestDuration(fitting[0] ?? MIN_DURATION_MINS)
+    switchOverlay(() => setRequestFormSlot(slot))
   }
 
   const confirmSuggestedSlot = async (
@@ -395,7 +497,7 @@ export function MentorCalendar({
     })
     if (res?.success) {
       await loadMyRequests()
-      setIsPopupOpen(false)
+      setIsListOpen(false)
       toast({ title: "Session request resubmitted", duration: 2000 })
     } else {
       toast({
@@ -407,12 +509,9 @@ export function MentorCalendar({
     }
   }
 
-  const handleDialogBack = () => {
-    if (requestFormSlot) {
-      setRequestFormSlot(null)
-    } else {
-      setIsPopupOpen(false)
-    }
+  /** Closes the Request-a-Session dialog and returns to the list sheet. */
+  const closeRequestForm = () => {
+    switchOverlay(() => setIsListOpen(true))
   }
 
   const handleRequestStartTimeChange = (value: string) => {
@@ -455,7 +554,7 @@ export function MentorCalendar({
 
     if (res?.success) {
       await loadMyRequests()
-      setRequestFormSlot(null)
+      closeRequestForm()
       toast({ title: "Session request sent", duration: 2000 })
     } else {
       setRequestError(res?.error ?? "Failed to send request")
@@ -471,6 +570,53 @@ export function MentorCalendar({
       repeat_type: s.repeat_type,
       repeat_end_date: s.repeat_end_date ?? null
     }))
+
+  /** Splits a recurring series around `date`, returning the serialized
+   * before/after remnants that keep every other occurrence intact. */
+  const splitSeriesExcludingDate = (
+    slot: SelectMentorAvailability,
+    date: Date
+  ) => {
+    const dow = moment(slot.date, "YYYY-MM-DD").day()
+    const occStr = moment(date).format("YYYY-MM-DD")
+
+    // Day before this occurrence → previous series ends here
+    const prevStr = moment(date).subtract(1, "day").format("YYYY-MM-DD")
+
+    // Day after this occurrence → next series starts here
+    const afterStr = moment(date).add(1, "day").format("YYYY-MM-DD")
+    const nextStr =
+      slot.repeat_type === "daily" ? afterStr : nextOccurrence(afterStr, dow)
+
+    const additions: ReturnType<typeof serializeSlots> = []
+
+    // Keep everything BEFORE this occurrence (only if anchor < occurrence)
+    if (slot.date < occStr) {
+      additions.push({
+        date: slot.date,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        session_type: slot.session_type,
+        repeat_type: slot.repeat_type,
+        repeat_end_date: prevStr
+      })
+    }
+
+    // Keep everything AFTER this occurrence (only if a next occurrence exists within the original end)
+    const originalEnd = slot.repeat_end_date ?? null
+    if (!originalEnd || nextStr <= originalEnd) {
+      additions.push({
+        date: nextStr,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        session_type: slot.session_type,
+        repeat_type: slot.repeat_type,
+        repeat_end_date: originalEnd
+      })
+    }
+
+    return additions
+  }
 
   /** Remove the entire recurring series (or a one-time slot) — any occurrence
    * date that already has an accepted booking is kept alive as a standalone
@@ -527,44 +673,9 @@ export function MentorCalendar({
     const slot = slots.find((s) => s.id === slotId)
     if (!slot) return
 
-    const dow = moment(slot.date, "YYYY-MM-DD").day()
     const occStr = moment(date).format("YYYY-MM-DD")
-
-    // Day before this occurrence → previous series ends here
-    const prevStr = moment(date).subtract(1, "day").format("YYYY-MM-DD")
-
-    // Day after this occurrence → next series starts here
-    const afterStr = moment(date).add(1, "day").format("YYYY-MM-DD")
-    const nextStr =
-      slot.repeat_type === "daily" ? afterStr : nextOccurrence(afterStr, dow)
-
     const otherSlots = serializeSlots(slots.filter((s) => s.id !== slotId))
-    const additions: typeof otherSlots = []
-
-    // Keep everything BEFORE this occurrence (only if anchor < occurrence)
-    if (slot.date < occStr) {
-      additions.push({
-        date: slot.date,
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        session_type: slot.session_type,
-        repeat_type: slot.repeat_type,
-        repeat_end_date: prevStr
-      })
-    }
-
-    // Keep everything AFTER this occurrence (only if a next occurrence exists within the original end)
-    const originalEnd = slot.repeat_end_date ?? null
-    if (!originalEnd || nextStr <= originalEnd) {
-      additions.push({
-        date: nextStr,
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        session_type: slot.session_type,
-        repeat_type: slot.repeat_type,
-        repeat_end_date: originalEnd
-      })
-    }
+    const additions = splitSeriesExcludingDate(slot, date)
 
     const res = await updateAvailability({
       mentorId: userId,
@@ -662,31 +773,195 @@ export function MentorCalendar({
         mentorPendingRequests={mentorPendingRequests}
         mentorAcceptedRequests={acceptedRequests}
         onSelectDate={openPopup}
-        onNewSlotClick={() => {
-          setSelectedDate(today)
-          resetPopupForm(today)
-          setIsPopupOpen(true)
-        }}
       />
 
-      {/* ── Popup ── */}
-      <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
+      {/* ── List sheet — slides in from the right ── */}
+      <Sheet open={isListOpen} onOpenChange={setIsListOpen}>
+        <SheetContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="w-full sm:max-w-[420px] p-0 gap-0 flex flex-col"
+        >
+          <SheetHeader className="px-5 pt-5 pb-3 shrink-0 text-left">
+            <SheetTitle className="text-lg font-semibold">
+              {isMyProfile
+                ? "Manage Availability"
+                : `${selectedDayName} Availability`}
+            </SheetTitle>
+            {selectedDate && (
+              <SheetDescription>
+                {moment(selectedDate).format("dddd, MMMM D, YYYY")}
+              </SheetDescription>
+            )}
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-3">
+            {isMyProfile && (
+              <Button
+                variant="outline"
+                className="w-full h-9 text-sm rounded-lg"
+                onClick={openAddSlot}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Slot
+              </Button>
+            )}
+
+            {/* Slot list */}
+            {slotsForSelected.length > 0 && (
+              <div className="pt-1 space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {isMyProfile
+                    ? "Existing Slots"
+                    : selectedDate &&
+                        slotsForSelected.some(
+                          (s) =>
+                            getSuggestedRequestForSlot(s.id, selectedDate) !==
+                            null
+                        )
+                      ? "Suggested Slots"
+                      : `Available Slot${slotsForSelected.length > 1 ? "s" : ""}`}
+                  {slotsForSelected.length > 0 && (
+                    <span className="ml-1.5 normal-case font-normal text-foreground">
+                      ({slotsForSelected.length})
+                    </span>
+                  )}
+                </p>
+                <div className="space-y-1.5">
+                  {slotsForSelected.map((slot) => (
+                    <SlotListItem
+                      key={slot.id}
+                      slot={slot}
+                      isMyProfile={isMyProfile}
+                      selectedDate={selectedDate!}
+                      myRequests={myRequests}
+                      bookedRequests={acceptedRequests}
+                      mentorPendingRequests={mentorPendingRequests}
+                      mentorAcceptedRequests={acceptedRequests}
+                      viewerRp={viewerRp}
+                      pendingDeleteId={pendingDeleteId}
+                      onTogglePendingDelete={(id) => {
+                        setPendingEditId(null)
+                        setPendingDeleteId(id)
+                      }}
+                      onDeleteSeries={handleDeleteSeries}
+                      onDeleteOccurrence={handleDeleteOccurrence}
+                      pendingEditId={pendingEditId}
+                      onTogglePendingEdit={(id) => {
+                        setPendingDeleteId(null)
+                        setPendingEditId(id)
+                      }}
+                      onEditSlot={openEditSlot}
+                      onEditOccurrence={openEditOccurrence}
+                      onRequestSlot={openRequestForm}
+                      suggestedRequest={getSuggestedRequestForSlot(
+                        slot.id,
+                        selectedDate!
+                      )}
+                      isConfirming={resubmitSubmitting}
+                      onConfirmSuggestedSlot={confirmSuggestedSlot}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!isMyProfile && slotsForSelected.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No availability set for this day
+              </p>
+            )}
+          </div>
+
+          <SheetFooter className="px-5 py-4 border-t border-foreground/8 shrink-0">
+            <Button
+              variant={isMyProfile ? "outline" : "default"}
+              onClick={() => setIsListOpen(false)}
+              className="h-9 px-5 text-sm rounded-lg"
+            >
+              Close
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Add/Edit slot dialog (mentor only) ── */}
+      <Dialog
+        open={isSlotFormOpen}
+        onOpenChange={(open) => !open && closeSlotForm()}
+      >
         <DialogContent
           onInteractOutside={(e) => e.preventDefault()}
           className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]"
         >
           <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
             <DialogTitle className="text-lg font-semibold">
-              {requestFormSlot
-                ? "Request a Session"
-                : isMyProfile
-                  ? "New Availability Slot"
-                  : `${selectedDayName} Availability`}
+              {!editingSlotId
+                ? "New Availability Slot"
+                : editingScope === "occurrence"
+                  ? "Edit This Date"
+                  : "Edit Availability Slot"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-3">
-            {requestFormSlot ? (
+            <AvailabilitySlotForm
+              today={today}
+              newDate={newDate}
+              onDateChange={setNewDate}
+              newStart={newStart}
+              onStartChange={setNewStart}
+              newEnd={newEnd}
+              onEndChange={setNewEnd}
+              newSession={newSession}
+              onSessionChange={setNewSession}
+              newRepeat={newRepeat}
+              onRepeatChange={setNewRepeat}
+              newRepeatDays={newRepeatDays}
+              onRepeatDaysChange={setNewRepeatDays}
+              newRepeatEnd={newRepeatEnd}
+              onRepeatEndChange={setNewRepeatEnd}
+              slotError={slotError}
+              onClearSlotError={() => setSlotError("")}
+              hideRepeat={editingScope === "occurrence"}
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
+            <Button
+              variant="outline"
+              onClick={closeSlotForm}
+              className="h-9 px-5 text-sm rounded-lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddSlot}
+              loading={saving}
+              className="h-9 px-5 text-sm rounded-lg"
+            >
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Request-a-session dialog (viewer only) ── */}
+      <Dialog
+        open={!!requestFormSlot}
+        onOpenChange={(open) => !open && closeRequestForm()}
+      >
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]"
+        >
+          <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
+            <DialogTitle className="text-lg font-semibold">
+              Request a Session
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-3">
+            {requestFormSlot && (
               <SessionRequestForm
                 slot={requestFormSlot}
                 unavailableRanges={
@@ -719,116 +994,24 @@ export function MentorCalendar({
                 onRepeatEndDateChange={setRequestRepeatEndDate}
                 error={requestError}
               />
-            ) : (
-              <>
-                {isMyProfile && (
-                  <AvailabilitySlotForm
-                    today={today}
-                    newDate={newDate}
-                    onDateChange={setNewDate}
-                    newStart={newStart}
-                    onStartChange={setNewStart}
-                    newEnd={newEnd}
-                    onEndChange={setNewEnd}
-                    newSession={newSession}
-                    onSessionChange={setNewSession}
-                    newRepeat={newRepeat}
-                    onRepeatChange={setNewRepeat}
-                    newRepeatDays={newRepeatDays}
-                    onRepeatDaysChange={setNewRepeatDays}
-                    newRepeatEnd={newRepeatEnd}
-                    onRepeatEndChange={setNewRepeatEnd}
-                    slotError={slotError}
-                    onClearSlotError={() => setSlotError("")}
-                  />
-                )}
-
-                {/* Slot list */}
-                {slotsForSelected.length > 0 && (
-                  <div className="pt-1 space-y-1.5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isMyProfile
-                        ? "Existing Slots"
-                        : selectedDate &&
-                            slotsForSelected.some(
-                              (s) =>
-                                getSuggestedRequestForSlot(
-                                  s.id,
-                                  selectedDate
-                                ) !== null
-                            )
-                          ? "Suggested Slots"
-                          : `Available Slot${slotsForSelected.length > 1 ? "s" : ""}`}
-                      {slotsForSelected.length > 0 && (
-                        <span className="ml-1.5 normal-case font-normal text-foreground">
-                          ({slotsForSelected.length})
-                        </span>
-                      )}
-                    </p>
-                    <div className="space-y-1.5 max-h-[152px] overflow-y-auto pr-0.5">
-                      {slotsForSelected.map((slot) => (
-                        <SlotListItem
-                          key={slot.id}
-                          slot={slot}
-                          isMyProfile={isMyProfile}
-                          selectedDate={selectedDate!}
-                          myRequests={myRequests}
-                          bookedRequests={acceptedRequests}
-                          mentorPendingRequests={mentorPendingRequests}
-                          mentorAcceptedRequests={acceptedRequests}
-                          viewerRp={viewerRp}
-                          pendingDeleteId={pendingDeleteId}
-                          onTogglePendingDelete={setPendingDeleteId}
-                          onDeleteSeries={handleDeleteSeries}
-                          onDeleteOccurrence={handleDeleteOccurrence}
-                          onRequestSlot={openRequestForm}
-                          suggestedRequest={getSuggestedRequestForSlot(
-                            slot.id,
-                            selectedDate!
-                          )}
-                          isConfirming={resubmitSubmitting}
-                          onConfirmSuggestedSlot={confirmSuggestedSlot}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {!isMyProfile && slotsForSelected.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No availability set for this day
-                  </p>
-                )}
-              </>
             )}
           </div>
 
           <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
             <Button
-              variant={!requestFormSlot && !isMyProfile ? "default" : "outline"}
-              onClick={handleDialogBack}
+              variant="outline"
+              onClick={closeRequestForm}
               className="h-9 px-5 text-sm rounded-lg"
             >
-              {requestFormSlot ? "Back" : isMyProfile ? "Cancel" : "Close"}
+              Back
             </Button>
-            {isMyProfile && !requestFormSlot && (
-              <Button
-                onClick={handleAddSlot}
-                loading={saving}
-                className="h-9 px-5 text-sm rounded-lg"
-              >
-                Save
-              </Button>
-            )}
-            {requestFormSlot && (
-              <Button
-                onClick={handleSubmitRequest}
-                loading={requestSubmitting}
-                className="h-9 px-5 text-sm rounded-lg"
-              >
-                Send Request
-              </Button>
-            )}
+            <Button
+              onClick={handleSubmitRequest}
+              loading={requestSubmitting}
+              className="h-9 px-5 text-sm rounded-lg"
+            >
+              Send Request
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
