@@ -5,7 +5,9 @@ import {
   CheckCircle2,
   Clock,
   Lock,
+  Pencil,
   Sparkles,
+  Trash2,
   User,
   Users,
   X,
@@ -49,6 +51,10 @@ interface SlotListItemProps {
   onTogglePendingDelete: (slotId: number | null) => void
   onDeleteSeries: (slotId: number) => void
   onDeleteOccurrence: (slotId: number, date: Date) => void
+  pendingEditId: number | null
+  onTogglePendingEdit: (slotId: number | null) => void
+  onEditSlot: (slot: SelectMentorAvailability) => void
+  onEditOccurrence: (slot: SelectMentorAvailability, date: Date) => void
   onRequestSlot: (slot: SelectMentorAvailability) => void
   suggestedRequest: SelectSessionRequest | null
   isConfirming?: boolean
@@ -71,6 +77,10 @@ export function SlotListItem({
   onTogglePendingDelete,
   onDeleteSeries,
   onDeleteOccurrence,
+  pendingEditId,
+  onTogglePendingEdit,
+  onEditSlot,
+  onEditOccurrence,
   onRequestSlot,
   suggestedRequest,
   isConfirming,
@@ -117,7 +127,7 @@ export function SlotListItem({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-muted-foreground/40 cursor-not-allowed ml-2">
-                  <X className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </span>
               </TooltipTrigger>
               <TooltipContent>
@@ -127,20 +137,36 @@ export function SlotListItem({
           </TooltipProvider>
         )}
         {isMyProfile && mentorAcceptedCount === 0 && (
-          <button
-            onClick={() => {
-              if (slot.repeat_type === "none") {
-                onDeleteSeries(slot.id)
-              } else {
-                onTogglePendingDelete(
-                  pendingDeleteId === slot.id ? null : slot.id
-                )
-              }
-            }}
-            className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-destructive hover:bg-destructive/10 transition-colors ml-2"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            <button
+              onClick={() => {
+                if (slot.repeat_type === "none") {
+                  onEditSlot(slot)
+                } else {
+                  onTogglePendingEdit(
+                    pendingEditId === slot.id ? null : slot.id
+                  )
+                }
+              }}
+              className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => {
+                if (slot.repeat_type === "none") {
+                  onDeleteSeries(slot.id)
+                } else {
+                  onTogglePendingDelete(
+                    pendingDeleteId === slot.id ? null : slot.id
+                  )
+                }
+              }}
+              className="h-6 w-6 flex items-center justify-center rounded text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
         )}
       </div>
 
@@ -296,6 +322,31 @@ export function SlotListItem({
             </Button>
           </div>
         ))}
+
+      {/* Inline edit-scope choice — only for recurring slots */}
+      {isMyProfile && pendingEditId === slot.id && (
+        <div className="flex items-center gap-2 px-3 py-2 border-t border-foreground/8 bg-primary/5">
+          <p className="text-xs text-muted-foreground flex-1">Edit:</p>
+          <button
+            onClick={() => onEditOccurrence(slot, selectedDate)}
+            className="text-xs px-2 py-1 rounded border border-primary/30 text-primary hover:bg-primary/10 transition-colors whitespace-nowrap"
+          >
+            This date
+          </button>
+          <button
+            onClick={() => onEditSlot(slot)}
+            className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/80 transition-colors whitespace-nowrap"
+          >
+            All dates
+          </button>
+          <button
+            onClick={() => onTogglePendingEdit(null)}
+            className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {/* Inline delete confirmation — only for recurring slots */}
       {isMyProfile && pendingDeleteId === slot.id && (

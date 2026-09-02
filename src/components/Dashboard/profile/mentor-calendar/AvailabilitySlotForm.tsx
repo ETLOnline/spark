@@ -31,6 +31,9 @@ interface AvailabilitySlotFormProps {
   onRepeatEndChange: (value: string) => void
   slotError: string
   onClearSlotError: () => void
+  /** Hides the Repeat controls — used when editing a single occurrence, which
+   * is always a one-off and shouldn't be turned back into a recurring series. */
+  hideRepeat?: boolean
 }
 
 export function AvailabilitySlotForm({
@@ -50,7 +53,8 @@ export function AvailabilitySlotForm({
   newRepeatEnd,
   onRepeatEndChange,
   slotError,
-  onClearSlotError
+  onClearSlotError,
+  hideRepeat = false
 }: AvailabilitySlotFormProps) {
   return (
     <>
@@ -134,78 +138,86 @@ export function AvailabilitySlotForm({
 
       {slotError && <p className="text-destructive text-xs">{slotError}</p>}
 
-      {/* Repeat */}
-      <div className="flex items-center justify-between rounded-lg border border-foreground/8 px-3 py-2.5">
-        <div className="flex items-center gap-2.5 text-sm">
-          <RefreshCw className="h-4 w-4 text-muted-foreground" />
-          <span>Repeat</span>
-        </div>
-        <div className="flex rounded-md border border-foreground/10 overflow-hidden">
-          {(["none", "daily", "weekly"] as RepeatType[]).map((r, i) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => {
-                onRepeatChange(r)
-                onClearSlotError()
-              }}
-              className={toggleItemCls(newRepeat === r, i === 0, "px-2.5 py-1")}
-            >
-              {r === "none" ? "None" : r === "daily" ? "Daily" : "Weekly"}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Day-of-week picker */}
-      {newRepeat === "weekly" && (
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">
-            Repeat on
-          </Label>
-          <div className="flex flex-wrap gap-1.5">
-            {DAY_HEADERS.map((label, dow) => {
-              const active = newRepeatDays.includes(dow)
-              return (
+      {!hideRepeat && (
+        <>
+          {/* Repeat */}
+          <div className="flex items-center justify-between rounded-lg border border-foreground/8 px-3 py-2.5">
+            <div className="flex items-center gap-2.5 text-sm">
+              <RefreshCw className="h-4 w-4 text-muted-foreground" />
+              <span>Repeat</span>
+            </div>
+            <div className="flex rounded-md border border-foreground/10 overflow-hidden">
+              {(["none", "daily", "weekly"] as RepeatType[]).map((r, i) => (
                 <button
-                  key={dow}
+                  key={r}
                   type="button"
                   onClick={() => {
+                    onRepeatChange(r)
                     onClearSlotError()
-                    onRepeatDaysChange((prev) =>
-                      prev.includes(dow)
-                        ? prev.filter((d) => d !== dow)
-                        : [...prev, dow]
-                    )
                   }}
-                  className={cn(
-                    "flex-1 min-w-[36px] py-1.5 text-[11px] font-semibold rounded-md border transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-foreground/10 text-muted-foreground hover:bg-muted"
+                  className={toggleItemCls(
+                    newRepeat === r,
+                    i === 0,
+                    "px-2.5 py-1"
                   )}
                 >
-                  {label}
+                  {r === "none" ? "None" : r === "daily" ? "Daily" : "Weekly"}
                 </button>
-              )
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Repeat until */}
-      {newRepeat !== "none" && (
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">
-            Repeat until <span className="opacity-60">(optional)</span>
-          </Label>
-          <Input
-            type="date"
-            value={newRepeatEnd}
-            min={newDate}
-            onChange={(e) => onRepeatEndChange(e.target.value)}
-          />
-        </div>
+          {/* Day-of-week picker */}
+          {newRepeat === "weekly" && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">
+                Repeat on
+              </Label>
+              <div className="flex flex-wrap gap-1.5">
+                {DAY_HEADERS.map((label, dow) => {
+                  const active = newRepeatDays.includes(dow)
+                  return (
+                    <button
+                      key={dow}
+                      type="button"
+                      onClick={() => {
+                        onClearSlotError()
+                        onRepeatDaysChange((prev) =>
+                          prev.includes(dow)
+                            ? prev.filter((d) => d !== dow)
+                            : [...prev, dow]
+                        )
+                      }}
+                      className={cn(
+                        "flex-1 min-w-[36px] py-1.5 text-[11px] font-semibold rounded-md border transition-colors",
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-foreground/10 text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Repeat until */}
+          {newRepeat !== "none" && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">
+                Repeat until <span className="opacity-60">(optional)</span>
+              </Label>
+              <Input
+                type="date"
+                value={newRepeatEnd}
+                min={newDate}
+                onChange={(e) => onRepeatEndChange(e.target.value)}
+              />
+            </div>
+          )}
+        </>
       )}
     </>
   )
