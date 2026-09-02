@@ -105,7 +105,7 @@ export const CreateAdvisorRequestAction = CreateServerAction(
       const eligibleAdvisors = await GetEligibleAdvisorsForDomain(
         formData.domain_tag_id,
         "fyp",
-        permissions.fyp.viewAdvisorRequests
+        permissions.fyp.advisorViewRequests
       )
       if (!eligibleAdvisors.length) {
         return {
