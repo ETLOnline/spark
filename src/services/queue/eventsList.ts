@@ -54,5 +54,7 @@ export const eventsList: Record<string, EventProcessor> = {
   session_request_rejected: processSessionRequestEmailNotification,
   identity_verification_otp: processIdentityVerificationOtpNotification,
   identity_verified: processIdentityVerifiedNotification,
+  advisor_request_accepted: processSessionRequestEmailNotification,
+  advisor_request_rejected: processSessionRequestEmailNotification,
   new_advisor_request: processAdvisorRequestNotification
 }

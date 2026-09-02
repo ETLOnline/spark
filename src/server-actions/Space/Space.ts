@@ -38,7 +38,8 @@ import {
 import {
   createScopedSpaceRolesAndAssignAdmin,
   deleteUserRole,
-  getAndAssignViewerRoles
+  getAndAssignViewerRoles,
+  type EntityType
 } from "@/src/db/data-access/roles/query"
 import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
@@ -376,7 +377,11 @@ export const GetSpaceByIdAction = CreateServerAction(
 
 export const AttachSpaceUserAction = CreateServerAction(
   true,
-  async (spaceId: string, userId: string) => {
+  async (
+    spaceId: string,
+    userId: string,
+    role: EntityType = "space_viewer"
+  ) => {
     try {
       const space = await GetSpaceById(spaceId, true)
       if (!space) return { success: false, error: "Space not found" }
@@ -389,24 +394,16 @@ export const AttachSpaceUserAction = CreateServerAction(
       if (!space.channel_id) {
         // Independent space (no channel/community) - skip the hierarchy
         // cascade entirely and attach the user directly to the space.
-        const spaceViewerRole = await getAndAssignViewerRoles(
-          userId,
-          "space_viewer",
-          spaceId
-        )
+        const spaceRole = await getAndAssignViewerRoles(userId, role, spaceId)
 
         const newSpaceUser = await attachSpaceUser(
           spaceId,
           userId,
           null,
-          spaceViewerRole?.viewerRole?.name
+          spaceRole?.viewerRole?.name
         )
 
-        await pusherServer.trigger(
-          `user-${userId}`,
-          "update-role",
-          spaceViewerRole
-        )
+        await pusherServer.trigger(`user-${userId}`, "update-role", spaceRole)
 
         return { success: true, data: newSpaceUser }
       }
@@ -464,11 +461,7 @@ export const AttachSpaceUserAction = CreateServerAction(
         )
       }
 
-      const spaceViewerRole = await getAndAssignViewerRoles(
-        userId,
-        "space_viewer",
-        spaceId
-      )
+      const spaceRole = await getAndAssignViewerRoles(userId, role, spaceId)
 
       const updatedChannelUsers = await getChannelUsers(space.channel_id)
       const channelUserId = updatedChannelUsers.find(
@@ -485,14 +478,10 @@ export const AttachSpaceUserAction = CreateServerAction(
         spaceId,
         userId,
         channelUserId,
-        spaceViewerRole?.viewerRole?.name
+        spaceRole?.viewerRole?.name
       )
 
-      await pusherServer.trigger(
-        `user-${userId}`,
-        "update-role",
-        spaceViewerRole
-      )
+      await pusherServer.trigger(`user-${userId}`, "update-role", spaceRole)
 
       return { success: true, data: newSpaceUser }
     } catch (error) {
