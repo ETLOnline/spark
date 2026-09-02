@@ -212,7 +212,11 @@ export async function GetSpaceBySlug(
         spaces: {
           where: eq(spacesTable.space_slug, spaceSlug),
           with: {
-            channel: true,
+            channel: {
+              with: {
+                community: true
+              }
+            },
             features: {
               with: {
                 feature: true
@@ -244,7 +248,11 @@ export async function GetSpaceById(spaceId: string, withSpaceUsers?: boolean) {
     const space = await db.query.spacesTable.findFirst({
       where: eq(spacesTable.id, spaceId),
       with: {
-        channel: true,
+        channel: {
+          with: {
+            community: true
+          }
+        },
         features: {
           with: {
             feature: true

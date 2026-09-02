@@ -23,6 +23,8 @@ import {
   processIdentityVerificationOtpNotification,
   processIdentityVerifiedNotification
 } from "./processors/identityVerification"
+import { processAdvisorRequestNotification } from "./processors/advisor-request"
+import { processMilestoneDoneNotification } from "./processors/milestone"
 
 interface EventJob {
   sendingTo: string[]
@@ -52,5 +54,9 @@ export const eventsList: Record<string, EventProcessor> = {
   session_request_accepted: processSessionRequestEmailNotification,
   session_request_rejected: processSessionRequestEmailNotification,
   identity_verification_otp: processIdentityVerificationOtpNotification,
-  identity_verified: processIdentityVerifiedNotification
+  identity_verified: processIdentityVerifiedNotification,
+  new_advisor_request: processAdvisorRequestNotification,
+  milestone_completed_pending_verification: processMilestoneDoneNotification,
+  advisor_request_accepted: processSessionRequestEmailNotification,
+  advisor_request_rejected: processSessionRequestEmailNotification
 }

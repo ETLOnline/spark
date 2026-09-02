@@ -1,5 +1,10 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
+import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
+import {
+  MilestoneStatus,
+  MilestoneArtifactEntry
+} from "@/src/types/Milestone/Milestone"
 import {
   integer,
   pgTable,
@@ -1002,6 +1007,7 @@ export const spacesTable = pgTable("spaces", {
   space_type: varchar(),
   publish_space: integer().notNull().default(0),
   overview: varchar(),
+  is_FYP_enable: boolean().notNull().default(false),
   ...timestamps
 })
 
@@ -1483,6 +1489,7 @@ export const communitiesTable = pgTable("communities", {
   type: varchar().notNull().default("public"),
   created_by: varchar().notNull(),
   cover_image: varchar(),
+  is_FYP_enable: boolean().notNull().default(false),
   ...timestamps
 })
 
@@ -1589,6 +1596,105 @@ export const communityRequestsTable = pgTable("community_requests", {
 
 export type InsertCommunityRequest = typeof communityRequestsTable.$inferInsert
 export type SelectCommunityRequest = typeof communityRequestsTable.$inferSelect
+
+export const advisorRequestsTable = pgTable("advisor_requests", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  requested_by: varchar().notNull(),
+  group_members: jsonb("group_members")
+    .$type<{ name: string; registration_number: string }[]>()
+    .notNull(),
+  supervisor_name: varchar().notNull(),
+  fyp_title: varchar().notNull(),
+  abstract: text().notNull(),
+  problem_statement: text().notNull(),
+  tech_stack: varchar().notNull(),
+  domain_tag_id: integer()
+    .notNull()
+    .references(() => tagsTable.id),
+  proposal_file_id: integer().references(() => filesTable.id),
+  proposal_link: varchar(),
+  status: varchar().notNull().default(AdvisorRequestStatus.PENDING),
+  accepted_by: varchar(),
+  rejected_by: jsonb("rejected_by")
+    .$type<{ advisor_id: string; reason: string }[]>()
+    .default([]),
+  advisor_ids: jsonb("advisor_ids").$type<string[]>().default([]),
+  expiry_date: varchar().notNull(),
+  ...timestamps
+})
+
+export const advisorRequestsRelations = relations(
+  advisorRequestsTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [advisorRequestsTable.space_id],
+      references: [spacesTable.id]
+    }),
+    requester: one(usersTable, {
+      fields: [advisorRequestsTable.requested_by],
+      references: [usersTable.unique_id]
+    }),
+    domain: one(tagsTable, {
+      fields: [advisorRequestsTable.domain_tag_id],
+      references: [tagsTable.id]
+    }),
+    proposalFile: one(filesTable, {
+      fields: [advisorRequestsTable.proposal_file_id],
+      references: [filesTable.id]
+    })
+  })
+)
+
+export type InsertAdvisorRequest = typeof advisorRequestsTable.$inferInsert
+export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
+  domain?: SelectTag
+  proposalFile?: SelectFile
+  space?: SelectSpace
+  requester?: SelectUser
+}
+
+// ─── FYP Milestones ───────────────────────────────────────────────────────────
+
+export const fypMilestonesTable = pgTable("fyp_milestones", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  name: varchar().notNull(),
+  status: varchar().notNull().default(MilestoneStatus.INCOMPLETE),
+  start_date: varchar(),
+  end_date: varchar(),
+  order_index: integer().notNull().default(0),
+  created_by: varchar().notNull(),
+  // Artifacts — JSON array; at least one required before marking as Done
+  artifacts: json()
+    .$type<MilestoneArtifactEntry[]>()
+    .notNull()
+    .default(sql`'[]'::json`),
+  ...timestamps
+})
+
+export const fypMilestonesRelations = relations(
+  fypMilestonesTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [fypMilestonesTable.space_id],
+      references: [spacesTable.id]
+    })
+  })
+)
+
+export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
+export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })

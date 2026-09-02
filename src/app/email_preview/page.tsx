@@ -111,6 +111,16 @@ const emailTemplates = [
     file: "session_request_response.html"
   },
   {
+    value: "advisor_request_accepted",
+    label: "Advisor Request Accepted Email",
+    file: "advisor_request_response.html"
+  },
+  {
+    value: "advisor_request_rejected",
+    label: "Advisor Request Rejected Email",
+    file: "advisor_request_response.html"
+  },
+  {
     value: "identity_verification_otp",
     label: "Identity Verification OTP",
     file: "identity_verification_otp.html"
@@ -119,6 +129,16 @@ const emailTemplates = [
     value: "identity_verified",
     label: "Identity Verified Success",
     file: "identity_verified_success.html"
+  },
+  {
+    value: "new_advisor_request",
+    label: "New Advisor Request Email",
+    file: "new_advisor_request.html"
+  },
+  {
+    value: "milestone_completed_pending_verification",
+    label: "Milestone Complete (Pending Verification)",
+    file: "milestone_completed_pending_verification.html"
   }
 ]
 

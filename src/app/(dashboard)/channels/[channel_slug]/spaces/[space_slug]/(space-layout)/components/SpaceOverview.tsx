@@ -6,10 +6,10 @@ import {
   Clock,
   LayoutDashboard,
   Share,
-  UserPlus,
   Users
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
+import RequestAdvisorButton from "@/src/components/Dashboard/Spaces/RequestAdvisorButton"
 import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -124,7 +124,8 @@ function SpaceOverview({
             Overview
           </h1>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-2">
+          <RequestAdvisorButton space={space} />
           <CreateShortcut
             type="space"
             entity={{

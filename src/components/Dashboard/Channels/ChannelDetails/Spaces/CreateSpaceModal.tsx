@@ -62,7 +62,8 @@ const spaceSchema = z.object({
     .min(1, "Description required")
     .max(150, "Description is too long"),
   space_type: z.string().min(1, "Space type required"),
-  publish_space: z.boolean().optional()
+  publish_space: z.boolean().optional(),
+  is_FYP_enable: z.boolean().optional()
 })
 
 function CreateSpaceModal({
@@ -81,6 +82,8 @@ function CreateSpaceModal({
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
   const [editSpace, setEditSpace] = useState(false)
+
+  const isCommunityFypEnabled = !!selectedChannel?.community?.is_FYP_enable
 
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
     useServerAction(CreateSpaceAction)
@@ -168,10 +171,14 @@ function CreateSpaceModal({
       } else {
         form.setValue("publish_space", false)
       }
+      form.setValue(
+        "is_FYP_enable",
+        isCommunityFypEnabled && selectedSpace.is_FYP_enable === true
+      )
     } else {
       setEditSpace(false)
     }
-  }, [selectedSpace])
+  }, [selectedSpace, isCommunityFypEnabled])
 
   useEffect(() => {
     if (!spaceFormModelVisibility) {
@@ -180,7 +187,8 @@ function CreateSpaceModal({
         space_name: "",
         space_slug: "",
         description: "",
-        space_type: ""
+        space_type: "",
+        is_FYP_enable: false
       })
       // Clear any errors
       form.clearErrors()
@@ -188,8 +196,10 @@ function CreateSpaceModal({
       setSelectedSpace(null)
       setEditSpace(false)
       setslugAvailableMessage("")
+    } else if (!selectedSpace) {
+      form.setValue("is_FYP_enable", isCommunityFypEnabled)
     }
-  }, [spaceFormModelVisibility])
+  }, [spaceFormModelVisibility, isCommunityFypEnabled])
 
   const { showConfirmation, setShowConfirmation, handleClose } =
     useConfirmClose({
@@ -203,6 +213,7 @@ function CreateSpaceModal({
     } else {
       data.publish_space = 0
     }
+    data.is_FYP_enable = data.is_FYP_enable === true
     if (!selectedSpace) {
       handleCreateSpace(data)
     } else handleUpdateSpace(data)
@@ -216,6 +227,7 @@ function CreateSpaceModal({
       data.space_slug = data.space_slug?.trim()
       data.space_type = data.space_type || "private"
       data.publish_space = data.publish_space ? 1 : 0
+      data.is_FYP_enable = data.is_FYP_enable ? true : false
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
@@ -425,19 +437,48 @@ function CreateSpaceModal({
                   )}
                 </div>
 
-                {/* Publish Space */}
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="publish_space">Publish Space</Label>
-                  <Controller
-                    name="publish_space"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
-                  />
+                {/* Publish Space & Enable FYP */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between gap-2 rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="publish_space" className="font-semibold">
+                        Publish Space
+                      </Label>
+                    </div>
+                    <Controller
+                      name="publish_space"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="publish_space"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-2 rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="is_FYP_enable" className="font-semibold">
+                        FYP Feature
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {isCommunityFypEnabled && "Disabled by admin"}
+                      </p>
+                    </div>
+                    <Controller
+                      name="is_FYP_enable"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="is_FYP_enable"
+                          checked={isCommunityFypEnabled && !!field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={!isCommunityFypEnabled}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
 

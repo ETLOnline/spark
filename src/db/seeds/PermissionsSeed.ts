@@ -127,7 +127,25 @@ const permissionSeedList = [
 
   // Mentorship
   { namespace: "mentorship", action: permissions.mentorship.sessionRequest },
-  { namespace: "mentorship", action: permissions.mentorship.addAvailability }
+  { namespace: "mentorship", action: permissions.mentorship.addAvailability },
+
+  // FYP — Advisor request
+  { namespace: "fyp", action: permissions.fyp.canRequestAdvisor },
+  { namespace: "fyp", action: permissions.fyp.canReceiveAdvisorRequest },
+
+  // FYP — Milestones
+  { namespace: "fyp", action: permissions.fyp.milestoneCreate },
+  { namespace: "fyp", action: permissions.fyp.milestoneUpdate },
+  { namespace: "fyp", action: permissions.fyp.milestoneDelete },
+  { namespace: "fyp", action: permissions.fyp.milestoneVerify },
+  { namespace: "fyp", action: permissions.fyp.milestoneRevert },
+  { namespace: "fyp", action: permissions.fyp.milestoneMarkDone },
+  { namespace: "fyp", action: permissions.fyp.milestoneArtifactAdd },
+
+  { namespace: "fyp", action: permissions.fyp.advisorViewRequests },
+  { namespace: "fyp", action: permissions.fyp.advisorViewDetails },
+  { namespace: "fyp", action: permissions.fyp.advisorAccept },
+  { namespace: "fyp", action: permissions.fyp.advisorReject }
 ]
 
 export const PermissionsSeed = async () => {

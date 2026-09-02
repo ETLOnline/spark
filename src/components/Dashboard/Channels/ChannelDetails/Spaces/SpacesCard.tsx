@@ -59,6 +59,11 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {space.space_name}
+            {space.is_FYP_enable && (
+              <Badge variant="secondary" className="ml-1">
+                FYP
+              </Badge>
+            )}
             {space.space_type === "private" && (
               <TooltipProvider>
                 <Tooltip>

@@ -414,6 +414,34 @@
       "when": 1786528629678,
       "tag": "0058_2026_08_12_145708__add_non_edu_mails",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1787223598554,
+      "tag": "0059_2026_08_20_143000__add_is_fyp_enable_to_communities_and_spaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1787319431482,
+      "tag": "0060_2026_08_21_183709__create_request_advisor_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1787573155601,
+      "tag": "0061_2026_08_24_170553__changing_default_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1788353259783,
+      "tag": "0062_2026_09_02_174737__create_milstone_table_and_drop_reject_reason_in_advisor_request",
+      "breakpoints": true
     }
   ]
 }

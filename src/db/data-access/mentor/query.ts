@@ -21,7 +21,6 @@ import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
-  permissionsTable,
   profileTable,
   sessionRequestsTable,
   spacesTable,
@@ -32,6 +31,8 @@ import {
   usersTable
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
+import { getRoleIdsWithPermission } from "../permissions/query"
+import { SearchUserProfile, updateUserProfile } from "../profile/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -47,6 +48,22 @@ export async function GetMentorAvailability(mentorId: string) {
     .select()
     .from(mentorAvailabilityTable)
     .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
+}
+
+/** Recomputes is_mentor_active from the mentor's current profile fields and
+ * slot count. A mentor can fill in professional_title/company or set their
+ * availability in any order — call this after any write to either so the
+ * flag never gets stuck out of sync with whichever field was saved last. */
+export async function RecalculateMentorActiveStatus(mentorId: string) {
+  const profile = await SearchUserProfile(mentorId)
+  const hasTitle = !!profile?.professional_title?.trim()
+  const hasCompany = !!profile?.company?.trim()
+  const slots = await GetMentorAvailability(mentorId)
+  const hasSlots = slots.length > 0
+
+  await updateUserProfile(mentorId, {
+    is_mentor_active: hasTitle && hasCompany && hasSlots
+  })
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
@@ -184,26 +201,16 @@ const buildAvailabilityCondition = (
   )
 }
 
-const getRoleIdsWithMentorshipPermission = async () => {
-  const permission = await db.query.permissionsTable.findFirst({
-    where: and(
-      eq(permissionsTable.namespace, "mentorship"),
-      eq(permissionsTable.action, permissions.mentorship.addAvailability)
-    ),
-    with: {
-      roles: { columns: { role_id: true } }
-    }
-  })
-  return permission?.roles.map((row) => row.role_id) ?? []
-}
-
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    const roleIds = await getRoleIdsWithMentorshipPermission()
+    const roleIds = await getRoleIdsWithPermission(
+      "mentorship",
+      permissions.mentorship.addAvailability
+    )
 
     if (!roleIds.length) {
       return {

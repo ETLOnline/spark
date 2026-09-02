@@ -1,24 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Save } from "lucide-react"
+import { Save, CircleAlert } from "lucide-react"
 import Link from "next/link"
 
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { Separator } from "@/src/components/ui/separator"
 import { Button } from "@/src/components/ui/button"
 import { Switch } from "@/src/components/ui/switch"
 import { SelectFeature, SelectSpace } from "@/src/db/schema"
 import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { attachSpaceFeaturesAction } from "@/src/server-actions/Feature/Feature"
+import { UpdateSpaceAction } from "@/src/server-actions/Space/Space"
 import { toast } from "@/src/hooks/use-toast"
 import { useAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
@@ -33,6 +34,8 @@ export default function SpaceSettings({
   const [ssrSpace, setSsrSpace] = useState<SelectSpace>(space)
   const [currentSpace, setCurrentSpace] = useAtom(spaceStore.currentSpace)
 
+  const isCommunityFypEnabled = !!ssrSpace.channel?.community?.is_FYP_enable
+
   const [
     attachingSpaceFeatures,
     attachedState,
@@ -40,7 +43,11 @@ export default function SpaceSettings({
     attachSpaceFeatures
   ] = useServerAction(attachSpaceFeaturesAction)
 
-  const defaultValues: any = {}
+  const [updatingSpace, , , updateSpaceFyp] = useServerAction(UpdateSpaceAction)
+
+  const defaultValues: any = {
+    is_FYP_enable: isCommunityFypEnabled && !!ssrSpace.is_FYP_enable
+  }
   featuresList.forEach((feature) => {
     defaultValues[feature.feature_slug] = ssrSpace.features?.find(
       (sf) => sf.feature?.feature_slug === feature.feature_slug
@@ -60,7 +67,9 @@ export default function SpaceSettings({
 
   useEffect(() => {
     if (ssrSpace) {
-      const updatedFormObject: any = {}
+      const updatedFormObject: any = {
+        is_FYP_enable: isCommunityFypEnabled && !!ssrSpace.is_FYP_enable
+      }
       featuresList.forEach((feature) => {
         updatedFormObject[feature.feature_slug] = ssrSpace.features?.find(
           (sf) => sf.feature?.feature_slug === feature.feature_slug
@@ -73,28 +82,61 @@ export default function SpaceSettings({
         setValue(key, updatedFormObject[key])
       })
     }
-  }, [ssrSpace.features])
+  }, [ssrSpace.features, ssrSpace.is_FYP_enable, isCommunityFypEnabled])
 
   // Handle save settings
   const handleSaveSettings = async (data: any) => {
     const featureIds = Object.keys(data)
       .map((key) => {
-        if (data[key] === true) {
+        if (key !== "is_FYP_enable" && data[key] === true) {
           return featuresList.find((f) => f.feature_slug === key)?.id
         }
       })
       .filter((id) => id !== undefined)
 
     const updatedSpace = await attachSpaceFeatures(ssrSpace.id, featureIds)
-    if (updatedSpace?.success && updatedSpace.data) {
-      setSsrSpace(updatedSpace.data)
-      setCurrentSpace(updatedSpace.data)
-      toast({
-        title: "Space Setting Saved",
-        duration: 3000
+    if (!updatedSpace?.success || !updatedSpace.data) return
+
+    const isFypEnabled = isCommunityFypEnabled && !!data.is_FYP_enable
+    let finalSpace = updatedSpace.data
+
+    if (isFypEnabled !== !!finalSpace.is_FYP_enable) {
+      const fypUpdatedSpace = await updateSpaceFyp(ssrSpace.id, {
+        is_FYP_enable: isFypEnabled
       })
+      if (fypUpdatedSpace?.success && fypUpdatedSpace.data) {
+        finalSpace = { ...finalSpace, ...fypUpdatedSpace.data }
+      }
     }
+
+    setSsrSpace(finalSpace)
+    setCurrentSpace(finalSpace)
+    toast({
+      title: "Space Setting Saved",
+      duration: 3000
+    })
   }
+
+  const rows: Array<{
+    key: string
+    name: string
+    description: string
+    disabled?: boolean
+    disabledMessage?: string
+  }> = [
+    ...featuresList.map((feature) => ({
+      key: feature.feature_slug,
+      name: feature.feature_name,
+      description: feature.feature_description || ""
+    })),
+    {
+      key: "is_FYP_enable",
+      name: "Enable FYP",
+      description: "Enable or disable FYP feature to request advisor.",
+      disabled: !isCommunityFypEnabled,
+      disabledMessage: "FYP feature is disabled by the community admin"
+    }
+  ]
 
   return (
     <main className="flex-1 p-4 sm:p-6">
@@ -107,58 +149,57 @@ export default function SpaceSettings({
               its status.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 px-4 sm:px-6">
+          <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit(handleSaveSettings)}>
-              <div className="space-y-4">
-                <h3 className="text-base font-medium">Features</h3>
-                <div className="space-y-4">
-                  {featuresList.map((feature, index) => (
-                    <div key={index} className="flex flex-col gap-4">
-                      <div
-                        key={index}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                      >
-                        <div className="space-y-0.5">
-                          <Label
-                            htmlFor={feature.feature_slug}
-                            className="text-base"
-                          >
-                            {feature.feature_name}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {feature.feature_description}
-                          </p>
-                        </div>
-                        <Controller
-                          name={feature.feature_slug}
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              id={feature.feature_slug}
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          )}
-                        />
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Features
+              </h3>
+              <div className="mt-2 divide-y">
+                {rows.map((row) => (
+                  <div key={row.key} className="flex flex-col gap-2 py-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <Label htmlFor={row.key} className="text-base">
+                          {row.name}
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          {row.description}
+                        </p>
                       </div>
-                      <Separator />
+                      <Controller
+                        name={row.key}
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            id={row.key}
+                            checked={row.disabled ? false : !!field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={row.disabled}
+                          />
+                        )}
+                      />
                     </div>
-                  ))}
-                </div>
+                    {row.disabled && row.disabledMessage && (
+                      <div className="flex items-center gap-1.5 text-sm text-amber-500">
+                        <CircleAlert className="h-4 w-4" />
+                        <span>{row.disabledMessage}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="text-end pt-4">
+
+              <CardFooter className="justify-end border-t px-0 py-4">
                 <Button
-                  loading={attachingSpaceFeatures}
-                  disabled={attachingSpaceFeatures}
+                  loading={attachingSpaceFeatures || updatingSpace}
+                  disabled={attachingSpaceFeatures || updatingSpace}
                   type="submit"
-                  className="w-full sm:w-auto"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save Changes
                 </Button>
-              </div>
+              </CardFooter>
             </form>
-            {/* Features Section */}
           </CardContent>
         </Card>
       </div>

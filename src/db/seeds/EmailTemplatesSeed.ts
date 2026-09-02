@@ -114,6 +114,27 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.IDENTITY_VERIFIED,
     subject: "Your identity has been verified",
     body: loadTemplate("identity_verified_success.html")
+  },
+  {
+    name: NotificationEvent.ADVISOR_REQUEST_ACCEPTED,
+    subject: "Your advisor request was accepted",
+    body: loadTemplate("advisor_request_response.html")
+  },
+  {
+    name: NotificationEvent.ADVISOR_REQUEST_REJECTED,
+    subject: "Update on your advisor request",
+    body: loadTemplate("advisor_request_response.html")
+  },
+  {
+    name: NotificationEvent.NEW_ADVISOR_REQUEST,
+    subject: "New Advisor Request in {{domainName}}",
+    body: loadTemplate("new_advisor_request.html")
+  },
+  {
+    name: NotificationEvent.MILESTONE_COMPLETED_PENDING_VERIFICATION,
+    subject:
+      "{{studentName}} marked a milestone as Complete (Pending Verification)",
+    body: loadTemplate("milestone_completed_pending_verification.html")
   }
 ]
 
