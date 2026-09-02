@@ -1,0 +1,1 @@
+ALTER TABLE "advisor_requests" DROP COLUMN IF EXISTS "rejection_reason";
