@@ -1,6 +1,6 @@
 {
-  "id": "afa50a7e-2373-421f-9a84-66822bd37c39",
-  "prevId": "16434215-53fa-41f2-a7a7-ca85ce2186b5",
+  "id": "9317c34f-f5c0-4c28-9a1c-a22c152e4433",
+  "prevId": "a174befe-9f79-4abe-8740-14fb93c76608",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -672,12 +672,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'[]'::jsonb"
-        },
-        "rejection_reason": {
-          "name": "rejection_reason",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         },
         "expiry_date": {
           "name": "expiry_date",
@@ -3520,105 +3514,6 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["unique_id"],
           "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.project_milestones": {
-      "name": "project_milestones",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(36)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "space_id": {
-          "name": "space_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'incomplete'"
-        },
-        "start_date": {
-          "name": "start_date",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "end_date": {
-          "name": "end_date",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "order_index": {
-          "name": "order_index",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "created_by": {
-          "name": "created_by",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "artifacts": {
-          "name": "artifacts",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::json"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "project_milestones_space_id_spaces_id_fk": {
-          "name": "project_milestones_space_id_spaces_id_fk",
-          "tableFrom": "project_milestones",
-          "tableTo": "spaces",
-          "columnsFrom": ["space_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

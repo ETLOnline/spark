@@ -134,11 +134,6 @@ const emailTemplates = [
     value: "new_advisor_request",
     label: "New Advisor Request Email",
     file: "new_advisor_request.html"
-  },
-  {
-    value: "milestone_completed_pending_verification",
-    label: "Milestone Complete (Pending Verification)",
-    file: "milestone_completed_pending_verification.html"
   }
 ]
 

@@ -138,7 +138,6 @@ const permissionSeedList = [
   { namespace: "fyp", action: permissions.fyp.milestoneUpdate },
   { namespace: "fyp", action: permissions.fyp.milestoneDelete },
   { namespace: "fyp", action: permissions.fyp.milestoneVerify },
-  { namespace: "fyp", action: permissions.fyp.milestoneRevert },
   { namespace: "fyp", action: permissions.fyp.milestoneMarkDone },
   { namespace: "fyp", action: permissions.fyp.milestoneArtifactAdd },
 
