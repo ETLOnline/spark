@@ -1658,9 +1658,9 @@ export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
   requester?: SelectUser
 }
 
-// ─── Project Milestones ───────────────────────────────────────────────────────
+// ─── FYP Milestones ───────────────────────────────────────────────────────────
 
-export const projectMilestonesTable = pgTable("project_milestones", {
+export const fypMilestonesTable = pgTable("fyp_milestones", {
   id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
@@ -1681,18 +1681,18 @@ export const projectMilestonesTable = pgTable("project_milestones", {
   ...timestamps
 })
 
-export const projectMilestonesRelations = relations(
-  projectMilestonesTable,
+export const fypMilestonesRelations = relations(
+  fypMilestonesTable,
   ({ one }) => ({
     space: one(spacesTable, {
-      fields: [projectMilestonesTable.space_id],
+      fields: [fypMilestonesTable.space_id],
       references: [spacesTable.id]
     })
   })
 )
 
-export type InsertProjectMilestone = typeof projectMilestonesTable.$inferInsert
-export type SelectProjectMilestone = typeof projectMilestonesTable.$inferSelect
+export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
+export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
 
 // ─────────────────────────────────────────────────────────────────────────────
 

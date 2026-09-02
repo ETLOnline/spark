@@ -1,48 +1,48 @@
 import { asc, eq } from "drizzle-orm"
 import { db } from "../.."
 import {
-  InsertProjectMilestone,
-  projectMilestonesTable,
-  SelectProjectMilestone
+  InsertFypMilestone,
+  fypMilestonesTable,
+  SelectFypMilestone
 } from "../../schema"
 
 export const GetMilestonesForSpace = async (
   spaceId: string
-): Promise<SelectProjectMilestone[]> => {
+): Promise<SelectFypMilestone[]> => {
   return db
     .select()
-    .from(projectMilestonesTable)
-    .where(eq(projectMilestonesTable.space_id, spaceId))
-    .orderBy(asc(projectMilestonesTable.order_index))
+    .from(fypMilestonesTable)
+    .where(eq(fypMilestonesTable.space_id, spaceId))
+    .orderBy(asc(fypMilestonesTable.order_index))
 }
 
 export const BulkCreateMilestones = async (
-  rows: InsertProjectMilestone[]
-): Promise<SelectProjectMilestone[]> => {
-  return db.insert(projectMilestonesTable).values(rows).returning()
+  rows: InsertFypMilestone[]
+): Promise<SelectFypMilestone[]> => {
+  return db.insert(fypMilestonesTable).values(rows).returning()
 }
 
 export const GetMilestoneById = async (
   id: string
-): Promise<SelectProjectMilestone | null> => {
+): Promise<SelectFypMilestone | null> => {
   const [row] = await db
     .select()
-    .from(projectMilestonesTable)
-    .where(eq(projectMilestonesTable.id, id))
+    .from(fypMilestonesTable)
+    .where(eq(fypMilestonesTable.id, id))
   return row ?? null
 }
 
 export const GetMilestoneWithSpace = async (
   id: string
 ): Promise<{
-  milestone: SelectProjectMilestone
+  milestone: SelectFypMilestone
   spaceSlug: string | null
   channelSlug: string | null
   spaceName: string
   createdBy: string
 } | null> => {
-  const row = await db.query.projectMilestonesTable.findFirst({
-    where: eq(projectMilestonesTable.id, id),
+  const row = await db.query.fypMilestonesTable.findFirst({
+    where: eq(fypMilestonesTable.id, id),
     with: {
       space: {
         with: {
@@ -56,7 +56,7 @@ export const GetMilestoneWithSpace = async (
 
   const { space, ...milestone } = row
   return {
-    milestone: milestone as SelectProjectMilestone,
+    milestone: milestone as SelectFypMilestone,
     spaceSlug: space?.space_slug ?? null,
     channelSlug: space?.channel?.channel_slug ?? null,
     spaceName: space?.space_name ?? "",
@@ -68,7 +68,7 @@ export const UpdateMilestone = async (
   id: string,
   data: Partial<
     Pick<
-      InsertProjectMilestone,
+      InsertFypMilestone,
       | "name"
       | "status"
       | "start_date"
@@ -77,19 +77,17 @@ export const UpdateMilestone = async (
       | "artifacts"
     >
   >
-): Promise<SelectProjectMilestone | null> => {
+): Promise<SelectFypMilestone | null> => {
   const [row] = await db
-    .update(projectMilestonesTable)
+    .update(fypMilestonesTable)
     .set(data)
-    .where(eq(projectMilestonesTable.id, id))
+    .where(eq(fypMilestonesTable.id, id))
     .returning()
   return row ?? null
 }
 
 export const DeleteMilestone = async (id: string): Promise<void> => {
-  await db
-    .delete(projectMilestonesTable)
-    .where(eq(projectMilestonesTable.id, id))
+  await db.delete(fypMilestonesTable).where(eq(fypMilestonesTable.id, id))
 }
 
 // ─── Reconfigure transaction ───────────────────────────────────────────────────
@@ -97,40 +95,38 @@ export const DeleteMilestone = async (id: string): Promise<void> => {
 
 export const ApplyMilestoneDiff = async (diff: {
   spaceId: string
-  toCreate: InsertProjectMilestone[]
+  toCreate: InsertFypMilestone[]
   toUpdate: {
     id: string
     data: Partial<
       Pick<
-        InsertProjectMilestone,
+        InsertFypMilestone,
         "name" | "start_date" | "end_date" | "order_index"
       >
     >
   }[]
   toDelete: string[]
-}): Promise<SelectProjectMilestone[]> => {
+}): Promise<SelectFypMilestone[]> => {
   return db.transaction(async (tx) => {
     for (const id of diff.toDelete) {
-      await tx
-        .delete(projectMilestonesTable)
-        .where(eq(projectMilestonesTable.id, id))
+      await tx.delete(fypMilestonesTable).where(eq(fypMilestonesTable.id, id))
     }
 
     for (const { id, data } of diff.toUpdate) {
       await tx
-        .update(projectMilestonesTable)
+        .update(fypMilestonesTable)
         .set(data)
-        .where(eq(projectMilestonesTable.id, id))
+        .where(eq(fypMilestonesTable.id, id))
     }
 
     if (diff.toCreate.length > 0) {
-      await tx.insert(projectMilestonesTable).values(diff.toCreate)
+      await tx.insert(fypMilestonesTable).values(diff.toCreate)
     }
 
     return tx
       .select()
-      .from(projectMilestonesTable)
-      .where(eq(projectMilestonesTable.space_id, diff.spaceId))
-      .orderBy(asc(projectMilestonesTable.order_index))
+      .from(fypMilestonesTable)
+      .where(eq(fypMilestonesTable.space_id, diff.spaceId))
+      .orderBy(asc(fypMilestonesTable.order_index))
   })
 }
