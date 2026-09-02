@@ -1654,6 +1654,46 @@ export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
   requester?: SelectUser
 }
 
+// ─── Project Milestones ───────────────────────────────────────────────────────
+
+export enum MilestoneStatus {
+  INCOMPLETE = "incomplete",
+  IN_PROGRESS = "in_progress",
+  DONE_PENDING_VERIFICATION = "done_pending_verification",
+  COMPLETED = "completed"
+}
+
+export const projectMilestonesTable = pgTable("project_milestones", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  name: varchar().notNull(),
+  status: varchar().notNull().default(MilestoneStatus.INCOMPLETE),
+  start_date: varchar(),
+  end_date: varchar(),
+  order_index: integer().notNull().default(0),
+  created_by: varchar().notNull(),
+  ...timestamps
+})
+
+export const projectMilestonesRelations = relations(
+  projectMilestonesTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [projectMilestonesTable.space_id],
+      references: [spacesTable.id]
+    })
+  })
+)
+
+export type InsertProjectMilestone = typeof projectMilestonesTable.$inferInsert
+export type SelectProjectMilestone = typeof projectMilestonesTable.$inferSelect
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })
     .primaryKey()

@@ -29,3 +29,24 @@ export const defaultSpaceOverviewTemplate = (spaceName: string) =>
     </li>
   </ul>
 `
+export const TEMPLATE_MILESTONES = [
+  "Proposal Approval",
+  "SRS",
+  "SDD",
+  "Implementation",
+  "Testing & Validation",
+  "Deployment & Documentation"
+]
+
+export const CUSTOM_MILESTONE_FEATURES = [
+  "Add milestones",
+  "Set start and end dates",
+  "Reorder milestones",
+  "Edit or remove milestones"
+]
+
+export const MILESTONE_STATUS_TOAST: Record<string, string> = {
+  in_progress: "Milestone marked as In Progress.",
+  done_pending_verification: "Milestone submitted for verification.",
+  completed: "Milestone marked as Completed."
+}

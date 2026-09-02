@@ -30,7 +30,10 @@ const userRolePermissions = [
       },
       {
         namespace: "fyp",
-        actions: [permissions.fyp.canRequestAdvisor]
+        actions: [
+          permissions.fyp.canRequestAdvisor,
+          permissions.fyp.milestoneMarkDone
+        ]
       }
     ]
   },
@@ -70,6 +73,11 @@ const userRolePermissions = [
         namespace: "fyp",
         actions: [
           permissions.fyp.canReceiveAdvisorRequest,
+          permissions.fyp.milestoneCreate,
+          permissions.fyp.milestoneUpdate,
+          permissions.fyp.milestoneDelete,
+          permissions.fyp.milestoneVerify,
+          permissions.fyp.milestoneArtifactAdd,
           permissions.fyp.advisorViewRequests,
           permissions.fyp.advisorViewDetails,
           permissions.fyp.advisorAccept,

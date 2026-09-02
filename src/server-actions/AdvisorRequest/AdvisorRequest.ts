@@ -33,7 +33,6 @@ import {
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
 
-
 const ADVISOR_REQUEST_EXPIRY_DAYS = 14
 
 export interface AdvisorRequestFormData {
