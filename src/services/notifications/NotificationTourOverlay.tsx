@@ -24,9 +24,9 @@ function NotificationTourOverlay({
           type="button"
           onClick={() => setIsOpen(false)}
           aria-label="Close"
-          className="absolute right-4 top-4 z-50 rounded-sm opacity-70 text-white ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="absolute right-4 top-20 z-50 rounded-sm opacity-70 text-white ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          <X className="h-6 w-6" />
+          <X className="h-9 w-9" />
         </button>
         <div className="h-full w-full flex flex-col gap-4 justify-center items-center">
           <div className="  rotate-2">
