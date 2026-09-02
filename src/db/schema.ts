@@ -2,6 +2,10 @@ import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
+  MilestoneStatus,
+  MilestoneArtifactEntry
+} from "@/src/types/Milestone/Milestone"
+import {
   integer,
   pgTable,
   primaryKey,
@@ -1655,18 +1659,6 @@ export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
 }
 
 // ─── Project Milestones ───────────────────────────────────────────────────────
-
-export enum MilestoneStatus {
-  INCOMPLETE = "incomplete",
-  IN_PROGRESS = "in_progress",
-  COMPLETED_PENDING_VERIFICATION = "completed_pending_verification",
-  VERIFIED = "verified"
-}
-
-// Artifact entries stored as a JSON array on each milestone
-export type MilestoneArtifactEntry =
-  | { type: "file"; file_id: number; file_name: string; file_path: string }
-  | { type: "link"; url: string }
 
 export const projectMilestonesTable = pgTable("project_milestones", {
   id: varchar("id", { length: 36 })

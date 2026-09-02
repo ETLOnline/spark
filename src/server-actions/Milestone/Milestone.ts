@@ -12,11 +12,11 @@ import {
   UpdateMilestone
 } from "@/src/db/data-access/milestones/query"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
+import { InsertProjectMilestone } from "@/src/db/schema"
 import {
-  InsertProjectMilestone,
   MilestoneArtifactEntry,
   MilestoneStatus
-} from "@/src/db/schema"
+} from "@/src/types/Milestone/Milestone"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
@@ -44,16 +44,15 @@ export const GetMilestonesForSpaceAction = CreateServerAction(
 // ─── First-time setup ─────────────────────────────────────────────────────────
 // Only called when there are no milestones yet. Bulk inserts all as INCOMPLETE.
 
-export interface MilestoneInput {
-  name: string
-  start_date?: string
-  end_date?: string
-  order_index: number
-}
-
 export const SetupMilestonesAction = CreateServerAction(
   true,
-  async (spaceId: string, inputs: MilestoneInput[]) => {
+  async (
+    spaceId: string,
+    inputs: Pick<
+      InsertProjectMilestone,
+      "name" | "start_date" | "end_date" | "order_index"
+    >[]
+  ) => {
     try {
       const user = await AuthUserAction()
       if (!user) return { success: false, message: "Unauthorized" }
@@ -81,17 +80,15 @@ export const SetupMilestonesAction = CreateServerAction(
 // necessary creates / updates / deletes in a single transaction.
 // Existing milestone statuses and student progress are preserved.
 
-export interface ReconfigureInput {
-  id?: string // DB id for existing milestones; absent for newly added rows
-  name: string
-  start_date?: string
-  end_date?: string
-  order_index: number
-}
-
 export const ReconfigureMilestonesAction = CreateServerAction(
   true,
-  async (spaceId: string, inputs: ReconfigureInput[]) => {
+  async (
+    spaceId: string,
+    inputs: Pick<
+      InsertProjectMilestone,
+      "id" | "name" | "start_date" | "end_date" | "order_index"
+    >[]
+  ) => {
     try {
       const user = await AuthUserAction()
       if (!user) return { success: false, message: "Unauthorized" }
@@ -257,22 +254,19 @@ export const UpdateMilestoneAction = CreateServerAction(
 // Student appends a file or link to the milestone's artifacts array.
 // Multiple artifacts are allowed; at least one is required to mark as Done.
 
-export interface MilestoneArtifactFile {
-  name: string
-  sizeBytes: number
-  base64: string
-  mimeType: string
-}
-
-// Imported from @/src/utils/constants — single source of truth
-// MAX_ARTIFACT_SIZE → MILESTONE_ARTIFACT_MAX_SIZE
-// ALLOWED_ARTIFACT_TYPES → MILESTONE_ARTIFACT_MIME_TYPES
-
 export const SubmitMilestoneArtifactAction = CreateServerAction(
   true,
   async (
     milestoneId: string,
-    artifact: { file?: MilestoneArtifactFile; link?: string }
+    artifact: {
+      file?: {
+        name: string
+        sizeBytes: number
+        base64: string
+        mimeType: string
+      }
+      link?: string
+    }
   ) => {
     try {
       const user = await AuthUserAction()

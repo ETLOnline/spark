@@ -32,17 +32,15 @@ export const GetMilestoneById = async (
   return row ?? null
 }
 
-export interface MilestoneWithSpace {
+export const GetMilestoneWithSpace = async (
+  id: string
+): Promise<{
   milestone: SelectProjectMilestone
   spaceSlug: string | null
   channelSlug: string | null
   spaceName: string
   createdBy: string
-}
-
-export const GetMilestoneWithSpace = async (
-  id: string
-): Promise<MilestoneWithSpace | null> => {
+} | null> => {
   const row = await db.query.projectMilestonesTable.findFirst({
     where: eq(projectMilestonesTable.id, id),
     with: {
@@ -97,7 +95,7 @@ export const DeleteMilestone = async (id: string): Promise<void> => {
 // ─── Reconfigure transaction ───────────────────────────────────────────────────
 // Applies a diff atomically. Status is never touched for existing milestones.
 
-export interface MilestoneDiff {
+export const ApplyMilestoneDiff = async (diff: {
   spaceId: string
   toCreate: InsertProjectMilestone[]
   toUpdate: {
@@ -110,11 +108,7 @@ export interface MilestoneDiff {
     >
   }[]
   toDelete: string[]
-}
-
-export const ApplyMilestoneDiff = async (
-  diff: MilestoneDiff
-): Promise<SelectProjectMilestone[]> => {
+}): Promise<SelectProjectMilestone[]> => {
   return db.transaction(async (tx) => {
     for (const id of diff.toDelete) {
       await tx

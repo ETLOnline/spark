@@ -2,7 +2,14 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { CheckCircle2, FileText, Link2, Loader2, Trash2 } from "lucide-react"
+import {
+  CheckCircle2,
+  FileText,
+  Link2,
+  Loader2,
+  PlusCircle,
+  Trash2
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import {
@@ -26,13 +33,12 @@ import {
   SubmitMilestoneArtifactAction,
   UpdateMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
+import { SelectProjectMilestone } from "@/src/db/schema"
 import {
   MilestoneArtifactEntry,
-  MilestoneStatus,
-  SelectProjectMilestone
-} from "@/src/db/schema"
-import { MILESTONE_ARTIFACT_ACCEPT } from "./constants"
-import { MILESTONE_STATUS_TOAST } from "./constants"
+  MilestoneStatus
+} from "@/src/types/Milestone/Milestone"
+import { MILESTONE_ARTIFACT_ACCEPT, MILESTONE_STATUS_TOAST } from "./constants"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,44 +57,28 @@ export interface ArtifactManageDialogProps {
   onMarkCompleted?: () => void
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Add Artifact Dialog ──────────────────────────────────────────────────────
 
-export function ArtifactManageDialog({
+interface ArtifactAddDialogProps {
+  open: boolean
+  milestoneId: string
+  onClose: () => void
+  onAdded: (updated: MilestoneArtifactEntry[]) => void
+}
+
+function ArtifactAddDialog({
   open,
   milestoneId,
-  artifacts,
-  status,
-  isStudent,
   onClose,
-  onArtifactsChanged,
-  onMarkDone,
-  onMarkCompleted
-}: ArtifactManageDialogProps) {
+  onAdded
+}: ArtifactAddDialogProps) {
   const { toast } = useToast()
-
   const [tab, setTab] = useState<ArtifactTab>("file")
   const [link, setLink] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isAdding, setIsAdding] = useState(false)
-  const [deletingIdx, setDeletingIdx] = useState<number | null>(null)
-  const [isMarkingDone, setIsMarkingDone] = useState(false)
-  const [isMarkingCompleted, setIsMarkingCompleted] = useState(false)
 
   const [, , , submitArtifact] = useServerAction(SubmitMilestoneArtifactAction)
-  const [, , , deleteArtifact] = useServerAction(DeleteMilestoneArtifactAction)
-  const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
-
-  // Students can add/replace artifacts until advisor marks as Completed
-  const canEdit =
-    isStudent &&
-    status !== MilestoneStatus.VERIFIED &&
-    status !== MilestoneStatus.INCOMPLETE
-
-  // Students can delete until the milestone is fully Completed (advisor verified)
-  // Advisors can also delete until Completed
-  const canDelete = status !== MilestoneStatus.VERIFIED
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleClose = () => {
     setTab("file")
@@ -113,12 +103,10 @@ export function ArtifactManageDialog({
       try {
         const res = await submitArtifact(milestoneId, { link: link.trim() })
         if (res?.success && res.data) {
-          onArtifactsChanged(
+          onAdded(
             (res.data as SelectProjectMilestone)
               .artifacts as MilestoneArtifactEntry[]
           )
-          setTab("file")
-          setLink("")
           toast({ title: "Link added" })
         } else {
           toast({
@@ -154,12 +142,10 @@ export function ArtifactManageDialog({
           }
         })
         if (res?.success && res.data) {
-          onArtifactsChanged(
+          onAdded(
             (res.data as SelectProjectMilestone)
               .artifacts as MilestoneArtifactEntry[]
           )
-          setTab("file")
-          setSelectedFile(null)
           toast({ title: "File uploaded" })
         } else {
           toast({
@@ -174,6 +160,122 @@ export function ArtifactManageDialog({
         setIsAdding(false)
       }
     }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) handleClose()
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Artifact</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-1">
+          <Tabs
+            value={tab}
+            onValueChange={(v) => {
+              setTab(v as ArtifactTab)
+              setSelectedFile(null)
+              setLink("")
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="file">Upload file</TabsTrigger>
+              <TabsTrigger value="link">Paste link</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="file" className="space-y-2">
+              <FileUpload
+                fileType="file"
+                accept={MILESTONE_ARTIFACT_ACCEPT}
+                multiple={false}
+                onChange={(files) => setSelectedFile(files[0] ?? null)}
+                onRemove={() => setSelectedFile(null)}
+              />
+              <p className="text-xs text-muted-foreground text-center">
+                PDF, DOC, DOCX, or image (PNG, JPG, GIF, WebP). Max 200MB.
+              </p>
+              <Button
+                size="sm"
+                onClick={handleAdd}
+                disabled={isAdding || !selectedFile}
+                className="w-full cursor-pointer"
+              >
+                {isAdding && (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                )}
+                Upload
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="link" className="space-y-2">
+              <Input
+                placeholder="https://github.com/..."
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                autoFocus
+              />
+              <Button
+                size="sm"
+                onClick={handleAdd}
+                disabled={isAdding || !link.trim()}
+                className="w-full cursor-pointer"
+              >
+                {isAdding && (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                )}
+                Add Link
+              </Button>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={isAdding}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── Artifact List Dialog ─────────────────────────────────────────────────────
+
+export function ArtifactManageDialog({
+  open,
+  milestoneId,
+  artifacts,
+  status,
+  isStudent,
+  onClose,
+  onArtifactsChanged,
+  onMarkDone,
+  onMarkCompleted
+}: ArtifactManageDialogProps) {
+  const { toast } = useToast()
+
+  const [showAdd, setShowAdd] = useState(false)
+  const [deletingIdx, setDeletingIdx] = useState<number | null>(null)
+  const [isMarkingDone, setIsMarkingDone] = useState(false)
+  const [isMarkingCompleted, setIsMarkingCompleted] = useState(false)
+
+  const [, , , deleteArtifact] = useServerAction(DeleteMilestoneArtifactAction)
+  const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
+
+  const canEdit =
+    isStudent &&
+    status !== MilestoneStatus.VERIFIED &&
+    status !== MilestoneStatus.INCOMPLETE
+
+  const canDelete = status !== MilestoneStatus.VERIFIED
+
+  const handleClose = () => {
+    onClose()
   }
 
   const handleDelete = async (index: number) => {
@@ -259,187 +361,148 @@ export function ArtifactManageDialog({
     }
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        if (!v) handleClose()
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Proof of Completion</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v) handleClose()
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Proof of Completion</DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4 py-1">
-          {/* Artifact list */}
-          {artifacts.length > 0 ? (
-            <div className="space-y-2">
-              {artifacts.map((a, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
-                >
-                  {a.type === "file" ? (
-                    <>
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <Link
-                        href={a.file_path}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 truncate text-primary hover:underline"
-                      >
-                        {a.file_name}
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <Link
-                        href={a.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 truncate text-primary hover:underline"
-                      >
-                        {a.url}
-                      </Link>
-                    </>
-                  )}
-                  {canDelete && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
-                      disabled={deletingIdx === i}
-                      onClick={() => handleDelete(i)}
-                    >
-                      {deletingIdx === i ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-3">
-              {isStudent
-                ? "No artifacts yet. Add at least one before marking as Done."
-                : "No artifacts have been submitted for this milestone."}
-            </p>
-          )}
-
-          {/* Upload section — students only, while milestone is editable */}
-          {canEdit && (
-            <div className="border-t pt-3">
-              <Tabs
-                value={tab}
-                onValueChange={(v) => {
-                  setTab(v as ArtifactTab)
-                  setSelectedFile(null)
-                  setLink("")
-                }}
-              >
-                <TabsList>
-                  <TabsTrigger value="file">Upload file</TabsTrigger>
-                  <TabsTrigger value="link">Paste link</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="file" className="space-y-2">
-                  <FileUpload
-                    fileType="file"
-                    accept={MILESTONE_ARTIFACT_ACCEPT}
-                    multiple={false}
-                    onChange={(files) => setSelectedFile(files[0] ?? null)}
-                    onRemove={() => setSelectedFile(null)}
-                  />
-                  <p className="text-xs text-muted-foreground text-center">
-                    PDF, DOC, DOCX, or image (PNG, JPG, GIF, WebP). Max 200MB.
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={handleAdd}
-                    disabled={isAdding || !selectedFile}
-                    className="w-full cursor-pointer"
+          <div className="space-y-3 py-1">
+            {/* Artifact list */}
+            {artifacts.length > 0 ? (
+              <div className="space-y-2">
+                {artifacts.map((a, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
                   >
-                    {isAdding ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : null}
-                    Upload
-                  </Button>
-                </TabsContent>
+                    {a.type === "file" ? (
+                      <>
+                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <Link
+                          href={a.file_path}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 truncate text-primary hover:underline"
+                        >
+                          {a.file_name}
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <Link
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 truncate text-primary hover:underline"
+                        >
+                          {a.url}
+                        </Link>
+                      </>
+                    )}
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
+                        disabled={deletingIdx === i}
+                        onClick={() => handleDelete(i)}
+                      >
+                        {deletingIdx === i ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-3">
+                {isStudent
+                  ? "No artifacts yet. Add at least one before marking as Done."
+                  : "No artifacts have been submitted for this milestone."}
+              </p>
+            )}
 
-                <TabsContent value="link" className="space-y-2">
-                  <Input
-                    placeholder="https://github.com/..."
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                    autoFocus
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleAdd}
-                    disabled={isAdding || !link.trim()}
-                    className="w-full cursor-pointer"
-                  >
-                    {isAdding ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : null}
-                    Add Link
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isMarkingDone || isMarkingCompleted}
-          >
-            Close
-          </Button>
-
-          {/* Student: Complete (Pending Verification) */}
-          {isStudent && status === MilestoneStatus.IN_PROGRESS && (
-            <Button
-              onClick={handleMarkDone}
-              disabled={artifacts.length === 0 || isMarkingDone}
-              className="min-w-32 cursor-pointer"
-            >
-              {isMarkingDone ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-              )}
-              Complete (Pending Verification)
-            </Button>
-          )}
-
-          {/* Advisor / Admin: Verify */}
-          {!isStudent &&
-            status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
+            {/* Add button — students only, while milestone is editable */}
+            {canEdit && (
               <Button
-                onClick={handleMarkCompleted}
-                disabled={isMarkingCompleted}
-                className="min-w-36 cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="w-full cursor-pointer"
+                onClick={() => setShowAdd(true)}
               >
-                {isMarkingCompleted ? (
+                <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+                Add Artifact
+              </Button>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isMarkingDone || isMarkingCompleted}
+            >
+              Close
+            </Button>
+
+            {/* Student: Complete (Pending Verification) */}
+            {isStudent && status === MilestoneStatus.IN_PROGRESS && (
+              <Button
+                onClick={handleMarkDone}
+                disabled={artifacts.length === 0 || isMarkingDone}
+                className="min-w-32 cursor-pointer"
+              >
+                {isMarkingDone ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                 )}
-                Verify
+                Complete (Pending Verification)
               </Button>
             )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+            {/* Advisor / Admin: Verify */}
+            {!isStudent &&
+              status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
+                <Button
+                  onClick={handleMarkCompleted}
+                  disabled={isMarkingCompleted}
+                  className="min-w-36 cursor-pointer"
+                >
+                  {isMarkingCompleted ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                  )}
+                  Verify
+                </Button>
+              )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Artifact Dialog — opens on top of the list dialog */}
+      <ArtifactAddDialog
+        open={showAdd}
+        milestoneId={milestoneId}
+        onClose={() => setShowAdd(false)}
+        onAdded={(updated) => {
+          onArtifactsChanged(updated)
+          setShowAdd(false)
+        }}
+      />
+    </>
   )
 }
