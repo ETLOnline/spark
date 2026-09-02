@@ -63,7 +63,7 @@ import {
   DeleteMilestoneAction,
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
-import { SelectProjectMilestone } from "@/src/db/schema"
+import { SelectFypMilestone } from "@/src/db/schema"
 import {
   MilestoneStatus,
   MilestoneArtifactEntry
@@ -136,7 +136,7 @@ function StatusBadge({ status }: { status: string }) {
 function MilestoneStepper({
   milestones
 }: {
-  milestones: SelectProjectMilestone[]
+  milestones: SelectFypMilestone[]
 }) {
   const completed = milestones.filter(
     (m) => m.status === MilestoneStatus.VERIFIED
@@ -358,9 +358,9 @@ function MilestoneSetup({
   onComplete
 }: {
   spaceId: string
-  initialMilestones?: SelectProjectMilestone[]
+  initialMilestones?: SelectFypMilestone[]
   onCancel?: () => void
-  onComplete: (milestones: SelectProjectMilestone[]) => void
+  onComplete: (milestones: SelectFypMilestone[]) => void
 }) {
   const { toast } = useToast()
 
@@ -497,7 +497,7 @@ function MilestoneSetup({
         const res = await reconfigureMilestones(spaceId, inputs)
         if (res?.success && res.data) {
           toast({ title: "Milestones updated successfully" })
-          onComplete(res.data as SelectProjectMilestone[])
+          onComplete(res.data as SelectFypMilestone[])
         } else {
           toast({
             title: "Failed to update milestones",
@@ -516,7 +516,7 @@ function MilestoneSetup({
         const res = await setupMilestones(spaceId, inputs)
         if (res?.success && res.data) {
           toast({ title: "Milestones set up successfully" })
-          onComplete(res.data as SelectProjectMilestone[])
+          onComplete(res.data as SelectFypMilestone[])
         } else {
           toast({
             title: "Failed to set up milestones",
@@ -751,7 +751,7 @@ function MilestoneView({
   canRevertMilestone,
   onSetupAgain
 }: {
-  milestones: SelectProjectMilestone[]
+  milestones: SelectFypMilestone[]
   canManage: boolean
   canCreateMilestone: boolean
   canUpdateMilestone: boolean
@@ -790,7 +790,7 @@ function MilestoneView({
     }
   }
 
-  const handleStartEdit = (m: SelectProjectMilestone) => {
+  const handleStartEdit = (m: SelectFypMilestone) => {
     setEditingId(m.id)
     setEditName(m.name)
   }
@@ -816,7 +816,7 @@ function MilestoneView({
   // Merges a partial update into the milestone matching `id` in local state
   const updateDialogMilestone = (
     id: string,
-    patch: Partial<SelectProjectMilestone>
+    patch: Partial<SelectFypMilestone>
   ) =>
     setMilestones((prev) =>
       prev.map((milestone) =>
@@ -847,7 +847,7 @@ function MilestoneView({
     try {
       const res = await revertMilestone(id)
       if (res?.success && res.data) {
-        const reverted = res.data as SelectProjectMilestone
+        const reverted = res.data as SelectFypMilestone
         setMilestones((prev) =>
           prev.map((m) => (m.id === id ? { ...m, status: reverted.status } : m))
         )
@@ -1256,7 +1256,7 @@ function FYPMilestones() {
   const spaceId = currentSpace?.id
   const communityId = currentSpace?.channel?.community_id ?? undefined
   const [view, setView] = useState<View>("milestones")
-  const [milestones, setMilestones] = useState<SelectProjectMilestone[]>([])
+  const [milestones, setMilestones] = useState<SelectFypMilestone[]>([])
   const [loadingMs, setLoadingMs] = useState(true)
   const [, , , fetchMilestones] = useServerAction(GetMilestonesForSpaceAction)
 
@@ -1305,7 +1305,7 @@ function FYPMilestones() {
     try {
       const res = await fetchMilestones(spaceId)
       if (res?.success && res.data) {
-        setMilestones(res.data as SelectProjectMilestone[])
+        setMilestones(res.data as SelectFypMilestone[])
         setView(res.data.length > 0 ? "milestones" : "setup")
       }
     } finally {
