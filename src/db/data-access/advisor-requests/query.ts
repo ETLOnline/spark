@@ -6,6 +6,7 @@ import {
   SelectUser
 } from "../../schema"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
+import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 
 // Creates a new advisor request row in the database. This is called when a user requests an advisor for their FYP.
 export const CreateAdvisorRequest = async (data: InsertAdvisorRequest) => {
@@ -14,34 +15,6 @@ export const CreateAdvisorRequest = async (data: InsertAdvisorRequest) => {
   } catch (e: any) {
     throw new Error(e.message)
   }
-}
-
-export type StudentRequestStatus =
-  | AdvisorRequestStatus.PENDING
-  | AdvisorRequestStatus.ACCEPTED
-  | AdvisorRequestStatus.REJECTED
-  | AdvisorRequestStatus.EXPIRED
-
-export function getStudentRequestStatus(request: {
-  status: string
-  accepted_by: string | null
-  rejected_by: { advisor_id: string; reason: string }[] | null
-  advisor_ids: string[] | null
-  expiry_date: string
-}): StudentRequestStatus {
-  if (request.status === AdvisorRequestStatus.ACCEPTED || request.accepted_by)
-    return AdvisorRequestStatus.ACCEPTED
-
-  const advisorIds = request.advisor_ids ?? []
-  const rejectedCount = request.rejected_by?.length ?? 0
-  const allRejected =
-    advisorIds.length > 0 && rejectedCount >= advisorIds.length
-  const isPastDeadline = new Date(request.expiry_date) < new Date()
-
-  if (allRejected) return AdvisorRequestStatus.REJECTED
-  if (isPastDeadline && rejectedCount > 0) return AdvisorRequestStatus.REJECTED
-  if (isPastDeadline) return AdvisorRequestStatus.EXPIRED
-  return AdvisorRequestStatus.PENDING
 }
 
 // Fetches the most recently submitted advisor request for a space, including its domain and proposal file.
@@ -55,13 +28,17 @@ export const GetLatestAdvisorRequestForSpace = async (spaceId: string) => {
   return request ?? null
 }
 
-// Fetches the active advisor request for a given space. Returns null if no active request exists.
+// Fetches the advisor request for a given space that still blocks a new
+// request from being submitted (i.e. not rejected or expired). Returns null
+// if no such request exists.
 export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
   const request = await GetLatestAdvisorRequestForSpace(spaceId)
   if (!request) return null
-  return getStudentRequestStatus(request) === AdvisorRequestStatus.PENDING
-    ? request
-    : null
+  const status = getStudentRequestStatus(request)
+  return status === AdvisorRequestStatus.REJECTED ||
+    status === AdvisorRequestStatus.EXPIRED
+    ? null
+    : request
 }
 
 export const GetAdvisorRequestById = async (requestId: string) => {
