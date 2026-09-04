@@ -29,3 +29,45 @@ export const defaultSpaceOverviewTemplate = (spaceName: string) =>
     </li>
   </ul>
 `
+export const TEMPLATE_MILESTONES = [
+  "Proposal Approval",
+  "SRS",
+  "SDD",
+  "Implementation",
+  "Testing & Validation",
+  "Deployment & Documentation"
+]
+
+export const CUSTOM_MILESTONE_FEATURES = [
+  "Add milestones",
+  "Set start and end dates",
+  "Reorder milestones",
+  "Edit or remove milestones"
+]
+
+export const MILESTONE_STATUS_TOAST: Record<string, string> = {
+  in_progress: "Milestone marked as In Progress.",
+  completed_pending_verification:
+    "Milestone marked as Completed (Pending Verification).",
+  verified: "Milestone verified successfully."
+}
+
+// ─── Milestone Artifact Upload Constraints ────────────────────────────────────
+// Single source of truth used by both the server action and the upload dialog.
+
+export const MILESTONE_ARTIFACT_MAX_SIZE = 200 * 1024 * 1024 // 200 MB
+
+export const MILESTONE_ARTIFACT_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp"
+]
+
+// Accept string for <FileUpload accept="..."> — must include "image/*" so the
+// component's acceptIncludesImage check passes and allows PNG/JPG/GIF/WebP.
+export const MILESTONE_ARTIFACT_ACCEPT =
+  ".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
