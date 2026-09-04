@@ -2,6 +2,10 @@ import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
+  MilestoneStatus,
+  MilestoneArtifactEntry
+} from "@/src/types/Milestone/Milestone"
+import {
   integer,
   pgTable,
   primaryKey,
@@ -1653,6 +1657,44 @@ export type SelectAdvisorRequest = typeof advisorRequestsTable.$inferSelect & {
   space?: SelectSpace
   requester?: SelectUser
 }
+
+// ─── FYP Milestones ───────────────────────────────────────────────────────────
+
+export const fypMilestonesTable = pgTable("fyp_milestones", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  name: varchar().notNull(),
+  status: varchar().notNull().default(MilestoneStatus.INCOMPLETE),
+  start_date: varchar(),
+  end_date: varchar(),
+  order_index: integer().notNull().default(0),
+  created_by: varchar().notNull(),
+  // Artifacts — JSON array; at least one required before marking as Done
+  artifacts: json()
+    .$type<MilestoneArtifactEntry[]>()
+    .notNull()
+    .default(sql`'[]'::json`),
+  ...timestamps
+})
+
+export const fypMilestonesRelations = relations(
+  fypMilestonesTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [fypMilestonesTable.space_id],
+      references: [spacesTable.id]
+    })
+  })
+)
+
+export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
+export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })
