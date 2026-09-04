@@ -12,10 +12,10 @@ import {
   GetEligibleAdvisorsForDomain,
   GetLatestAdvisorRequestForSpace,
   GetRecentPendingAdvisorRequests,
-  getStudentRequestStatus,
   RejectAdvisorRequest,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
+import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 import { permissions } from "@/src/utils/constants"
 import {
   base64ToBuffer,
@@ -32,7 +32,6 @@ import {
   ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
-
 
 const ADVISOR_REQUEST_EXPIRY_DAYS = 14
 
@@ -106,7 +105,7 @@ export const CreateAdvisorRequestAction = CreateServerAction(
       const eligibleAdvisors = await GetEligibleAdvisorsForDomain(
         formData.domain_tag_id,
         "fyp",
-        permissions.fyp.viewAdvisorRequests
+        permissions.fyp.advisorViewRequests
       )
       if (!eligibleAdvisors.length) {
         return {
