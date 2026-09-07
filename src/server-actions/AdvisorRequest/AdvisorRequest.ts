@@ -6,6 +6,7 @@ import {
   AcceptAdvisorRequest,
   AddAdvisorsInRequest,
   CreateAdvisorRequest,
+  ExpireOverdueAdvisorRequests,
   GetActiveAdvisorRequestForSpace,
   GetAdvisorRequestById,
   GetAdvisorRequestsForAdvisor,
@@ -367,6 +368,18 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       await Promise.all(proccessingRequest)
 
       return { success: true }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const ExpireOverdueAdvisorRequestsAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const expired = await ExpireOverdueAdvisorRequests()
+      return { success: true, data: { expiredCount: expired.length } }
     } catch (error) {
       return { success: false, error }
     }

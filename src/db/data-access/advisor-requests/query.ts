@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   advisorRequestsTable,
@@ -191,6 +191,29 @@ export const AddAdvisorsInRequest = async (
     throw new Error(e.message)
   }
 }
+
+export const ExpireOverdueAdvisorRequests = async () => {
+  try {
+    const res = await db
+      .update(advisorRequestsTable)
+      .set({ status: AdvisorRequestStatus.EXPIRED })
+      .where(
+        and(
+          inArray(advisorRequestsTable.status, [
+            AdvisorRequestStatus.PENDING,
+            AdvisorRequestStatus.AWAITING_APPROVAL
+          ]),
+          sql`${advisorRequestsTable.expiry_date}::timestamptz < now()`
+        )
+      )
+      .returning({ id: advisorRequestsTable.id })
+
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export const UpdateRequestStatus = async (
   requestId: string,
   status: AdvisorRequestStatus
