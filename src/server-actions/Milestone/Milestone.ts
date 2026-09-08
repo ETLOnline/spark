@@ -204,7 +204,7 @@ export const UpdateMilestoneAction = CreateServerAction(
             try {
               const deepLink =
                 ctx.channelSlug && ctx.spaceSlug
-                  ? `/channels/${ctx.channelSlug}/spaces/${ctx.spaceSlug}?page-type=fyp`
+                  ? `/channels/${ctx.channelSlug}/spaces/${ctx.spaceSlug}?page-type=fyp&fyp-tab=milestones`
                   : "/"
 
               const spaceUsers = await getSpaceUsers(ctx.milestone.space_id)
@@ -360,8 +360,18 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
       const current: MilestoneArtifactEntry[] =
         (milestone.artifacts as MilestoneArtifactEntry[]) ?? []
 
+      const newArtifacts = current.filter((_, i) => i !== index)
+
+      // If the student removed the last artifact while pending verification,
+      // revert the milestone back to IN_PROGRESS so Advisors don't see an
+      // empty evidence state awaiting review.
+      const shouldRevert =
+        newArtifacts.length === 0 &&
+        status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
+
       const updated = await UpdateMilestone(milestoneId, {
-        artifacts: current.filter((_, i) => i !== index)
+        artifacts: newArtifacts,
+        ...(shouldRevert ? { status: MilestoneStatus.IN_PROGRESS } : {})
       })
 
       return { success: true, data: updated }

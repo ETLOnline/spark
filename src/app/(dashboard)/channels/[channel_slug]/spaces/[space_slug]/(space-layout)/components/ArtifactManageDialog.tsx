@@ -283,10 +283,16 @@ export function ArtifactManageDialog({
     try {
       const res = await deleteArtifact(milestoneId, index)
       if (res?.success && res.data) {
+        const updatedMilestone = res.data as SelectFypMilestone
         onArtifactsChanged(
-          (res.data as SelectFypMilestone).artifacts as MilestoneArtifactEntry[]
+          updatedMilestone.artifacts as MilestoneArtifactEntry[]
         )
-        toast({ title: "Artifact removed" })
+        const statusReverted = updatedMilestone.status !== status
+        toast({
+          title: statusReverted
+            ? "Artifact removed — milestone reverted to In Progress"
+            : "Artifact removed"
+        })
       } else {
         toast({
           title: (res as { message?: string })?.message ?? "Failed to remove",

@@ -1185,9 +1185,18 @@ function MilestoneView({
               status={m.status as MilestoneStatus}
               isStudent={!canManage}
               onClose={() => setArtifactDialogId(null)}
-              onArtifactsChanged={(updated) =>
-                updateDialogMilestone(artifactDialogId, { artifacts: updated })
-              }
+              onArtifactsChanged={(updated) => {
+                const patch: Partial<SelectFypMilestone> = {
+                  artifacts: updated
+                }
+                if (
+                  updated.length === 0 &&
+                  m.status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
+                ) {
+                  patch.status = MilestoneStatus.IN_PROGRESS
+                }
+                updateDialogMilestone(artifactDialogId, patch)
+              }}
               onMarkDone={() =>
                 updateDialogMilestone(artifactDialogId, {
                   status: MilestoneStatus.COMPLETED_PENDING_VERIFICATION
