@@ -570,9 +570,9 @@ function MilestoneSetup({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">Set Up Project Milestones</h2>
+        <h2 className="text-lg font-semibold">No milestones yet</h2>
         <p className="text-sm text-muted-foreground">
-          Choose how you want to set up milestones for this project.
+          Set up a template or create custom milestones to get started.
         </p>
       </div>
 
@@ -1346,13 +1346,19 @@ function FYPMilestones() {
 
   if (view === "setup" && !canManage) {
     return (
-      <div className="flex flex-col items-center gap-2 py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No milestones have been set up for this project yet.
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          An Advisor or University Admin will configure them soon.
-        </p>
+      <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+          <LayoutList className="h-6 w-6 text-muted-foreground/60" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            No milestones yet
+          </p>
+          <p className="text-xs text-muted-foreground max-w-[260px] leading-relaxed">
+            Your Advisor or University Admin will set up your project
+            milestones. Check back here once they&apos;re configured.
+          </p>
+        </div>
       </div>
     )
   }
