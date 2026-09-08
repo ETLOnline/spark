@@ -17,10 +17,8 @@ export async function notifyAdvisorsOfNewAdvisorRequest(
   const fypTitle = request.fyp_title
   const domainName = request.domain?.name ?? ""
   const spaceName = request.space?.space_name
-  const channelSlug = request.space?.channel?.channel_slug
-  const spaceSlug = request.space?.space_slug
 
-  const deepLink = `/channels/${channelSlug}/spaces/${spaceSlug}`
+  const deepLink = "/profile/advisor-requests"
 
   await SendSystemNotification({
     user_id: requesterId,
@@ -28,7 +26,8 @@ export async function notifyAdvisorsOfNewAdvisorRequest(
     template: {
       title: `New advisor request in ${domainName}`,
       body: `${requesterName} from ${spaceName} requested an advisor for "${fypTitle}" in ${domainName}.`,
-      deep_link: deepLink
+      deep_link: deepLink,
+      icon: request.requester?.profile_url || ""
     }
   })
 
