@@ -91,6 +91,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("session_slot_suggested.html")
   },
   {
+    name: NotificationEvent.SESSION_SLOT_TIME_CHANGED,
+    subject: "{{mentorName}} changed the time for your requested slot",
+    body: loadTemplate("session_slot_time_changed.html")
+  },
+  {
     name: NotificationEvent.NEW_SESSION_REQUEST,
     subject: "New Session Request from {{menteeName}}",
     body: loadTemplate("new_session_request.html")

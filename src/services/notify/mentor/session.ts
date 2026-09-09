@@ -72,3 +72,35 @@ export async function notifySessionSlotSuggested(
     withData: true
   })
 }
+
+export async function notifySessionSlotTimeChanged(
+  event: string,
+  request: SelectSessionRequest,
+  newTime: { newDateLabel: string; newStartLabel: string; newEndLabel: string }
+) {
+  if (!request.mentee) return
+
+  const siteLogo = getSiteLogoUrl()
+  const sessionLink = createAbsoluteUrl(
+    `/profile/${request.mentor_id}/availability`
+  )
+  const mentorName = request.mentor
+    ? `${request.mentor.first_name} ${request.mentor.last_name}`
+    : "Your mentor"
+
+  const payload = {
+    logoUrl: siteLogo,
+    menteeName: `${request.mentee.first_name} ${request.mentee.last_name}`,
+    mentorName,
+    topic: request.topic,
+    ...newTime,
+    sessionLink
+  }
+
+  await AddToQueue({
+    sendingTo: [request.mentee.email],
+    event,
+    payload,
+    withData: true
+  })
+}

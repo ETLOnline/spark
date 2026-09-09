@@ -18,6 +18,16 @@ import {
   SheetHeader,
   SheetTitle
 } from "../../ui/sheet"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../../ui/alert-dialog"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSessionRequestAction,
@@ -26,6 +36,7 @@ import {
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
   GetPendingSessionRequestsForMentorAction,
+  NotifySlotTimeChangedAction,
   ResubmitSessionRequestAction,
   UpdateAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
@@ -51,6 +62,7 @@ import {
   minsToTime,
   nextOccurrence,
   pendingOnlyRequestsFor,
+  pendingRequestsOverlappingSlot,
   RepeatType,
   SessionType
 } from "./mentor-calendar/mentorCalendarUtils"
@@ -135,8 +147,18 @@ export function MentorCalendar({
   const [suggestTarget, setSuggestTarget] =
     useState<RequestWithOptionalMentee | null>(null)
 
+  // Edit-time-change gating — editing a slot's time with pending requests on
+  // it needs mentor confirmation before saving, since those mentees will be
+  // notified their requested time moved.
+  const [timeChangeGate, setTimeChangeGate] = useState<
+    RequestWithOptionalMentee[] | null
+  >(null)
+
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
+  const [, , , notifySlotTimeChanged] = useServerAction(
+    NotifySlotTimeChangedAction
+  )
   const [, , , getAuthUser] = useServerAction(AuthUserAction)
   const [, , , getViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
   const [, , , getMyRequests] = useServerAction(
@@ -321,7 +343,7 @@ export function MentorCalendar({
     switchOverlay(() => setIsListOpen(true))
   }
 
-  const handleAddSlot = async () => {
+  const handleAddSlot = async (skipTimeChangeGate = false) => {
     const anchorStart = moment(`${newDate} ${newStart}`, "YYYY-MM-DD HH:mm")
     if (anchorStart.isBefore(moment())) {
       setSlotError("Cannot add availability in the past")
@@ -401,6 +423,27 @@ export function MentorCalendar({
       }
     }
 
+    // Editing a slot with pending requests on it moves the time for whoever
+    // requested it — confirm with the mentor before saving, once, then
+    // proceed straight through on the retry (skipTimeChangeGate).
+    const originalSlot = editingSlotId
+      ? slots.find((s) => s.id === editingSlotId)
+      : undefined
+    const affectedPendingRequests = originalSlot
+      ? editingScope === "occurrence" && editingOccurrenceDate
+        ? pendingOnlyRequestsFor(
+            originalSlot,
+            moment(editingOccurrenceDate, "YYYY-MM-DD").toDate(),
+            mentorPendingRequests
+          )
+        : pendingRequestsOverlappingSlot(originalSlot, mentorPendingRequests)
+      : []
+
+    if (!skipTimeChangeGate && affectedPendingRequests.length > 0) {
+      setTimeChangeGate(affectedPendingRequests)
+      return
+    }
+
     setSaving(true)
     const repeatEnd =
       newRepeat !== "none" ? newRepeatEnd || endOfMonth(newDate) : null
@@ -430,7 +473,6 @@ export function MentorCalendar({
 
     // Editing a single occurrence: keep the rest of the original series by
     // splicing it around the date being edited (same split used on delete).
-    const originalSlot = slots.find((s) => s.id === editingSlotId)
     const seriesRemnants =
       editingScope === "occurrence" && originalSlot && editingOccurrenceDate
         ? splitSeriesExcludingDate(
@@ -451,6 +493,14 @@ export function MentorCalendar({
         title: editingSlotId ? "Slot updated" : "Slot added",
         duration: 2000
       })
+      if (affectedPendingRequests.length > 0) {
+        await notifySlotTimeChanged({
+          requestIds: affectedPendingRequests.map((r) => r.id),
+          newDate,
+          newStart,
+          newEnd
+        })
+      }
     } else {
       toast({
         title: editingSlotId ? "Failed to update slot" : "Failed to add slot",
@@ -460,6 +510,13 @@ export function MentorCalendar({
     }
     setSaving(false)
   }
+
+  const confirmTimeChangeAndSave = () => {
+    setTimeChangeGate(null)
+    handleAddSlot(true)
+  }
+
+  const cancelTimeChange = () => setTimeChangeGate(null)
 
   const openRequestForm = (slot: SelectMentorAvailability) => {
     setRequestTopic("")
@@ -935,7 +992,7 @@ export function MentorCalendar({
               Cancel
             </Button>
             <Button
-              onClick={handleAddSlot}
+              onClick={() => handleAddSlot()}
               loading={saving}
               className="h-9 px-5 text-sm rounded-lg"
             >
@@ -944,6 +1001,33 @@ export function MentorCalendar({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Pending-request confirmation for edits ── */}
+      <AlertDialog
+        open={!!timeChangeGate}
+        onOpenChange={(open) => !open && cancelTimeChange()}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change this time slot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {timeChangeGate?.length === 1
+                ? "1 student has a pending request"
+                : `${timeChangeGate?.length ?? 0} students have pending requests`}{" "}
+              on this slot. Changing the time will keep their request but
+              notify them the time has changed. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelTimeChange}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmTimeChangeAndSave}>
+              Change Time
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Request-a-session dialog (viewer only) ── */}
       <Dialog

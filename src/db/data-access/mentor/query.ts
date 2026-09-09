@@ -32,7 +32,6 @@ import {
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
 import { getRoleIdsWithPermission } from "../permissions/query"
-import { SearchUserProfile, updateUserProfile } from "../profile/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -53,17 +52,31 @@ export async function GetMentorAvailability(mentorId: string) {
 /** Recomputes is_mentor_active from the mentor's current profile fields and
  * slot count. A mentor can fill in professional_title/company or set their
  * availability in any order — call this after any write to either so the
- * flag never gets stuck out of sync with whichever field was saved last. */
+ * flag never gets stuck out of sync with whichever field was saved last.
+ *
+ * This is a single atomic UPDATE with the condition evaluated by Postgres
+ * itself, not a read-in-JS-then-write-back. Two of these can run
+ * concurrently (e.g. a profile save and an availability save landing close
+ * together) without one clobbering the other with a stale computed value —
+ * each statement recomputes fresh from whatever is actually in the database
+ * at the moment it executes. A prior read-then-write version of this
+ * function could lose an update: whichever call read the profile before the
+ * other's write committed would compute `false` and could overwrite a
+ * correct `true` written moments earlier. */
 export async function RecalculateMentorActiveStatus(mentorId: string) {
-  const profile = await SearchUserProfile(mentorId)
-  const hasTitle = !!profile?.professional_title?.trim()
-  const hasCompany = !!profile?.company?.trim()
-  const slots = await GetMentorAvailability(mentorId)
-  const hasSlots = slots.length > 0
-
-  await updateUserProfile(mentorId, {
-    is_mentor_active: hasTitle && hasCompany && hasSlots
-  })
+  await db
+    .update(profileTable)
+    .set({
+      is_mentor_active: sql`
+        (${profileTable.professional_title} is not null and trim(${profileTable.professional_title}) <> '')
+        and (${profileTable.company} is not null and trim(${profileTable.company}) <> '')
+        and exists (
+          select 1 from ${mentorAvailabilityTable}
+          where ${mentorAvailabilityTable.mentor_id} = ${profileTable.user_id}
+        )
+      `
+    })
+    .where(eq(profileTable.user_id, mentorId))
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
@@ -475,6 +488,14 @@ export async function GetSessionRequestsForMentorByStatus(
 export async function GetSessionRequestById(requestId: number) {
   return await db.query.sessionRequestsTable.findFirst({
     where: eq(sessionRequestsTable.id, requestId)
+  })
+}
+
+export async function GetSessionRequestsByIds(requestIds: number[]) {
+  if (requestIds.length === 0) return []
+  return await db.query.sessionRequestsTable.findMany({
+    where: inArray(sessionRequestsTable.id, requestIds),
+    with: { mentee: true, mentor: true }
   })
 }
 

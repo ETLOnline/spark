@@ -22,6 +22,7 @@ import {
   GetMentors,
   GetPendingSessionRequestsForMentor,
   GetSessionRequestById,
+  GetSessionRequestsByIds,
   GetSessionRequestsForMenteeAndMentor,
   GetSessionRequestsForMentorByStatus,
   GetSharedSpacesForSessions,
@@ -42,9 +43,15 @@ import type {
   FeedbackItem
 } from "@/src/components/Dashboard/profile/engagements/types"
 import type { SpaceBasic } from "@/src/db/data-access/mentor/query"
-import { notifySessionSlotSuggested } from "@/src/services/notify/mentor/session"
+import {
+  notifySessionSlotSuggested,
+  notifySessionSlotTimeChanged
+} from "@/src/services/notify/mentor/session"
 import { NotificationEvent } from "@/src/services/notify/types/events"
-import { SendMentorSlotSuggestionNotification } from "@/src/services/notifications/Mentor/utils"
+import {
+  SendMentorSlotSuggestionNotification,
+  SendSlotTimeChangedNotification
+} from "@/src/services/notifications/Mentor/utils"
 import { updateUserProfile } from "@/src/db/data-access/profile/query"
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
@@ -219,6 +226,52 @@ export const UpdateAvailabilityAction = CreateServerAction(
     } catch (error) {
       console.error("UpdateAvailabilityAction error:", error)
       return { error: "Failed to update availability" }
+    }
+  }
+)
+
+/** Tells mentees with a pending request on an edited slot that its time
+ * changed. Called by the client after a slot edit succeeds, only when the
+ * mentor confirmed they want to proceed despite pending requests. */
+export const NotifySlotTimeChangedAction = CreateServerAction(
+  true,
+  async (payload: {
+    requestIds: number[]
+    newDate: string
+    newStart: string
+    newEnd: string
+  }) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+      if (!payload.requestIds.length) return { success: true }
+
+      const requests = await GetSessionRequestsByIds(payload.requestIds)
+      const newTime = {
+        newDateLabel: moment(payload.newDate, "YYYY-MM-DD").format(
+          "ddd, MMM D, YYYY"
+        ),
+        newStartLabel: moment(payload.newStart, "HH:mm").format("h:mm A"),
+        newEndLabel: moment(payload.newEnd, "HH:mm").format("h:mm A")
+      }
+
+      await Promise.all(
+        requests
+          .filter((request) => request.mentor_id === authUser.unique_id)
+          .map(async (request) => {
+            await notifySessionSlotTimeChanged(
+              NotificationEvent.SESSION_SLOT_TIME_CHANGED,
+              request,
+              newTime
+            )
+            await SendSlotTimeChangedNotification(request, newTime)
+          })
+      )
+
+      return { success: true }
+    } catch (error) {
+      console.error("NotifySlotTimeChangedAction error:", error)
+      return { error: "Failed to notify affected students" }
     }
   }
 )
