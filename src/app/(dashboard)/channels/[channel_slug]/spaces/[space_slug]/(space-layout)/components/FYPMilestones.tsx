@@ -73,6 +73,7 @@ import {
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1014,8 +1015,8 @@ function MilestoneView({
                         canManage)
 
                     return (
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-1 justify-end">
+                      <td className="py-3 px-2 align-middle relative">
+                        <div className="flex items-center justify-center">
                           {canManageArtifact && (
                             <Button
                               variant="outline"
@@ -1034,6 +1035,8 @@ function MilestoneView({
                               View Artifacts
                             </Button>
                           )}
+                        </div>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -1092,7 +1095,7 @@ function MilestoneView({
                                         }
                                       }}
                                     >
-                                      <Clock className="h-3.5 w-3.5 mr-2" />
+                                      <Clock className="h-3.5 w-3.5 mr-2 text-amber-600" />
                                       Complete (Pending Verification)
                                     </DropdownMenuItem>
                                   </>
@@ -1346,20 +1349,11 @@ function FYPMilestones() {
 
   if (view === "setup" && !canManage) {
     return (
-      <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-          <LayoutList className="h-6 w-6 text-muted-foreground/60" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">
-            No milestones yet
-          </p>
-          <p className="text-xs text-muted-foreground max-w-[260px] leading-relaxed">
-            Your Advisor or University Admin will set up your project
-            milestones. Check back here once they&apos;re configured.
-          </p>
-        </div>
-      </div>
+      <NoDataCard
+        icon={<LayoutList className="h-16 w-16 text-muted-foreground mb-4" />}
+        title="No milestones yet"
+        description="Your Advisor or University Admin will set up your project milestones. Check back here once they're configured."
+      />
     )
   }
 
