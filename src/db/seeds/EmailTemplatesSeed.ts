@@ -126,6 +126,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("advisor_request_response.html")
   },
   {
+    name: NotificationEvent.ADVISOR_REQUEST_EXPIRED,
+    subject: "Your advisor request has expired",
+    body: loadTemplate("advisor_request_response.html")
+  },
+  {
     name: NotificationEvent.NEW_ADVISOR_REQUEST,
     subject: "New Advisor Request in {{domainName}}",
     body: loadTemplate("new_advisor_request.html")
