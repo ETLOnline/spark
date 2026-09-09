@@ -1016,7 +1016,7 @@ function MilestoneView({
 
                     return (
                       <td className="py-3 px-2 align-middle relative">
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center ">
                           {canManageArtifact && (
                             <Button
                               variant="outline"
