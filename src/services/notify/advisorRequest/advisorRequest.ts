@@ -11,15 +11,42 @@ interface AdvisorRequestEmailContext {
   channel_slug?: string | null
 }
 
+const RESPONSE_COPY = {
+  accepted: {
+    event: NotificationEvent.ADVISOR_REQUEST_ACCEPTED,
+    statusLabel: "Accepted",
+    headerBgColor: "#51ecdc",
+    actionVerb: "been accepted",
+    ctaText: "View Request",
+    footerText: "Log in to see your advisor's details."
+  },
+  rejected: {
+    event: NotificationEvent.ADVISOR_REQUEST_REJECTED,
+    statusLabel: "Update",
+    headerBgColor: "#f1f5f9",
+    actionVerb: "not been accepted by any advisor",
+    ctaText: "Resubmit Request",
+    footerText: "You can update your details and resubmit anytime."
+  },
+  expired: {
+    event: NotificationEvent.ADVISOR_REQUEST_EXPIRED,
+    statusLabel: "Expired",
+    headerBgColor: "#f1f5f9",
+    actionVerb: "expired — the 14-day window to find an advisor has passed",
+    ctaText: "Resubmit Request",
+    footerText: "You can update your details and resubmit anytime."
+  }
+} as const
+
 export async function createAdvisorRequestResponseEmailNotification(
   request: AdvisorRequestEmailContext,
-  status: "accepted" | "rejected",
+  status: "accepted" | "rejected" | "expired",
   advisorName?: string
 ) {
   const studentRes = await FindUserByUniqueIdAction(request.requested_by)
   if (!studentRes.data?.email) return
 
-  const accepted = status === "accepted"
+  const copy = RESPONSE_COPY[status]
   const ctaLink = createAbsoluteUrl(
     `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
   )
@@ -28,23 +55,19 @@ export async function createAdvisorRequestResponseEmailNotification(
     logoUrl: getSiteLogoUrl(),
     studentName:
       `${studentRes.data.first_name ?? ""} ${studentRes.data.last_name ?? ""}`.trim(),
-    advisorName: accepted ? advisorName : undefined,
+    advisorName: status === "accepted" ? advisorName : undefined,
     fypTitle: request.fyp_title,
     ctaLink,
-    statusLabel: accepted ? "Accepted" : "Update",
-    headerBgColor: accepted ? "#51ecdc" : "#f1f5f9",
-    actionVerb: accepted ? "been accepted" : "not been accepted by any advisor",
-    ctaText: accepted ? "View Request" : "Resubmit Request",
-    footerText: accepted
-      ? "Log in to see your advisor's details."
-      : "You can update your details and resubmit anytime."
+    statusLabel: copy.statusLabel,
+    headerBgColor: copy.headerBgColor,
+    actionVerb: copy.actionVerb,
+    ctaText: copy.ctaText,
+    footerText: copy.footerText
   }
 
   await AddToQueue({
     sendingTo: [studentRes.data.email],
-    event: accepted
-      ? NotificationEvent.ADVISOR_REQUEST_ACCEPTED
-      : NotificationEvent.ADVISOR_REQUEST_REJECTED,
+    event: copy.event,
     payload,
     withData: true
   })

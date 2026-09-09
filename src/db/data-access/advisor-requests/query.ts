@@ -194,21 +194,30 @@ export const AddAdvisorsInRequest = async (
 
 export const ExpireOverdueAdvisorRequests = async () => {
   try {
-    const res = await db
+    const overdue = await db.query.advisorRequestsTable.findMany({
+      where: and(
+        inArray(advisorRequestsTable.status, [
+          AdvisorRequestStatus.PENDING,
+          AdvisorRequestStatus.AWAITING_APPROVAL
+        ]),
+        sql`${advisorRequestsTable.expiry_date}::timestamptz < now()`
+      ),
+      with: { space: { with: { channel: true } } }
+    })
+
+    if (overdue.length === 0) return []
+
+    await db
       .update(advisorRequestsTable)
       .set({ status: AdvisorRequestStatus.EXPIRED })
       .where(
-        and(
-          inArray(advisorRequestsTable.status, [
-            AdvisorRequestStatus.PENDING,
-            AdvisorRequestStatus.AWAITING_APPROVAL
-          ]),
-          sql`${advisorRequestsTable.expiry_date}::timestamptz < now()`
+        inArray(
+          advisorRequestsTable.id,
+          overdue.map((r) => r.id)
         )
       )
-      .returning({ id: advisorRequestsTable.id })
 
-    return res
+    return overdue
   } catch (e: any) {
     throw new Error(e.message)
   }
