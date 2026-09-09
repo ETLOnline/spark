@@ -1,7 +1,7 @@
 "use client"
 
 import { ClipboardEdit, Flag, GraduationCap } from "lucide-react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname, useRouter } from "next/navigation"
 import {
   Tabs,
   TabsContent,
@@ -20,10 +20,19 @@ type FypTab = (typeof VALID_TABS)[number]
 
 function SpaceFYP() {
   const params = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+
   const tabParam = params.get("fyp-tab")
   const defaultTab: FypTab = VALID_TABS.includes(tabParam as FypTab)
     ? (tabParam as FypTab)
     : "request-status"
+
+  const handleTabChange = (tab: string) => {
+    const next = new URLSearchParams(params.toString())
+    next.set("fyp-tab", tab)
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false })
+  }
 
   return (
     <div className="w-full">
@@ -32,7 +41,7 @@ function SpaceFYP() {
         <h1 className="text-lg sm:text-xl font-semibold truncate">FYP</h1>
       </div>
 
-      <Tabs defaultValue={defaultTab}>
+      <Tabs defaultValue={defaultTab} onValueChange={handleTabChange}>
         <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent px-4 py-0 sm:px-6">
           <TabsTrigger value="request-status" className={TAB_TRIGGER_CLASS}>
             <GraduationCap className="h-4 w-4" />
