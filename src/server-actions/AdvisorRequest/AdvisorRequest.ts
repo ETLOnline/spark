@@ -12,10 +12,10 @@ import {
   GetEligibleAdvisorsForDomain,
   GetLatestAdvisorRequestForSpace,
   GetRecentPendingAdvisorRequests,
-  getStudentRequestStatus,
   RejectAdvisorRequest,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
+import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 import { permissions } from "@/src/utils/constants"
 import {
   base64ToBuffer,
