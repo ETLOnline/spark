@@ -49,8 +49,10 @@ export interface ArtifactManageDialogProps {
   milestoneId: string
   artifacts: MilestoneArtifactEntry[]
   status: MilestoneStatus
-  /** true = student view (can add, limited delete, "Mark as Done" button) */
+  /** true = student view (can add/delete artifacts, "Mark as Done" button) */
   isStudent: boolean
+  /** true = user has permission to verify the milestone (advisor/admin only) */
+  canVerify: boolean
   onClose: () => void
   onArtifactsChanged: (updated: MilestoneArtifactEntry[]) => void
   onMarkDone: () => void
@@ -252,6 +254,7 @@ export function ArtifactManageDialog({
   artifacts,
   status,
   isStudent,
+  canVerify,
   onClose,
   onArtifactsChanged,
   onMarkDone,
@@ -272,7 +275,9 @@ export function ArtifactManageDialog({
     status !== MilestoneStatus.VERIFIED &&
     status !== MilestoneStatus.INCOMPLETE
 
-  const canDelete = status !== MilestoneStatus.VERIFIED
+  // Students and advisors/admins can delete; faculty (neither isStudent nor canVerify) cannot
+  const canDelete =
+    (isStudent || canVerify) && status !== MilestoneStatus.VERIFIED
 
   const handleClose = () => {
     onClose()
@@ -472,8 +477,8 @@ export function ArtifactManageDialog({
               </Button>
             )}
 
-            {/* Advisor / Admin: Verify */}
-            {!isStudent &&
+            {/* Advisor / Admin: Verify (faculty cannot verify) */}
+            {canVerify &&
               status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
                 <Button
                   onClick={handleMarkCompleted}

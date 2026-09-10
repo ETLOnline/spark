@@ -78,6 +78,7 @@ import {
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -743,6 +744,8 @@ function MilestoneSetup({
 
 function MilestoneView({
   milestones: initial,
+  spaceId: _spaceId,
+  isStudent,
   canManage,
   canCreateMilestone,
   canUpdateMilestone,
@@ -752,6 +755,9 @@ function MilestoneView({
   onSetupAgain
 }: {
   milestones: SelectFypMilestone[]
+  spaceId: string
+  /** true = current user is a student (can add/delete artifacts) */
+  isStudent: boolean
   canManage: boolean
   canCreateMilestone: boolean
   canUpdateMilestone: boolean
@@ -766,6 +772,51 @@ function MilestoneView({
   const [editName, setEditName] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [artifactDialogId, setArtifactDialogId] = useState<string | null>(null)
+
+  // Real-time: subscribe to a private per-milestone channel for each milestone.
+  // Follows the same pattern as private-chat-${chatId} used in ChatScreen.
+  useEffect(() => {
+    if (!initial.length) return
+
+    const subscriptions = initial.map((m) => {
+      const channelName = `milestone-${m.id}`
+      const channel = pusherClient.subscribe(channelName)
+
+      channel.bind(
+        "status-update",
+        (data: { id: string; status: MilestoneStatus }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, status: data.status } : ms
+            )
+          )
+        }
+      )
+
+      channel.bind(
+        "artifacts-update",
+        (data: { id: string; artifacts: MilestoneArtifactEntry[] }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, artifacts: data.artifacts } : ms
+            )
+          )
+        }
+      )
+
+      return channelName
+    })
+
+    return () => {
+      subscriptions.forEach((channelName) => {
+        const ch = pusherClient.channel(channelName)
+        if (ch) {
+          ch.unbind_all()
+          pusherClient.unsubscribe(channelName)
+        }
+      })
+    }
+  }, [])
 
   const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
   const [, , , deleteMilestone] = useServerAction(DeleteMilestoneAction)
@@ -984,15 +1035,16 @@ function MilestoneView({
                   {/* Actions */}
                   {(() => {
                     const arts = (m.artifacts as MilestoneArtifactEntry[]) ?? []
+                    // Student: can manage (add/delete) their artifacts
                     const canManageArtifact =
-                      !canManage &&
+                      isStudent &&
                       (m.status === MilestoneStatus.IN_PROGRESS ||
                         m.status ===
                           MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
+                    // Advisor/admin/faculty: view always; student: view only once verified
                     const canViewArtifact =
                       arts.length > 0 &&
-                      ((!canManage && m.status === MilestoneStatus.VERIFIED) ||
-                        canManage)
+                      (!isStudent || m.status === MilestoneStatus.VERIFIED)
 
                     return (
                       <td className="py-3 px-2">
@@ -1183,7 +1235,8 @@ function MilestoneView({
               milestoneId={artifactDialogId}
               artifacts={(m.artifacts as MilestoneArtifactEntry[]) ?? []}
               status={m.status as MilestoneStatus}
-              isStudent={!canManage}
+              isStudent={isStudent}
+              canVerify={canVerifyMilestone}
               onClose={() => setArtifactDialogId(null)}
               onArtifactsChanged={(updated) =>
                 updateDialogMilestone(artifactDialogId, { artifacts: updated })
@@ -1292,6 +1345,11 @@ function FYPMilestones() {
   const canVerifyMilestone = canFyp("fyp.milestone.verify")
   const canRevertMilestone = canFyp("fyp.milestone.revert")
 
+  // Only the student role has milestone.mark_done.
+  // Advisors also have milestone.artifact.add, so we use mark_done as the
+  // reliable student-only signal to distinguish "student" from "faculty/advisor/admin".
+  const isStudent = globalChecker?.canAccess("fyp.milestone.mark_done") ?? false
+
   const canManage =
     canCreateMilestone ||
     canUpdateMilestone ||
@@ -1357,6 +1415,8 @@ function FYPMilestones() {
   return (
     <MilestoneView
       milestones={milestones}
+      spaceId={spaceId!}
+      isStudent={isStudent}
       canManage={canManage}
       canCreateMilestone={canCreateMilestone}
       canUpdateMilestone={canUpdateMilestone}
