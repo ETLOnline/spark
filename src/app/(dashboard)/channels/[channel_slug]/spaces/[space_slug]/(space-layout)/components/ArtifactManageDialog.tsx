@@ -40,16 +40,6 @@ import {
 } from "@/src/types/Milestone/Milestone"
 import { MILESTONE_ARTIFACT_ACCEPT, MILESTONE_STATUS_TOAST } from "./constants"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function truncateFileName(name: string, max = 40): string {
-  if (name.length <= max) return name
-  const dotIdx = name.lastIndexOf(".")
-  const ext = dotIdx > 0 ? name.slice(dotIdx) : ""
-  const keep = max - ext.length - 3
-  return `${name.slice(0, keep)}...${ext}`
-}
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ArtifactTab = "file" | "link"
@@ -403,7 +393,7 @@ export function ArtifactManageDialog({
                             className="block truncate text-primary hover:underline"
                             title={a.file_name}
                           >
-                            {truncateFileName(a.file_name)}
+                            {a.file_name}
                           </Link>
                         </div>
                       </>
@@ -418,7 +408,7 @@ export function ArtifactManageDialog({
                             className="block truncate text-primary hover:underline"
                             title={a.url}
                           >
-                            {truncateFileName(a.url, 50)}
+                            {a.url}
                           </Link>
                         </div>
                       </>
