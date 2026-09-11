@@ -49,20 +49,6 @@ export async function GetMentorAvailability(mentorId: string) {
     .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
 }
 
-/** Recomputes is_mentor_active from the mentor's current profile fields and
- * slot count. A mentor can fill in professional_title/company or set their
- * availability in any order — call this after any write to either so the
- * flag never gets stuck out of sync with whichever field was saved last.
- *
- * This is a single atomic UPDATE with the condition evaluated by Postgres
- * itself, not a read-in-JS-then-write-back. Two of these can run
- * concurrently (e.g. a profile save and an availability save landing close
- * together) without one clobbering the other with a stale computed value —
- * each statement recomputes fresh from whatever is actually in the database
- * at the moment it executes. A prior read-then-write version of this
- * function could lose an update: whichever call read the profile before the
- * other's write committed would compute `false` and could overwrite a
- * correct `true` written moments earlier. */
 export async function RecalculateMentorActiveStatus(mentorId: string) {
   await db
     .update(profileTable)
