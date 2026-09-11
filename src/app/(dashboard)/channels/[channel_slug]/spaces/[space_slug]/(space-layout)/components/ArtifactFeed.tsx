@@ -14,14 +14,6 @@ import {
 import ImageLightbox from "@/src/components/common/LightBox"
 import { Button } from "@/src/components/ui/button"
 import { MilestoneArtifactEntry } from "@/src/types/Milestone/Milestone"
-import { MILESTONE_IMAGE_EXTENSIONS } from "./constants"
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-export function isImageFile(fileName: string): boolean {
-  const ext = fileName.split(".").pop()?.toLowerCase() ?? ""
-  return MILESTONE_IMAGE_EXTENSIONS.has(ext)
-}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -40,15 +32,16 @@ export function ArtifactFeed({
   deletingIdx = null,
   onDelete
 }: ArtifactFeedProps) {
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [lightboxFileId, setLightboxFileId] = useState<number | null>(null)
 
-  // Collect image-type artifacts in order for lightbox indexing
   const imageArtifacts = artifacts.filter(
     (a): a is Extract<MilestoneArtifactEntry, { type: "file" }> =>
-      a.type === "file" && isImageFile(a.file_name)
+      a.type === "file" && (a.mime_type?.startsWith("image/") ?? false)
   )
   const imageUrls = imageArtifacts.map((a) => a.file_path)
+  const lightboxIndex = imageArtifacts.findIndex(
+    (a) => a.file_id === lightboxFileId
+  )
 
   return (
     <>
@@ -61,7 +54,8 @@ export function ArtifactFeed({
         <div className="space-y-3">
           {artifacts.map((a, i) => {
             const isDeleting = deletingIdx === i
-            const isImg = a.type === "file" && isImageFile(a.file_name)
+            const isImg =
+              a.type === "file" && (a.mime_type?.startsWith("image/") ?? false)
 
             // ── Timeline dot ──
             const dotIcon =
@@ -113,13 +107,7 @@ export function ArtifactFeed({
                     <>
                       <div
                         className="group relative cursor-pointer aspect-video overflow-hidden"
-                        onClick={() => {
-                          const idx = imageArtifacts.findIndex(
-                            (ia) => ia.file_path === a.file_path
-                          )
-                          setLightboxIndex(idx)
-                          setLightboxOpen(true)
-                        }}
+                        onClick={() => setLightboxFileId(a.file_id)}
                       >
                         <Image
                           src={a.file_path}
@@ -211,10 +199,10 @@ export function ArtifactFeed({
 
       {/* Lightbox for images */}
       <ImageLightbox
-        open={lightboxOpen}
+        open={lightboxFileId !== null}
         images={imageUrls}
-        index={lightboxIndex}
-        onClose={() => setLightboxOpen(false)}
+        index={lightboxIndex >= 0 ? lightboxIndex : 0}
+        onClose={() => setLightboxFileId(null)}
         showDownload={true}
       />
     </>

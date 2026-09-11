@@ -327,7 +327,8 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
           type: "file",
           file_id: fileRecord.id,
           file_name: fileRecord.file_name,
-          file_path: fileRecord.file_path
+          file_path: fileRecord.file_path,
+          mime_type: fileRecord.file_type
         }
       } else {
         newEntry = { type: "link", url: artifact.link!.trim() }
