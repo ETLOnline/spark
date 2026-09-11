@@ -33,6 +33,7 @@ import type { SelectFile, SelectTag, SelectUser } from "@/src/db/schema"
 import { notifyAdvisorsOfNewAdvisorRequest } from "@/src/services/notify/advisor-request/advisor-request"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
+  ADVISOR_REJECTION_REASON_MAX_LENGTH,
   ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
@@ -284,6 +285,13 @@ export const RejectAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string, reason: string) => {
     try {
+      if (reason.length > ADVISOR_REJECTION_REASON_MAX_LENGTH) {
+        return {
+          success: false,
+          error: `Reason must be ${ADVISOR_REJECTION_REASON_MAX_LENGTH} characters or fewer.`
+        }
+      }
+
       const user = await AuthUserAction()
 
       const before = await GetAdvisorRequestById(requestId)

@@ -370,6 +370,9 @@ export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
 /** Max length for a session request's Description field. */
 export const SESSION_REQUEST_DESCRIPTION_MAX_LENGTH = 500
 
+/** Max length for an advisor's rejection reason on an FYP advisor request. */
+export const ADVISOR_REJECTION_REASON_MAX_LENGTH = 1000
+
 export const MONTH_NAMES = [
   "January",
   "February",
