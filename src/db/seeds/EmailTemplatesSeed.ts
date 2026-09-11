@@ -92,7 +92,7 @@ const templatesToSeed: NewEmailTemplate[] = [
   },
   {
     name: NotificationEvent.SESSION_SLOT_TIME_CHANGED,
-    subject: "Your pending request was removed — slot changed",
+    subject: "{{mentorName}} changed a slot you requested",
     body: loadTemplate("session_slot_time_changed.html")
   },
   {
