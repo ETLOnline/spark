@@ -24,9 +24,26 @@ import {
 import { notifyManagersMilestoneDone } from "@/src/services/notify/milestone/milestone"
 import {
   MILESTONE_ARTIFACT_MAX_SIZE,
-  MILESTONE_ARTIFACT_MIME_TYPES
+  MILESTONE_ARTIFACT_MIME_TYPES,
+  MILESTONE_STATUS_FLOW,
+  MILESTONE_ALLOWED_REVERSIONS
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 import pusherServer from "@/src/services/realtime/pusherServer"
+
+// ─── Get single milestone ─────────────────────────────────────────────────────
+
+export const GetMilestoneByIdAction = CreateServerAction(
+  true,
+  async (milestoneId: string) => {
+    try {
+      const milestone = await GetMilestoneById(milestoneId)
+      if (!milestone) return { success: false, message: "Milestone not found" }
+      return { success: true, data: milestone }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
 
 // ─── Get milestones ───────────────────────────────────────────────────────────
 
@@ -167,14 +184,8 @@ export const UpdateMilestoneAction = CreateServerAction(
 
         // Enforce strict forward order:
         // incomplete → in_progress → completed_pending_verification → verified
-        const FLOW: MilestoneStatus[] = [
-          MilestoneStatus.INCOMPLETE,
-          MilestoneStatus.IN_PROGRESS,
-          MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
-          MilestoneStatus.VERIFIED
-        ]
-        const currentIdx = FLOW.indexOf(currentStatus)
-        const newIdx = FLOW.indexOf(newStatus)
+        const currentIdx = MILESTONE_STATUS_FLOW.indexOf(currentStatus)
+        const newIdx = MILESTONE_STATUS_FLOW.indexOf(newStatus)
         if (newIdx !== currentIdx + 1) {
           return { success: false, message: "Invalid status transition." }
         }
@@ -205,7 +216,7 @@ export const UpdateMilestoneAction = CreateServerAction(
             try {
               const deepLink =
                 ctx.channelSlug && ctx.spaceSlug
-                  ? `/channels/${ctx.channelSlug}/spaces/${ctx.spaceSlug}?page-type=fyp`
+                  ? `/channels/${ctx.channelSlug}/spaces/${ctx.spaceSlug}?page-type=fyp&fyp-tab=milestones`
                   : "/"
 
               const spaceUsers = await getSpaceUsers(ctx.milestone.space_id)
@@ -372,8 +383,18 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
       const current: MilestoneArtifactEntry[] =
         (milestone.artifacts as MilestoneArtifactEntry[]) ?? []
 
+      const newArtifacts = current.filter((_, i) => i !== index)
+
+      // If the student removed the last artifact while pending verification,
+      // revert the milestone back to IN_PROGRESS so Advisors don't see an
+      // empty evidence state awaiting review.
+      const shouldRevert =
+        newArtifacts.length === 0 &&
+        status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
+
       const updated = await UpdateMilestone(milestoneId, {
-        artifacts: current.filter((_, i) => i !== index)
+        artifacts: newArtifacts,
+        ...(shouldRevert ? { status: MilestoneStatus.IN_PROGRESS } : {})
       })
 
       await pusherServer.trigger(
@@ -394,12 +415,6 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
 //   completed_pending_verification → in_progress
 //   verified                       → completed_pending_verification
 
-const ALLOWED_REVERSIONS: Partial<Record<MilestoneStatus, MilestoneStatus>> = {
-  [MilestoneStatus.VERIFIED]: MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
-  [MilestoneStatus.COMPLETED_PENDING_VERIFICATION]: MilestoneStatus.IN_PROGRESS,
-  [MilestoneStatus.IN_PROGRESS]: MilestoneStatus.INCOMPLETE
-}
-
 export const RevertMilestoneAction = CreateServerAction(
   true,
   async (milestoneId: string) => {
@@ -411,7 +426,7 @@ export const RevertMilestoneAction = CreateServerAction(
       if (!ctx) return { success: false, message: "Milestone not found" }
 
       const currentStatus = ctx.milestone.status as MilestoneStatus
-      const targetStatus = ALLOWED_REVERSIONS[currentStatus]
+      const targetStatus = MILESTONE_ALLOWED_REVERSIONS[currentStatus]
       if (!targetStatus) {
         return {
           success: false,

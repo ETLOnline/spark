@@ -293,10 +293,7 @@ export function MentorCalendar({
 
   /** Edits only the single occurrence on `date`, splitting it out of the
    * recurring series so the rest of the series is unaffected. */
-  const openEditOccurrence = (
-    slot: SelectMentorAvailability,
-    date: Date
-  ) => {
+  const openEditOccurrence = (slot: SelectMentorAvailability, date: Date) => {
     const occStr = moment(date).format("YYYY-MM-DD")
     setNewDate(occStr)
     setNewStart(slot.start_time)

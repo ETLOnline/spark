@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { useAtomValue } from "jotai"
 import {
   DndContext,
@@ -45,12 +46,15 @@ import {
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/src/components/ui/dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
 import { userStore } from "@/src/store/user/userStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
@@ -70,11 +74,11 @@ import {
 } from "@/src/types/Milestone/Milestone"
 import { useToast } from "@/src/hooks/use-toast"
 import moment from "moment"
-import { ArtifactManageDialog } from "./ArtifactManageDialog"
 import {
   TEMPLATE_MILESTONES,
   CUSTOM_MILESTONE_FEATURES,
-  MILESTONE_STATUS_TOAST
+  MILESTONE_STATUS_TOAST,
+  MILESTONE_DATE_FORMAT
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -281,12 +285,14 @@ function SortableRow({
   item,
   index,
   errorFields,
+  isDeleting,
   onChange,
   onDelete
 }: {
   item: LocalMilestone
   index: number
   errorFields: { start_date: boolean; end_date: boolean }
+  isDeleting?: boolean
   onChange: (id: string, field: keyof LocalMilestone, value: string) => void
   onDelete: (id: string) => void
 }) {
@@ -341,9 +347,14 @@ function SortableRow({
           variant="ghost"
           size="icon"
           className="h-7 w-7 text-muted-foreground/50 hover:text-destructive cursor-pointer"
+          disabled={isDeleting}
           onClick={() => onDelete(item.id)}
         >
-          <Trash2 className="h-4 w-4" />
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
         </Button>
       </td>
     </tr>
@@ -356,65 +367,97 @@ function MilestoneSetup({
   spaceId,
   initialMilestones,
   onCancel,
-  onComplete
+  onComplete,
+  onMilestoneDeleted
 }: {
   spaceId: string
   initialMilestones?: SelectFypMilestone[]
   onCancel?: () => void
   onComplete: (milestones: SelectFypMilestone[]) => void
+  onMilestoneDeleted?: (deletedId: string) => void
 }) {
   const { toast } = useToast()
 
-  const [mode, setMode] = useState<SetupMode>(
-    initialMilestones && initialMilestones.length > 0 ? "custom" : "template"
+  // ── Row caches: one per mode so switching back restores the previous state ──
+  // Computed once via useRef so both the cache and the active rows share the
+  // same UUIDs on mount (avoids a duplicate call that would generate new keys).
+  const _initCustom = useRef<LocalMilestone[]>(
+    initialMilestones && initialMilestones.length > 0
+      ? initialMilestones.map((m) => ({
+          id: crypto.randomUUID(),
+          dbId: m.id,
+          name: m.name,
+          start_date: m.start_date ?? "",
+          end_date: m.end_date ?? ""
+        }))
+      : [{ id: crypto.randomUUID(), name: "", start_date: "", end_date: "" }]
   )
-  const [rows, setRows] = useState<LocalMilestone[]>(() => {
-    if (initialMilestones && initialMilestones.length > 0) {
-      return initialMilestones.map((m) => ({
-        id: crypto.randomUUID(),
-        dbId: m.id,
-        name: m.name,
-        start_date: m.start_date ?? "",
-        end_date: m.end_date ?? ""
-      }))
-    }
-    return TEMPLATE_MILESTONES.map((name) => ({
+  const _initTemplate = useRef<LocalMilestone[]>(
+    TEMPLATE_MILESTONES.map((name) => ({
       id: crypto.randomUUID(),
       name,
       start_date: "",
       end_date: ""
     }))
-  })
+  )
+
+  const initialMode: SetupMode =
+    initialMilestones && initialMilestones.length > 0 ? "custom" : "template"
+
+  const [mode, setMode] = useState<SetupMode>(initialMode)
+  const [templateRowsCache, setTemplateRowsCache] = useState<LocalMilestone[]>(
+    _initTemplate.current
+  )
+  const [customRowsCache, setCustomRowsCache] = useState<LocalMilestone[]>(
+    _initCustom.current
+  )
+
+  // Active rows — starts in sync with the matching cache
+  const [rows, setRows] = useState<LocalMilestone[]>(
+    initialMode === "custom" ? _initCustom.current : _initTemplate.current
+  )
 
   const sensors = useSensors(useSensor(PointerSensor))
   const isReconfigure = !!initialMilestones && initialMilestones.length > 0
+
+  // ── Confirmation dialogs state ──
+  // Fired when switching from custom → built-in template while reconfiguring
+  const [confirmTemplateSwitch, setConfirmTemplateSwitch] = useState(false)
+  // Fired when deleting a row whose DB milestone is in_progress + has artifacts
+  const [confirmDelete, setConfirmDelete] = useState<{
+    rowId: string
+    name: string
+  } | null>(null)
+
   const [isSettingUp, , , setupMilestones] = useServerAction(
     SetupMilestonesAction
   )
   const [isReconfiguring, , , reconfigureMilestones] = useServerAction(
     ReconfigureMilestonesAction
   )
+  const [, , , deleteMilestoneRow] = useServerAction(DeleteMilestoneAction)
   const isSubmitting = isSettingUp || isReconfiguring
+  const [deletingRowId, setDeletingRowId] = useState<string | null>(null)
   const [dateErrors, setDateErrors] = useState<
     Record<string, { start_date: boolean; end_date: boolean }>
   >({})
 
-  const handleModeChange = (m: SetupMode) => {
-    setMode(m)
-    if (m === "template") {
-      setRows(
-        TEMPLATE_MILESTONES.map((name) => ({
-          id: crypto.randomUUID(),
-          name,
-          start_date: "",
-          end_date: ""
-        }))
-      )
+  // Saves current rows into the active mode's cache, then switches to the other mode
+  // and restores its cached rows — so switching back always preserves what was there.
+  const applyModeChange = (newMode: SetupMode) => {
+    if (newMode === mode) return
+    if (mode === "template") {
+      setTemplateRowsCache(rows)
+      setRows(customRowsCache)
     } else {
-      setRows([
-        { id: crypto.randomUUID(), name: "", start_date: "", end_date: "" }
-      ])
+      setCustomRowsCache(rows)
+      setRows(templateRowsCache)
     }
+    setMode(newMode)
+  }
+
+  const handleModeChange = (m: SetupMode) => {
+    applyModeChange(m)
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -444,8 +487,57 @@ function MilestoneSetup({
     }
   }
 
+  // Removes the row from the table and, if it has a DB record, deletes it immediately.
+  const doDeleteRow = async (id: string) => {
+    const row = rows.find((r) => r.id === id)
+
+    if (row?.dbId) {
+      // Existing DB milestone — delete immediately so Cancel still reflects the change
+      setDeletingRowId(id)
+      try {
+        const res = await deleteMilestoneRow(row.dbId)
+        if (res?.success) {
+          setRows((prev) => prev.filter((r) => r.id !== id))
+          // Also keep the caches in sync
+          setCustomRowsCache((prev) => prev.filter((r) => r.id !== id))
+          toast({ title: "Milestone deleted" })
+          onMilestoneDeleted?.(row.dbId)
+        } else {
+          toast({
+            title:
+              (res as { message?: string })?.message ??
+              "Failed to delete milestone",
+            variant: "destructive"
+          })
+        }
+      } catch {
+        toast({ title: "Failed to delete milestone", variant: "destructive" })
+      } finally {
+        setDeletingRowId(null)
+      }
+    } else {
+      // New row (not yet in DB) — just remove from the table
+      setRows((prev) => prev.filter((r) => r.id !== id))
+      toast({ title: "Milestone removed." })
+    }
+  }
+
   const handleDeleteRow = (id: string) => {
-    setRows((prev) => prev.filter((r) => r.id !== id))
+    if (isReconfigure) {
+      const row = rows.find((r) => r.id === id)
+      if (row?.dbId) {
+        const dbM = initialMilestones?.find((m) => m.id === row.dbId)
+        if (
+          dbM &&
+          dbM.status === MilestoneStatus.IN_PROGRESS &&
+          ((dbM.artifacts as MilestoneArtifactEntry[]) ?? []).length > 0
+        ) {
+          setConfirmDelete({ rowId: id, name: row.name || "this milestone" })
+          return
+        }
+      }
+    }
+    doDeleteRow(id)
   }
 
   const handleAdd = () => {
@@ -455,6 +547,59 @@ function MilestoneSetup({
     ])
   }
 
+  // Runs the actual API call — called either directly or after confirm
+  const doSubmit = async () => {
+    try {
+      if (isReconfigure) {
+        const inputs = rows.map((r, i) => ({
+          id: r.dbId,
+          name: r.name.trim(),
+          start_date: r.start_date,
+          end_date: r.end_date,
+          order_index: i
+        }))
+        const res = await reconfigureMilestones(spaceId, inputs)
+        if (res?.success && res.data) {
+          toast({ title: "Milestones updated successfully" })
+          onComplete(res.data as SelectFypMilestone[])
+        } else {
+          toast({
+            title: "Failed to update milestones",
+            description: (res as { message?: string })?.message,
+            variant: "destructive"
+          })
+        }
+      } else {
+        const inputs = rows.map((r, i) => ({
+          name: r.name.trim(),
+          start_date: r.start_date,
+          end_date: r.end_date,
+          order_index: i
+        }))
+        const res = await setupMilestones(spaceId, inputs)
+        if (res?.success && res.data) {
+          toast({ title: "Milestones set up successfully" })
+          onComplete(res.data as SelectFypMilestone[])
+        } else {
+          toast({
+            title: "Failed to set up milestones",
+            description: (res as { message?: string })?.message,
+            variant: "destructive"
+          })
+        }
+      }
+    } catch {
+      toast({
+        title: isReconfigure
+          ? "Failed to update milestones"
+          : "Failed to set up milestones",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Validates, then either shows the confirmation dialog (for destructive reconfigure)
+  // or submits directly
   const handleApply = async () => {
     if (rows.length === 0) {
       toast({ title: "Add at least one milestone", variant: "destructive" })
@@ -485,55 +630,13 @@ function MilestoneSetup({
     }
     setDateErrors({})
 
-    try {
-      if (isReconfigure) {
-        // Reconfigure: diff-based — preserves existing IDs and statuses
-        const inputs = rows.map((r, i) => ({
-          id: r.dbId,
-          name: r.name.trim(),
-          start_date: r.start_date,
-          end_date: r.end_date,
-          order_index: i
-        }))
-        const res = await reconfigureMilestones(spaceId, inputs)
-        if (res?.success && res.data) {
-          toast({ title: "Milestones updated successfully" })
-          onComplete(res.data as SelectFypMilestone[])
-        } else {
-          toast({
-            title: "Failed to update milestones",
-            description: (res as { message?: string })?.message,
-            variant: "destructive"
-          })
-        }
-      } else {
-        // First-time setup: bulk insert
-        const inputs = rows.map((r, i) => ({
-          name: r.name.trim(),
-          start_date: r.start_date,
-          end_date: r.end_date,
-          order_index: i
-        }))
-        const res = await setupMilestones(spaceId, inputs)
-        if (res?.success && res.data) {
-          toast({ title: "Milestones set up successfully" })
-          onComplete(res.data as SelectFypMilestone[])
-        } else {
-          toast({
-            title: "Failed to set up milestones",
-            description: (res as { message?: string })?.message,
-            variant: "destructive"
-          })
-        }
-      }
-    } catch {
-      toast({
-        title: isReconfigure
-          ? "Failed to update milestones"
-          : "Failed to set up milestones",
-        variant: "destructive"
-      })
+    // Show confirmation when applying built-in template over existing custom milestones
+    if (isReconfigure && mode === "template") {
+      setConfirmTemplateSwitch(true)
+      return
     }
+
+    await doSubmit()
   }
 
   const optionCardClass = (selected: boolean) =>
@@ -704,6 +807,7 @@ function MilestoneSetup({
                           end_date: false
                         }
                       }
+                      isDeleting={deletingRowId === row.id}
                       onChange={handleChange}
                       onDelete={handleDeleteRow}
                     />
@@ -736,6 +840,85 @@ function MilestoneSetup({
           {mode === "template" ? "Apply Template" : "Apply Custom"} →
         </Button>
       </div>
+
+      {/* ── Confirm: switching custom → built-in template ── */}
+      <AlertDialog
+        open={confirmTemplateSwitch}
+        onOpenChange={setConfirmTemplateSwitch}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch to built-in template?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                Switching to the built-in FYP template will replace your current
+                custom milestones. Any artifacts (files &amp; links) that
+                students have already submitted may be removed when you apply.
+              </span>
+              <span className="block text-destructive font-medium">
+                This action cannot be undone.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep custom milestones</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault()
+                setConfirmTemplateSwitch(false)
+                await doSubmit()
+              }}
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Yes, apply template
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Confirm: deleting an in-progress milestone that has artifacts ── */}
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(v) => {
+          if (!v) setConfirmDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Remove milestone with submitted work?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                <strong>{confirmDelete?.name}</strong> is currently{" "}
+                <strong>In Progress</strong> and has student-submitted
+                artifacts. Removing it from the configuration will delete those
+                artifacts when you apply.
+              </span>
+              <span className="block text-destructive font-medium">
+                This action cannot be undone.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>
+              Keep milestone
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDelete) doDeleteRow(confirmDelete.rowId)
+                setConfirmDelete(null)
+              }}
+            >
+              Yes, remove it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -750,7 +933,8 @@ function MilestoneView({
   canDeleteMilestone,
   canVerifyMilestone,
   canRevertMilestone,
-  onSetupAgain
+  onSetupAgain,
+  onMilestoneDeleted
 }: {
   milestones: SelectFypMilestone[]
   canManage: boolean
@@ -760,13 +944,22 @@ function MilestoneView({
   canVerifyMilestone: boolean
   canRevertMilestone: boolean
   onSetupAgain: () => void
+  onMilestoneDeleted?: (id: string) => void
 }) {
   const { toast } = useToast()
+  const router = useRouter()
+  const params = useParams()
+  const channelSlug = params.channel_slug as string
+  const spaceSlug = params.space_slug as string
+
   const [milestones, setMilestones] = useState(initial)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [artifactDialogId, setArtifactDialogId] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   // Real-time: subscribe to a private per-milestone channel for each milestone.
   // Follows the same pattern as private-chat-${chatId} used in ChatScreen.
@@ -859,24 +1052,25 @@ function MilestoneView({
     }
   }
 
-  // Merges a partial update into the milestone matching `id` in local state
-  const updateDialogMilestone = (
-    id: string,
-    patch: Partial<SelectFypMilestone>
-  ) =>
-    setMilestones((prev) =>
-      prev.map((milestone) =>
-        milestone.id === id ? { ...milestone, ...patch } : milestone
-      )
-    )
+  const handleDeleteClick = (m: SelectFypMilestone) => {
+    const arts = (m.artifacts as MilestoneArtifactEntry[]) ?? []
+    const needsConfirm =
+      m.status === MilestoneStatus.IN_PROGRESS || arts.length > 0
+    if (needsConfirm) {
+      setConfirmDelete({ id: m.id, name: m.name })
+    } else {
+      doDelete(m.id)
+    }
+  }
 
-  const handleDelete = async (id: string) => {
+  const doDelete = async (id: string) => {
     try {
       const res = await deleteMilestone(id)
       if (res?.success) {
         const remaining = milestones.filter((m) => m.id !== id)
         setMilestones(remaining)
         toast({ title: "Milestone deleted" })
+        onMilestoneDeleted?.(id)
         if (remaining.length === 0 && canManage) {
           onSetupAgain()
         }
@@ -912,7 +1106,7 @@ function MilestoneView({
   }
 
   const formatDate = (d: string | null | undefined) =>
-    d && moment(d).isValid() ? moment(d).format("DD MMM YYYY") : "—"
+    d && moment(d).isValid() ? moment(d).format(MILESTONE_DATE_FORMAT) : "—"
 
   return (
     <div className="space-y-6">
@@ -1047,7 +1241,11 @@ function MilestoneView({
                             <Button
                               variant="outline"
                               className="h-6 w-[118px] text-xs justify-center border-primary/40 text-primary hover:bg-primary/10 hover:text-primary cursor-pointer"
-                              onClick={() => setArtifactDialogId(m.id)}
+                              onClick={() =>
+                                router.push(
+                                  `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                )
+                              }
                             >
                               Manage Artifact
                             </Button>
@@ -1056,7 +1254,11 @@ function MilestoneView({
                             <Button
                               variant="outline"
                               className="h-6 w-[118px] text-xs justify-center border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground cursor-pointer"
-                              onClick={() => setArtifactDialogId(m.id)}
+                              onClick={() =>
+                                router.push(
+                                  `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                )
+                              }
                             >
                               View Artifacts
                             </Button>
@@ -1104,13 +1306,10 @@ function MilestoneView({
                                           (m.artifacts as MilestoneArtifactEntry[]) ??
                                           []
                                         if (arts.length === 0) {
-                                          // No artifacts yet — open the modal so the student can add one first
-                                          toast({
-                                            title:
-                                              "Add at least one artifact before marking as Done",
-                                            variant: "destructive"
-                                          })
-                                          setArtifactDialogId(m.id)
+                                          // No artifacts yet — navigate to artifact page so student can add one first
+                                          router.push(
+                                            `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                          )
                                         } else {
                                           handleStatusChange(
                                             m.id,
@@ -1196,7 +1395,7 @@ function MilestoneView({
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
                                         className="cursor-pointer text-destructive focus:text-destructive"
-                                        onClick={() => handleDelete(m.id)}
+                                        onClick={() => handleDeleteClick(m)}
                                       >
                                         <Trash2 className="h-3.5 w-3.5 mr-2" />
                                         Delete
@@ -1217,36 +1416,6 @@ function MilestoneView({
           </tbody>
         </table>
       </div>
-
-      {/* Artifact manage dialog */}
-      {artifactDialogId &&
-        (() => {
-          const m = milestones.find((x) => x.id === artifactDialogId)
-          if (!m) return null
-          return (
-            <ArtifactManageDialog
-              open={!!artifactDialogId}
-              milestoneId={artifactDialogId}
-              artifacts={(m.artifacts as MilestoneArtifactEntry[]) ?? []}
-              status={m.status as MilestoneStatus}
-              isStudent={!canManage}
-              onClose={() => setArtifactDialogId(null)}
-              onArtifactsChanged={(updated) =>
-                updateDialogMilestone(artifactDialogId, { artifacts: updated })
-              }
-              onMarkDone={() =>
-                updateDialogMilestone(artifactDialogId, {
-                  status: MilestoneStatus.COMPLETED_PENDING_VERIFICATION
-                })
-              }
-              onMarkCompleted={() =>
-                updateDialogMilestone(artifactDialogId, {
-                  status: MilestoneStatus.VERIFIED
-                })
-              }
-            />
-          )
-        })()}
 
       {/* Legend */}
       <div className="flex flex-wrap items-start gap-x-8 gap-y-3 pt-1">
@@ -1291,6 +1460,52 @@ function MilestoneView({
           </span>
         </div>
       </div>
+
+      {/* ── Confirm delete ── */}
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(v) => {
+          if (!v) setConfirmDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete milestone?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                <strong>{confirmDelete?.name}</strong> is{" "}
+                {(() => {
+                  const m = milestones.find((x) => x.id === confirmDelete?.id)
+                  const arts = (m?.artifacts as MilestoneArtifactEntry[]) ?? []
+                  const isIP = m?.status === MilestoneStatus.IN_PROGRESS
+                  if (isIP && arts.length > 0)
+                    return "currently In Progress and has submitted artifacts. Deleting it will permanently remove all associated artifacts."
+                  if (isIP)
+                    return "currently In Progress. Deleting it will remove all associated data."
+                  return "associated with submitted artifacts. Deleting it will permanently remove those artifacts."
+                })()}
+              </span>
+              <span className="block text-destructive font-medium">
+                This action cannot be undone.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDelete) doDelete(confirmDelete.id)
+                setConfirmDelete(null)
+              }}
+            >
+              Yes, delete it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -1396,6 +1611,9 @@ function FYPMilestones() {
           setMilestones(created)
           setView("milestones")
         }}
+        onMilestoneDeleted={(deletedId) =>
+          setMilestones((prev) => prev.filter((m) => m.id !== deletedId))
+        }
       />
     )
   }
@@ -1410,6 +1628,9 @@ function FYPMilestones() {
       canVerifyMilestone={canVerifyMilestone}
       canRevertMilestone={canRevertMilestone}
       onSetupAgain={() => setView("setup")}
+      onMilestoneDeleted={(deletedId) =>
+        setMilestones((prev) => prev.filter((m) => m.id !== deletedId))
+      }
     />
   )
 }
