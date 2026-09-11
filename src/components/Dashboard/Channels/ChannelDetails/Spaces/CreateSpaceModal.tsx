@@ -463,7 +463,7 @@ function CreateSpaceModal({
                         FYP Feature
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        {isCommunityFypEnabled && "Disabled by admin"}
+                        {!isCommunityFypEnabled && "Disabled by admin"}
                       </p>
                     </div>
                     <Controller
