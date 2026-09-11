@@ -27,5 +27,6 @@ export enum NotificationEvent {
   MILESTONE_COMPLETED_PENDING_VERIFICATION = "milestone_completed_pending_verification",
   ADVISOR_REQUEST_ACCEPTED = "advisor_request_accepted",
   ADVISOR_REQUEST_REJECTED = "advisor_request_rejected",
+  ADVISOR_REQUEST_EXPIRED = "advisor_request_expired",
   NEW_ADVISOR_REQUEST = "new_advisor_request"
 }

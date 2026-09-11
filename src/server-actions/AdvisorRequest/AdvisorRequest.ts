@@ -6,23 +6,27 @@ import {
   AcceptAdvisorRequest,
   AddAdvisorsInRequest,
   CreateAdvisorRequest,
+  ExpireOverdueAdvisorRequests,
   GetActiveAdvisorRequestForSpace,
   GetAdvisorRequestById,
   GetAdvisorRequestsForAdvisor,
   GetEligibleAdvisorsForDomain,
   GetLatestAdvisorRequestForSpace,
   GetRecentPendingAdvisorRequests,
-  getStudentRequestStatus,
   RejectAdvisorRequest,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
+import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 import { permissions } from "@/src/utils/constants"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
-import { sendAdvisorRequestResponseNotification } from "@/src/services/notifications/AdvisorRequest/utils"
+import {
+  sendAdvisorRequestExpiredNotification,
+  sendAdvisorRequestResponseNotification
+} from "@/src/services/notifications/AdvisorRequest/utils"
 import { createAdvisorRequestResponseEmailNotification } from "@/src/services/notify/advisorRequest/advisorRequest"
 import { advisorRequestsTable } from "@/src/db/schema"
 import type { SelectFile, SelectTag, SelectUser } from "@/src/db/schema"
@@ -367,6 +371,46 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       await Promise.all(proccessingRequest)
 
       return { success: true }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const ExpireOverdueAdvisorRequestsAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const expired = await ExpireOverdueAdvisorRequests()
+
+      const results = await Promise.allSettled(
+        expired.map((request) => {
+          const notifyContext = {
+            requested_by: request.requested_by,
+            fyp_title: request.fyp_title,
+            space_slug: request.space.space_slug,
+            channel_slug: request.space.channel?.channel_slug
+          }
+          return Promise.all([
+            sendAdvisorRequestExpiredNotification(notifyContext),
+            createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "expired"
+            )
+          ])
+        })
+      )
+
+      results.forEach((result, i) => {
+        if (result.status === "rejected") {
+          console.error(
+            `Failed to notify student for expired request ${expired[i].id}:`,
+            result.reason
+          )
+        }
+      })
+
+      return { success: true, data: { expiredCount: expired.length } }
     } catch (error) {
       return { success: false, error }
     }

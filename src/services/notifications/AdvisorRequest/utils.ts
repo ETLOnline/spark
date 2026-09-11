@@ -38,3 +38,29 @@ export async function sendAdvisorRequestResponseNotification(
     template
   })
 }
+
+/** System-triggered (no acting advisor) — sent by the expiry cron when the
+ * 14-day window passes with no advisor accepting the request. */
+export async function sendAdvisorRequestExpiredNotification(
+  request: AdvisorRequestNotificationContext
+) {
+  const deepLink = `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
+
+  const template = {
+    title: "Advisor request expired",
+    body: `Your advisor request for "${request.fyp_title}" has expired — no advisor accepted it within the 14-day window. You can resubmit anytime.`,
+    deep_link: deepLink,
+    icon: ""
+  }
+
+  await SendSystemNotification({
+    user_id: request.requested_by,
+    receivers: [request.requested_by],
+    template
+  })
+
+  await sendPushNotification({
+    receivers: [request.requested_by],
+    template
+  })
+}
