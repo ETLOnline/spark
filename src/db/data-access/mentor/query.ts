@@ -32,6 +32,7 @@ import {
   usersTable
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
+import { SearchUserProfile, updateUserProfile } from "../profile/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -47,6 +48,22 @@ export async function GetMentorAvailability(mentorId: string) {
     .select()
     .from(mentorAvailabilityTable)
     .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
+}
+
+export async function RecalculateMentorActiveStatus(mentorId: string) {
+  await db
+    .update(profileTable)
+    .set({
+      is_mentor_active: sql`
+        (${profileTable.professional_title} is not null and trim(${profileTable.professional_title}) <> '')
+        and (${profileTable.company} is not null and trim(${profileTable.company}) <> '')
+        and exists (
+          select 1 from ${mentorAvailabilityTable}
+          where ${mentorAvailabilityTable.mentor_id} = ${profileTable.user_id}
+        )
+      `
+    })
+    .where(eq(profileTable.user_id, mentorId))
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
