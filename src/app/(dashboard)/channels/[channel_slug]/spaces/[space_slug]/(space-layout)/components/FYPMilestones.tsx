@@ -480,26 +480,6 @@ function MilestoneSetup({
       return
     }
 
-    const dateOrderErrors: Record<
-      string,
-      { start_date: boolean; end_date: boolean }
-    > = {}
-    rows.forEach((r) => {
-      if (r.start_date && r.end_date && r.end_date < r.start_date) {
-        dateOrderErrors[r.id] = { start_date: false, end_date: true }
-      }
-    })
-    if (Object.keys(dateOrderErrors).length > 0) {
-      setDateErrors(dateOrderErrors)
-      toast({
-        title: "End date must be after the start date",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setDateErrors({})
-
     try {
       if (isReconfigure) {
         // Reconfigure: diff-based — preserves existing IDs and statuses
