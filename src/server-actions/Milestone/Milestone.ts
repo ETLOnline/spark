@@ -24,7 +24,9 @@ import {
 import { notifyManagersMilestoneDone } from "@/src/services/notify/milestone/milestone"
 import {
   MILESTONE_ARTIFACT_MAX_SIZE,
-  MILESTONE_ARTIFACT_MIME_TYPES
+  MILESTONE_ARTIFACT_MIME_TYPES,
+  MILESTONE_STATUS_FLOW,
+  MILESTONE_ALLOWED_REVERSIONS
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 
 // ─── Get single milestone ─────────────────────────────────────────────────────
@@ -181,14 +183,8 @@ export const UpdateMilestoneAction = CreateServerAction(
 
         // Enforce strict forward order:
         // incomplete → in_progress → completed_pending_verification → verified
-        const FLOW: MilestoneStatus[] = [
-          MilestoneStatus.INCOMPLETE,
-          MilestoneStatus.IN_PROGRESS,
-          MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
-          MilestoneStatus.VERIFIED
-        ]
-        const currentIdx = FLOW.indexOf(currentStatus)
-        const newIdx = FLOW.indexOf(newStatus)
+        const currentIdx = MILESTONE_STATUS_FLOW.indexOf(currentStatus)
+        const newIdx = MILESTONE_STATUS_FLOW.indexOf(newStatus)
         if (newIdx !== currentIdx + 1) {
           return { success: false, message: "Invalid status transition." }
         }
@@ -402,12 +398,6 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
 //   completed_pending_verification → in_progress
 //   verified                       → completed_pending_verification
 
-const ALLOWED_REVERSIONS: Partial<Record<MilestoneStatus, MilestoneStatus>> = {
-  [MilestoneStatus.VERIFIED]: MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
-  [MilestoneStatus.COMPLETED_PENDING_VERIFICATION]: MilestoneStatus.IN_PROGRESS,
-  [MilestoneStatus.IN_PROGRESS]: MilestoneStatus.INCOMPLETE
-}
-
 export const RevertMilestoneAction = CreateServerAction(
   true,
   async (milestoneId: string) => {
@@ -419,7 +409,7 @@ export const RevertMilestoneAction = CreateServerAction(
       if (!ctx) return { success: false, message: "Milestone not found" }
 
       const currentStatus = ctx.milestone.status as MilestoneStatus
-      const targetStatus = ALLOWED_REVERSIONS[currentStatus]
+      const targetStatus = MILESTONE_ALLOWED_REVERSIONS[currentStatus]
       if (!targetStatus) {
         return {
           success: false,

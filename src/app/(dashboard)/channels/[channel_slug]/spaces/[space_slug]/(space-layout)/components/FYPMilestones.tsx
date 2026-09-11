@@ -77,7 +77,8 @@ import moment from "moment"
 import {
   TEMPLATE_MILESTONES,
   CUSTOM_MILESTONE_FEATURES,
-  MILESTONE_STATUS_TOAST
+  MILESTONE_STATUS_TOAST,
+  MILESTONE_DATE_FORMAT
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -1059,7 +1060,7 @@ function MilestoneView({
   }
 
   const formatDate = (d: string | null | undefined) =>
-    d && moment(d).isValid() ? moment(d).format("DD MMM YYYY") : "—"
+    d && moment(d).isValid() ? moment(d).format(MILESTONE_DATE_FORMAT) : "—"
 
   return (
     <div className="space-y-6">

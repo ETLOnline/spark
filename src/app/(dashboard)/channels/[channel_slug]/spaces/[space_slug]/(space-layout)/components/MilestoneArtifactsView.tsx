@@ -46,7 +46,11 @@ import {
   MilestoneArtifactEntry,
   MilestoneStatus
 } from "@/src/types/Milestone/Milestone"
-import { MILESTONE_ARTIFACT_ACCEPT, MILESTONE_STATUS_TOAST } from "./constants"
+import {
+  MILESTONE_ARTIFACT_ACCEPT,
+  MILESTONE_DATE_FORMAT,
+  MILESTONE_STATUS_TOAST
+} from "./constants"
 import { ArtifactFeed } from "./ArtifactFeed"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -368,7 +372,7 @@ export default function MilestoneArtifactsView({
   }, [load])
 
   const formatDate = (d: string | null | undefined) =>
-    d && moment(d).isValid() ? moment(d).format("DD MMM YYYY") : "—"
+    d && moment(d).isValid() ? moment(d).format(MILESTONE_DATE_FORMAT) : "—"
 
   // ── Handlers ──
   const handleDelete = async (index: number) => {

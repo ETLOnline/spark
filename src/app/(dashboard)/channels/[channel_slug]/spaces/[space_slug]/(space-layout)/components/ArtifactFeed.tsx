@@ -14,25 +14,13 @@ import {
 import ImageLightbox from "@/src/components/common/LightBox"
 import { Button } from "@/src/components/ui/button"
 import { MilestoneArtifactEntry } from "@/src/types/Milestone/Milestone"
+import { MILESTONE_IMAGE_EXTENSIONS } from "./constants"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const IMAGE_EXTENSIONS = new Set([
-  "png",
-  "jpg",
-  "jpeg",
-  "jfif",
-  "jpe",
-  "gif",
-  "webp",
-  "bmp",
-  "svg",
-  "avif"
-])
-
 export function isImageFile(fileName: string): boolean {
   const ext = fileName.split(".").pop()?.toLowerCase() ?? ""
-  return IMAGE_EXTENSIONS.has(ext)
+  return MILESTONE_IMAGE_EXTENSIONS.has(ext)
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
