@@ -495,11 +495,9 @@ export function MentorCalendar({
       })
       if (affectedPendingRequests.length > 0) {
         await notifySlotTimeChanged({
-          requestIds: affectedPendingRequests.map((r) => r.id),
-          newDate,
-          newStart,
-          newEnd
+          requestIds: affectedPendingRequests.map((r) => r.id)
         })
+        await loadMentorPendingRequests()
       }
     } else {
       toast({
@@ -1014,8 +1012,9 @@ export function MentorCalendar({
               {timeChangeGate?.length === 1
                 ? "1 student has a pending request"
                 : `${timeChangeGate?.length ?? 0} students have pending requests`}{" "}
-              on this slot. Changing the time will keep their request but
-              notify them the time has changed. Do you want to continue?
+              on this slot. Changing the time will remove their request and
+              notify them so they can resubmit if they're still interested.
+              Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

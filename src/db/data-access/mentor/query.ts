@@ -499,6 +499,14 @@ export async function GetSessionRequestsByIds(requestIds: number[]) {
   })
 }
 
+export async function DeleteSessionRequestsByIds(requestIds: number[]) {
+  if (requestIds.length === 0) return []
+  return await db
+    .delete(sessionRequestsTable)
+    .where(inArray(sessionRequestsTable.id, requestIds))
+    .returning()
+}
+
 export async function UpdateSessionRequestStatus(
   requestId: number,
   status: "accepted" | "rejected",

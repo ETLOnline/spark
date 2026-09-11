@@ -51,9 +51,9 @@
 
             <!-- Header -->
             <tr>
-              <td align="center" bgcolor="#51ecdc" style="padding: 24px 20px">
+              <td align="center" bgcolor="#f1f5f9" style="padding: 24px 20px">
                 <div style="font-size: 20px; font-weight: bold; color: #0f172a">
-                  Session Time Changed
+                  Slot Changed
                 </div>
                 <div
                   style="
@@ -63,7 +63,7 @@
                     color: #0f172a;
                   "
                 >
-                  Your mentor updated the time for this slot
+                  Your pending request has been removed
                 </div>
               </td>
             </tr>
@@ -81,50 +81,12 @@
                 <p style="margin: 0 0 16px">
                   Hi <strong>{{menteeName}}</strong>,
                 </p>
-                <p style="margin: 0 0 24px; font-size: 15px; color: #475569">
-                  <strong>{{mentorName}}</strong> changed the time for the slot
-                  you have a pending request on for
-                  <strong>{{topic}}</strong>. Your request is still pending —
-                  please review the new time below.
+                <p style="margin: 0 0 28px; font-size: 15px; color: #475569">
+                  <strong>{{mentorName}}</strong> changed the slot for your
+                  request on <strong>{{topic}}</strong>, so your pending
+                  request has been removed. Please check availability and
+                  submit a new request if you're still interested.
                 </p>
-
-                <!-- New Time -->
-                <p
-                  style="
-                    margin: 0 0 12px;
-                    font-size: 15px;
-                    font-weight: 700;
-                    color: #1e293b;
-                  "
-                >
-                  New Time
-                </p>
-                <table
-                  role="presentation"
-                  cellpadding="0"
-                  cellspacing="0"
-                  border="0"
-                  width="100%"
-                  style="
-                    background-color: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    margin: 0 0 28px;
-                  "
-                >
-                  <tr>
-                    <td
-                      style="
-                        padding: 16px 20px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        color: #1e293b;
-                      "
-                    >
-                      {{newDateLabel}} · {{newStartLabel}} – {{newEndLabel}}
-                    </td>
-                  </tr>
-                </table>
 
                 <!-- CTA Button -->
                 <table

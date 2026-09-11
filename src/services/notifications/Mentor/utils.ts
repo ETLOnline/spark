@@ -30,8 +30,7 @@ export const SendMentorSlotSuggestionNotification = async (
 }
 
 export const SendSlotTimeChangedNotification = async (
-  request: SelectSessionRequest,
-  newTime: { newDateLabel: string; newStartLabel: string; newEndLabel: string }
+  request: SelectSessionRequest
 ) => {
   try {
     if (!request.mentee) return
@@ -44,8 +43,8 @@ export const SendSlotTimeChangedNotification = async (
       user_id: request.mentor_id,
       receivers: [request.mentee_id],
       template: {
-        title: `${mentorName} changed the session time`,
-        body: `The time for your pending request on "${request.topic}" changed to ${newTime.newDateLabel} · ${newTime.newStartLabel} – ${newTime.newEndLabel}.`,
+        title: `${mentorName} changed a slot you requested`,
+        body: `The slot for your request on "${request.topic}" has been changed. Please check availability and submit a new request if you're still interested.`,
         deep_link: createAbsoluteUrl(
           `/profile/${request.mentor_id}/availability`
         ),

@@ -75,8 +75,7 @@ export async function notifySessionSlotSuggested(
 
 export async function notifySessionSlotTimeChanged(
   event: string,
-  request: SelectSessionRequest,
-  newTime: { newDateLabel: string; newStartLabel: string; newEndLabel: string }
+  request: SelectSessionRequest
 ) {
   if (!request.mentee) return
 
@@ -93,7 +92,6 @@ export async function notifySessionSlotTimeChanged(
     menteeName: `${request.mentee.first_name} ${request.mentee.last_name}`,
     mentorName,
     topic: request.topic,
-    ...newTime,
     sessionLink
   }
 

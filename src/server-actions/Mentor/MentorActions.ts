@@ -21,6 +21,7 @@ import {
   GetMentorAvailability,
   GetMentors,
   GetPendingSessionRequestsForMentor,
+  DeleteSessionRequestsByIds,
   GetSessionRequestById,
   GetSessionRequestsByIds,
   GetSessionRequestsForMenteeAndMentor,
@@ -230,42 +231,37 @@ export const UpdateAvailabilityAction = CreateServerAction(
   }
 )
 
-/** Tells mentees with a pending request on an edited slot that its time
- * changed. Called by the client after a slot edit succeeds, only when the
- * mentor confirmed they want to proceed despite pending requests. */
+/** A slot's date/time changed while it had pending requests on it — rather
+ * than silently moving a request to a time the mentee never agreed to (they
+ * might not be free then), or leaving a stale request pointing at a time
+ * that no longer exists, those requests are removed and the mentee is told
+ * to resubmit if they're still interested. Called by the client after a
+ * slot edit succeeds, only once the mentor confirmed they want to proceed
+ * despite pending requests. */
 export const NotifySlotTimeChangedAction = CreateServerAction(
   true,
-  async (payload: {
-    requestIds: number[]
-    newDate: string
-    newStart: string
-    newEnd: string
-  }) => {
+  async (payload: { requestIds: number[] }) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
       if (!payload.requestIds.length) return { success: true }
 
       const requests = await GetSessionRequestsByIds(payload.requestIds)
-      const newTime = {
-        newDateLabel: moment(payload.newDate, "YYYY-MM-DD").format(
-          "ddd, MMM D, YYYY"
-        ),
-        newStartLabel: moment(payload.newStart, "HH:mm").format("h:mm A"),
-        newEndLabel: moment(payload.newEnd, "HH:mm").format("h:mm A")
-      }
+      const ownRequests = requests.filter(
+        (request) => request.mentor_id === authUser.unique_id
+      )
+      if (!ownRequests.length) return { success: true }
+
+      await DeleteSessionRequestsByIds(ownRequests.map((r) => r.id))
 
       await Promise.all(
-        requests
-          .filter((request) => request.mentor_id === authUser.unique_id)
-          .map(async (request) => {
-            await notifySessionSlotTimeChanged(
-              NotificationEvent.SESSION_SLOT_TIME_CHANGED,
-              request,
-              newTime
-            )
-            await SendSlotTimeChangedNotification(request, newTime)
-          })
+        ownRequests.map(async (request) => {
+          await notifySessionSlotTimeChanged(
+            NotificationEvent.SESSION_SLOT_TIME_CHANGED,
+            request
+          )
+          await SendSlotTimeChangedNotification(request)
+        })
       )
 
       return { success: true }
