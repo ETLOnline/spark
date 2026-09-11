@@ -51,15 +51,19 @@ export async function GetMentorAvailability(mentorId: string) {
 }
 
 export async function RecalculateMentorActiveStatus(mentorId: string) {
-  const profile = await SearchUserProfile(mentorId)
-  const hasTitle = !!profile?.professional_title?.trim()
-  const hasCompany = !!profile?.company?.trim()
-  const slots = await GetMentorAvailability(mentorId)
-  const hasSlots = slots.length > 0
-
-  await updateUserProfile(mentorId, {
-    is_mentor_active: hasTitle && hasCompany && hasSlots
-  })
+  await db
+    .update(profileTable)
+    .set({
+      is_mentor_active: sql`
+        (${profileTable.professional_title} is not null and trim(${profileTable.professional_title}) <> '')
+        and (${profileTable.company} is not null and trim(${profileTable.company}) <> '')
+        and exists (
+          select 1 from ${mentorAvailabilityTable}
+          where ${mentorAvailabilityTable.mentor_id} = ${profileTable.user_id}
+        )
+      `
+    })
+    .where(eq(profileTable.user_id, mentorId))
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
