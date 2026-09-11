@@ -32,6 +32,7 @@ import {
   usersTable
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
+import { SearchUserProfile, updateUserProfile } from "../profile/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -47,6 +48,18 @@ export async function GetMentorAvailability(mentorId: string) {
     .select()
     .from(mentorAvailabilityTable)
     .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
+}
+
+export async function RecalculateMentorActiveStatus(mentorId: string) {
+  const profile = await SearchUserProfile(mentorId)
+  const hasTitle = !!profile?.professional_title?.trim()
+  const hasCompany = !!profile?.company?.trim()
+  const slots = await GetMentorAvailability(mentorId)
+  const hasSlots = slots.length > 0
+
+  await updateUserProfile(mentorId, {
+    is_mentor_active: hasTitle && hasCompany && hasSlots
+  })
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */

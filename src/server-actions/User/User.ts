@@ -11,7 +11,10 @@ import {
   UpdateCoverImage,
   getSuperAdmins
 } from "@/src/db/data-access/user/query"
-import { GetMentors } from "@/src/db/data-access/mentor/query"
+import {
+  GetMentors,
+  RecalculateMentorActiveStatus
+} from "@/src/db/data-access/mentor/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
@@ -67,6 +70,7 @@ export const SaveUserProfileAction = CreateServerAction(
         })
       }
 
+      await RecalculateMentorActiveStatus(profileData.userId)
       const allTags = [...profileData.interests, ...profileData.skills]
 
       await AddUserTag(profileData.userId, allTags)

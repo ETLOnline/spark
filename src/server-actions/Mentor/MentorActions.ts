@@ -27,6 +27,7 @@ import {
   GetSharedSpacesForSessions,
   HasAcceptedOverlap,
   HasPendingSessionRequest,
+  RecalculateMentorActiveStatus,
   ReplaceMentorAvailability,
   ResubmitSessionRequest,
   SubmitMentorshipFeedback,
@@ -44,10 +45,7 @@ import type { SpaceBasic } from "@/src/db/data-access/mentor/query"
 import { notifySessionSlotSuggested } from "@/src/services/notify/mentor/session"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { SendMentorSlotSuggestionNotification } from "@/src/services/notifications/Mentor/utils"
-import {
-  updateUserProfile,
-  SearchUserProfile
-} from "@/src/db/data-access/profile/query"
+import { updateUserProfile } from "@/src/db/data-access/profile/query"
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import {
@@ -98,6 +96,7 @@ export const SaveMentorSetupAction = CreateServerAction(
         company: payload.company,
         engagement_type: payload.engagement_type || "both"
       })
+      await RecalculateMentorActiveStatus(payload.userId)
       return { success: true }
     } catch (error) {
       console.error("SaveMentorSetupAction error:", error)
@@ -214,15 +213,7 @@ export const UpdateAvailabilityAction = CreateServerAction(
       }
 
       await ReplaceMentorAvailability(mentorId, slots)
-
-      const profile = await SearchUserProfile(mentorId)
-      const hasTitle = !!profile?.professional_title?.trim()
-      const hasCompany = !!profile?.company?.trim()
-      const hasSlots = slots.length > 0
-
-      await updateUserProfile(mentorId, {
-        is_mentor_active: hasTitle && hasCompany && hasSlots
-      })
+      await RecalculateMentorActiveStatus(mentorId)
 
       return { success: true }
     } catch (error) {
