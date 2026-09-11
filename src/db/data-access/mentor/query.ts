@@ -32,7 +32,6 @@ import {
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
 import { getRoleIdsWithPermission } from "../permissions/query"
-import { SearchUserProfile, updateUserProfile } from "../profile/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -50,20 +49,20 @@ export async function GetMentorAvailability(mentorId: string) {
     .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
 }
 
-/** Recomputes is_mentor_active from the mentor's current profile fields and
- * slot count. A mentor can fill in professional_title/company or set their
- * availability in any order — call this after any write to either so the
- * flag never gets stuck out of sync with whichever field was saved last. */
 export async function RecalculateMentorActiveStatus(mentorId: string) {
-  const profile = await SearchUserProfile(mentorId)
-  const hasTitle = !!profile?.professional_title?.trim()
-  const hasCompany = !!profile?.company?.trim()
-  const slots = await GetMentorAvailability(mentorId)
-  const hasSlots = slots.length > 0
-
-  await updateUserProfile(mentorId, {
-    is_mentor_active: hasTitle && hasCompany && hasSlots
-  })
+  await db
+    .update(profileTable)
+    .set({
+      is_mentor_active: sql`
+        (${profileTable.professional_title} is not null and trim(${profileTable.professional_title}) <> '')
+        and (${profileTable.company} is not null and trim(${profileTable.company}) <> '')
+        and exists (
+          select 1 from ${mentorAvailabilityTable}
+          where ${mentorAvailabilityTable.mentor_id} = ${profileTable.user_id}
+        )
+      `
+    })
+    .where(eq(profileTable.user_id, mentorId))
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
@@ -476,6 +475,22 @@ export async function GetSessionRequestById(requestId: number) {
   return await db.query.sessionRequestsTable.findFirst({
     where: eq(sessionRequestsTable.id, requestId)
   })
+}
+
+export async function GetSessionRequestsByIds(requestIds: number[]) {
+  if (requestIds.length === 0) return []
+  return await db.query.sessionRequestsTable.findMany({
+    where: inArray(sessionRequestsTable.id, requestIds),
+    with: { mentee: true, mentor: true }
+  })
+}
+
+export async function DeleteSessionRequestsByIds(requestIds: number[]) {
+  if (requestIds.length === 0) return []
+  return await db
+    .delete(sessionRequestsTable)
+    .where(inArray(sessionRequestsTable.id, requestIds))
+    .returning()
 }
 
 export async function UpdateSessionRequestStatus(
