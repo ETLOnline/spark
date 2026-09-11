@@ -744,8 +744,6 @@ function MilestoneSetup({
 
 function MilestoneView({
   milestones: initial,
-  spaceId: _spaceId,
-  isStudent,
   canManage,
   canCreateMilestone,
   canUpdateMilestone,
@@ -755,9 +753,6 @@ function MilestoneView({
   onSetupAgain
 }: {
   milestones: SelectFypMilestone[]
-  spaceId: string
-  /** true = current user is a student (can add/delete artifacts) */
-  isStudent: boolean
   canManage: boolean
   canCreateMilestone: boolean
   canUpdateMilestone: boolean
@@ -1035,16 +1030,15 @@ function MilestoneView({
                   {/* Actions */}
                   {(() => {
                     const arts = (m.artifacts as MilestoneArtifactEntry[]) ?? []
-                    // Student: can manage (add/delete) their artifacts
                     const canManageArtifact =
-                      isStudent &&
+                      !canManage &&
                       (m.status === MilestoneStatus.IN_PROGRESS ||
                         m.status ===
                           MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
-                    // Advisor/admin/faculty: view always; student: view only once verified
                     const canViewArtifact =
                       arts.length > 0 &&
-                      (!isStudent || m.status === MilestoneStatus.VERIFIED)
+                      ((!canManage && m.status === MilestoneStatus.VERIFIED) ||
+                        canManage)
 
                     return (
                       <td className="py-3 px-2">
@@ -1235,8 +1229,7 @@ function MilestoneView({
               milestoneId={artifactDialogId}
               artifacts={(m.artifacts as MilestoneArtifactEntry[]) ?? []}
               status={m.status as MilestoneStatus}
-              isStudent={isStudent}
-              canVerify={canVerifyMilestone}
+              isStudent={!canManage}
               onClose={() => setArtifactDialogId(null)}
               onArtifactsChanged={(updated) =>
                 updateDialogMilestone(artifactDialogId, { artifacts: updated })
@@ -1345,11 +1338,6 @@ function FYPMilestones() {
   const canVerifyMilestone = canFyp("fyp.milestone.verify")
   const canRevertMilestone = canFyp("fyp.milestone.revert")
 
-  // Only the student role has milestone.mark_done.
-  // Advisors also have milestone.artifact.add, so we use mark_done as the
-  // reliable student-only signal to distinguish "student" from "faculty/advisor/admin".
-  const isStudent = globalChecker?.canAccess("fyp.milestone.mark_done") ?? false
-
   const canManage =
     canCreateMilestone ||
     canUpdateMilestone ||
@@ -1415,8 +1403,6 @@ function FYPMilestones() {
   return (
     <MilestoneView
       milestones={milestones}
-      spaceId={spaceId!}
-      isStudent={isStudent}
       canManage={canManage}
       canCreateMilestone={canCreateMilestone}
       canUpdateMilestone={canUpdateMilestone}
