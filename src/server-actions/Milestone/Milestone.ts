@@ -27,6 +27,21 @@ import {
   MILESTONE_ARTIFACT_MIME_TYPES
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 
+// ─── Get single milestone ─────────────────────────────────────────────────────
+
+export const GetMilestoneByIdAction = CreateServerAction(
+  true,
+  async (milestoneId: string) => {
+    try {
+      const milestone = await GetMilestoneById(milestoneId)
+      if (!milestone) return { success: false, message: "Milestone not found" }
+      return { success: true, data: milestone }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
+
 // ─── Get milestones ───────────────────────────────────────────────────────────
 
 export const GetMilestonesForSpaceAction = CreateServerAction(
