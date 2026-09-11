@@ -78,6 +78,7 @@ import {
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -766,6 +767,51 @@ function MilestoneView({
   const [editName, setEditName] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [artifactDialogId, setArtifactDialogId] = useState<string | null>(null)
+
+  // Real-time: subscribe to a private per-milestone channel for each milestone.
+  // Follows the same pattern as private-chat-${chatId} used in ChatScreen.
+  useEffect(() => {
+    if (!initial.length) return
+
+    const subscriptions = initial.map((m) => {
+      const channelName = `milestone-${m.id}`
+      const channel = pusherClient.subscribe(channelName)
+
+      channel.bind(
+        "status-update",
+        (data: { id: string; status: MilestoneStatus }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, status: data.status } : ms
+            )
+          )
+        }
+      )
+
+      channel.bind(
+        "artifacts-update",
+        (data: { id: string; artifacts: MilestoneArtifactEntry[] }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, artifacts: data.artifacts } : ms
+            )
+          )
+        }
+      )
+
+      return channelName
+    })
+
+    return () => {
+      subscriptions.forEach((channelName) => {
+        const ch = pusherClient.channel(channelName)
+        if (ch) {
+          ch.unbind_all()
+          pusherClient.unsubscribe(channelName)
+        }
+      })
+    }
+  }, [])
 
   const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
   const [, , , deleteMilestone] = useServerAction(DeleteMilestoneAction)
