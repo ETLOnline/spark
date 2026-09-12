@@ -28,6 +28,7 @@ import {
   MILESTONE_STATUS_FLOW,
   MILESTONE_ALLOWED_REVERSIONS
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 // ─── Get single milestone ─────────────────────────────────────────────────────
 
@@ -249,6 +250,12 @@ export const UpdateMilestoneAction = CreateServerAction(
           })()
         }
 
+        // Broadcast status change on a private per-milestone channel
+        // (same pattern as private-chat-${chatId} used throughout this codebase)
+        await pusherServer.trigger(`milestone-${id}`, "status-update", {
+          id,
+          status: newStatus
+        })
         return { success: true, data: updated }
       }
 
@@ -338,6 +345,11 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
         artifacts: [...current, newEntry]
       })
 
+      await pusherServer.trigger(
+        `milestone-${milestoneId}`,
+        "artifacts-update",
+        { id: milestoneId, artifacts: updated?.artifacts ?? [] }
+      )
       return { success: true, data: updated }
     } catch (error) {
       return { error: error }
@@ -386,6 +398,20 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
         ...(shouldRevert ? { status: MilestoneStatus.IN_PROGRESS } : {})
       })
 
+      await pusherServer.trigger(
+        `milestone-${milestoneId}`,
+        "artifacts-update",
+        { id: milestoneId, artifacts: updated?.artifacts ?? [] }
+      )
+
+      if (shouldRevert) {
+        await pusherServer.trigger(
+          `milestone-${milestoneId}`,
+          "status-update",
+          { id: milestoneId, status: MilestoneStatus.IN_PROGRESS }
+        )
+      }
+
       return { success: true, data: updated }
     } catch (error) {
       return { error: error }
@@ -422,6 +448,10 @@ export const RevertMilestoneAction = CreateServerAction(
         status: targetStatus
       })
 
+      await pusherServer.trigger(`milestone-${milestoneId}`, "status-update", {
+        id: milestoneId,
+        status: targetStatus
+      })
       return { success: true, data: updated }
     } catch (error) {
       return { error: error }

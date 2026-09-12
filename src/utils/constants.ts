@@ -242,6 +242,7 @@ export const permissions = {
     milestoneRevert: "milestone.revert", // revert status — advisor/admin only
     milestoneMarkDone: "milestone.mark_done", // student: submit for review
     milestoneArtifactAdd: "milestone.artifact.add", // student: add artifact
+    milestoneArtifactDelete: "milestone.artifact.delete", // student/advisor/admin: delete artifact
 
     advisorViewRequests: "advisor.view_requests",
     advisorViewDetails: "advisor.view_details",
