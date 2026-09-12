@@ -54,6 +54,7 @@ import {
 import { ArtifactFeed } from "./ArtifactFeed"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -336,6 +337,7 @@ export default function MilestoneArtifactsView({
   const canRevert = canFyp("fyp.milestone.revert")
 
   const isStudent = !canManage
+
   const status = (milestone?.status ??
     MilestoneStatus.INCOMPLETE) as MilestoneStatus
   const artifacts = (milestone?.artifacts as MilestoneArtifactEntry[]) ?? []
@@ -370,6 +372,42 @@ export default function MilestoneArtifactsView({
   useEffect(() => {
     load()
   }, [load])
+
+  // Real-time: subscribe to the per-milestone Pusher channel so status and
+  // artifact changes made by other users (advisor verifying, student adding
+  // an artifact from a different session, etc.) are reflected immediately.
+  useEffect(() => {
+    const channelName = `milestone-${milestoneId}`
+    const channel = pusherClient.subscribe(channelName)
+
+    channel.bind(
+      "status-update",
+      (data: { id: string; status: MilestoneStatus }) => {
+        setMilestone((prev) =>
+          prev && prev.id === data.id ? { ...prev, status: data.status } : prev
+        )
+      }
+    )
+
+    channel.bind(
+      "artifacts-update",
+      (data: { id: string; artifacts: MilestoneArtifactEntry[] }) => {
+        setMilestone((prev) =>
+          prev && prev.id === data.id
+            ? { ...prev, artifacts: data.artifacts }
+            : prev
+        )
+      }
+    )
+
+    return () => {
+      const ch = pusherClient.channel(channelName)
+      if (ch) {
+        ch.unbind_all()
+        pusherClient.unsubscribe(channelName)
+      }
+    }
+  }, [milestoneId])
 
   const formatDate = (d: string | null | undefined) =>
     d && moment(d).isValid() ? moment(d).format(MILESTONE_DATE_FORMAT) : "—"

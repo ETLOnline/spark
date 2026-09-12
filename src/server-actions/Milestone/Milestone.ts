@@ -402,6 +402,15 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
         "artifacts-update",
         { id: milestoneId, artifacts: updated?.artifacts ?? [] }
       )
+
+      if (shouldRevert) {
+        await pusherServer.trigger(
+          `milestone-${milestoneId}`,
+          "status-update",
+          { id: milestoneId, status: MilestoneStatus.IN_PROGRESS }
+        )
+      }
+
       return { success: true, data: updated }
     } catch (error) {
       return { error: error }
