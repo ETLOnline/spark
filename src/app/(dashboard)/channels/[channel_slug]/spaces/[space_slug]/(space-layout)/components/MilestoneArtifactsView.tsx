@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { useAtomValue } from "jotai"
 import moment from "moment"
 import {
   ArrowLeft,
@@ -32,8 +31,7 @@ import {
 import { FileUpload } from "@/src/components/ui/file-upload"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { spaceStore } from "@/src/store/space/spaceStore"
+import { useMilestonePermissions } from "@/src/hooks/useMilestonePermissions"
 import {
   GetMilestoneByIdAction,
   DeleteMilestoneArtifactAction,
@@ -302,52 +300,25 @@ export default function MilestoneArtifactsView({
   const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
   const [, , , revertMilestone] = useServerAction(RevertMilestoneAction)
 
-  // ── Permissions (same logic as FYPMilestones) ──
-  const currentSpace = useAtomValue(spaceStore.currentSpace)
-  const communityId = currentSpace?.channel?.community_id ?? undefined
-  const spaceId = currentSpace?.id
-
-  const { permissionChecker: globalChecker } = usePermissionChecker("global")
-  const { permissionChecker: scopedChecker } = usePermissionChecker(
-    "scoped",
-    "COMMUNITY",
-    communityId
-  )
-  const { permissionChecker: spaceChecker } = usePermissionChecker(
-    "scoped",
-    "SPACE",
-    spaceId
-  )
-
-  const canFyp = (action: string): boolean => {
-    const isAdvisor = globalChecker?.canAccess(action) ?? false
-    const isCommunityAdmin = scopedChecker?.canAccess(action) ?? false
-    if (isAdvisor) return spaceChecker?.canAccess("space.update") ?? false
-    return isCommunityAdmin
-  }
-
-  const canManage =
-    canFyp("fyp.milestone.create") ||
-    canFyp("fyp.milestone.update") ||
-    canFyp("fyp.milestone.delete") ||
-    canFyp("fyp.milestone.verify") ||
-    canFyp("fyp.milestone.revert")
-
-  const canVerify = canFyp("fyp.milestone.verify")
-  const canRevert = canFyp("fyp.milestone.revert")
-
-  const isStudent = !canManage
+  // ── Permissions ──
+  const {
+    canManage,
+    canVerifyMilestone: canVerify,
+    canRevertMilestone: canRevert,
+    canArtifactAdd,
+    canArtifactDelete
+  } = useMilestonePermissions()
 
   const status = (milestone?.status ??
     MilestoneStatus.INCOMPLETE) as MilestoneStatus
   const artifacts = (milestone?.artifacts as MilestoneArtifactEntry[]) ?? []
 
   const canEdit =
-    isStudent &&
+    canArtifactAdd &&
     status !== MilestoneStatus.VERIFIED &&
     status !== MilestoneStatus.INCOMPLETE
 
-  const canDelete = status !== MilestoneStatus.VERIFIED
+  const canDelete = canArtifactDelete && status !== MilestoneStatus.VERIFIED
 
   const backUrl = `/channels/${channelSlug}/spaces/${spaceSlug}?page-type=fyp&fyp-tab=milestones`
 
@@ -528,7 +499,7 @@ export default function MilestoneArtifactsView({
   if (!milestone) return null
 
   const showActionBar =
-    (isStudent && status === MilestoneStatus.IN_PROGRESS) ||
+    (canArtifactAdd && status === MilestoneStatus.IN_PROGRESS) ||
     (canVerify && status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION) ||
     (canRevert &&
       (status === MilestoneStatus.IN_PROGRESS ||
@@ -584,7 +555,7 @@ export default function MilestoneArtifactsView({
                 No artifacts yet
               </p>
               <p className="text-xs text-muted-foreground/60">
-                {isStudent
+                {canArtifactAdd
                   ? "Upload a file or paste a link to submit your work."
                   : "No artifacts have been submitted for this milestone."}
               </p>
@@ -655,7 +626,7 @@ export default function MilestoneArtifactsView({
           {/* Actions */}
           {showActionBar && (
             <div className="px-5 py-4 space-y-2 mt-auto border-t">
-              {isStudent && status === MilestoneStatus.IN_PROGRESS && (
+              {canArtifactAdd && status === MilestoneStatus.IN_PROGRESS && (
                 <Button
                   onClick={handleMarkDone}
                   disabled={artifacts.length === 0 || actionLoading}
