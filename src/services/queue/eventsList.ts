@@ -60,5 +60,6 @@ export const eventsList: Record<string, EventProcessor> = {
   milestone_completed_pending_verification: processMilestoneDoneNotification,
   advisor_request_accepted: processSessionRequestEmailNotification,
   advisor_request_rejected: processSessionRequestEmailNotification,
-  advisor_request_expired: processSessionRequestEmailNotification
+  advisor_request_expired: processSessionRequestEmailNotification,
+  advisor_request_advisor_declined: processSessionRequestEmailNotification
 }

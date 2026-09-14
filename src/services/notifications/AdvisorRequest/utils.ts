@@ -39,6 +39,35 @@ export async function sendAdvisorRequestResponseNotification(
   })
 }
 
+/** Sent every time a single advisor declines, while the request is still
+ * alive (other advisors haven't all responded yet). Deliberately generic —
+ * never names or otherwise identifies which advisor rejected it, unlike
+ * sendAdvisorRequestResponseNotification's final "rejected" message, which
+ * fires separately once every advisor has responded or the request expires. */
+export async function sendAdvisorRequestSingleDeclineNotification(
+  request: AdvisorRequestNotificationContext
+) {
+  const deepLink = `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
+
+  const template = {
+    title: "Advisor request update",
+    body: `One of the advisors reviewing your request for "${request.fyp_title}" has declined it. Other advisors are still reviewing your request.`,
+    deep_link: deepLink,
+    icon: ""
+  }
+
+  await SendSystemNotification({
+    user_id: request.requested_by,
+    receivers: [request.requested_by],
+    template
+  })
+
+  await sendPushNotification({
+    receivers: [request.requested_by],
+    template
+  })
+}
+
 /** System-triggered (no acting advisor) — sent by the expiry cron when the
  * 14-day window passes with no advisor accepting the request. */
 export async function sendAdvisorRequestExpiredNotification(
