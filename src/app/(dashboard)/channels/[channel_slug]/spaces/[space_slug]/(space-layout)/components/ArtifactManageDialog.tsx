@@ -380,31 +380,37 @@ export function ArtifactManageDialog({
                 {artifacts.map((a, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
+                    className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm min-w-0"
                   >
                     {a.type === "file" ? (
                       <>
                         <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <Link
-                          href={a.file_path}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-1 truncate text-primary hover:underline"
-                        >
-                          {a.file_name}
-                        </Link>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <Link
+                            href={a.file_path}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block truncate text-primary hover:underline"
+                            title={a.file_name}
+                          >
+                            {a.file_name}
+                          </Link>
+                        </div>
                       </>
                     ) : (
                       <>
                         <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <Link
-                          href={a.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-1 truncate text-primary hover:underline"
-                        >
-                          {a.url}
-                        </Link>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <Link
+                            href={a.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block truncate text-primary hover:underline"
+                            title={a.url}
+                          >
+                            {a.url}
+                          </Link>
+                        </div>
                       </>
                     )}
                     {canDelete && (
