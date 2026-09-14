@@ -11,40 +11,17 @@ interface AdvisorRequestEmailContext {
   channel_slug?: string | null
 }
 
-const RESPONSE_COPY = {
-  accepted: {
-    event: NotificationEvent.ADVISOR_REQUEST_ACCEPTED,
-    statusLabel: "Accepted",
-    headerBgColor: "#51ecdc",
-    actionVerb: "been accepted",
-    ctaText: "View Request",
-    footerText: "Log in to see your advisor's details."
-  },
-  rejected: {
-    event: NotificationEvent.ADVISOR_REQUEST_REJECTED,
-    statusLabel: "Update",
-    headerBgColor: "#f1f5f9",
-    actionVerb: "not been accepted by any advisor",
-    ctaText: "Resubmit Request",
-    footerText: "You can update your details and resubmit anytime."
-  },
-  expired: {
-    event: NotificationEvent.ADVISOR_REQUEST_EXPIRED,
-    statusLabel: "Expired",
-    headerBgColor: "#f1f5f9",
-    actionVerb: "expired — the 14-day window to find an advisor has passed",
-    ctaText: "Resubmit Request",
-    footerText: "You can update your details and resubmit anytime."
-  },
-  declined: {
-    event: NotificationEvent.ADVISOR_REQUEST_ADVISOR_DECLINED,
-    statusLabel: "Update",
-    headerBgColor: "#f1f5f9",
-    actionVerb:
-      "been declined by one of the advisors reviewing it — other advisors are still reviewing your request",
-    ctaText: "View Request",
-    footerText: "You'll be notified once a final decision is made."
-  }
+// Each status has its own dedicated template file with the copy baked
+// directly into the HTML (see public/email-templates/advisor_request_*.html)
+// — the message never actually varies at runtime, so there's no reason to
+// thread it through shared variables. Only "accepted" needs a variable for
+// the advisor's name, since that's genuinely different every time; the
+// other statuses never show one at all.
+const EVENT_BY_STATUS = {
+  accepted: NotificationEvent.ADVISOR_REQUEST_ACCEPTED,
+  rejected: NotificationEvent.ADVISOR_REQUEST_REJECTED,
+  expired: NotificationEvent.ADVISOR_REQUEST_EXPIRED,
+  declined: NotificationEvent.ADVISOR_REQUEST_ADVISOR_DECLINED
 } as const
 
 export async function createAdvisorRequestResponseEmailNotification(
@@ -55,7 +32,6 @@ export async function createAdvisorRequestResponseEmailNotification(
   const studentRes = await FindUserByUniqueIdAction(request.requested_by)
   if (!studentRes.data?.email) return
 
-  const copy = RESPONSE_COPY[status]
   const ctaLink = createAbsoluteUrl(
     `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
   )
@@ -64,19 +40,14 @@ export async function createAdvisorRequestResponseEmailNotification(
     logoUrl: getSiteLogoUrl(),
     studentName:
       `${studentRes.data.first_name ?? ""} ${studentRes.data.last_name ?? ""}`.trim(),
-    advisorName: status === "accepted" ? advisorName : undefined,
     fypTitle: request.fyp_title,
     ctaLink,
-    statusLabel: copy.statusLabel,
-    headerBgColor: copy.headerBgColor,
-    actionVerb: copy.actionVerb,
-    ctaText: copy.ctaText,
-    footerText: copy.footerText
+    ...(status === "accepted" ? { advisorName } : {})
   }
 
   await AddToQueue({
     sendingTo: [studentRes.data.email],
-    event: copy.event,
+    event: EVENT_BY_STATUS[status],
     payload,
     withData: true
   })

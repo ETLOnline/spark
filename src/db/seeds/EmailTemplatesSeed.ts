@@ -118,22 +118,22 @@ const templatesToSeed: NewEmailTemplate[] = [
   {
     name: NotificationEvent.ADVISOR_REQUEST_ACCEPTED,
     subject: "Your advisor request was accepted",
-    body: loadTemplate("advisor_request_response.html")
+    body: loadTemplate("advisor_request_accepted.html")
   },
   {
     name: NotificationEvent.ADVISOR_REQUEST_REJECTED,
     subject: "Update on your advisor request",
-    body: loadTemplate("advisor_request_response.html")
+    body: loadTemplate("advisor_request_rejected.html")
   },
   {
     name: NotificationEvent.ADVISOR_REQUEST_EXPIRED,
     subject: "Your advisor request has expired",
-    body: loadTemplate("advisor_request_response.html")
+    body: loadTemplate("advisor_request_expired.html")
   },
   {
     name: NotificationEvent.ADVISOR_REQUEST_ADVISOR_DECLINED,
     subject: "Update on your advisor request",
-    body: loadTemplate("advisor_request_response.html")
+    body: loadTemplate("advisor_request_advisor_declined.html")
   },
   {
     name: NotificationEvent.NEW_ADVISOR_REQUEST,
