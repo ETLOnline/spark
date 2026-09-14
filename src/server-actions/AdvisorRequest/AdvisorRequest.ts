@@ -6,29 +6,35 @@ import {
   AcceptAdvisorRequest,
   AddAdvisorsInRequest,
   CreateAdvisorRequest,
+  ExpireOverdueAdvisorRequests,
   GetActiveAdvisorRequestForSpace,
   GetAdvisorRequestById,
   GetAdvisorRequestsForAdvisor,
   GetEligibleAdvisorsForDomain,
   GetLatestAdvisorRequestForSpace,
   GetRecentPendingAdvisorRequests,
-  getStudentRequestStatus,
   RejectAdvisorRequest,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
+import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 import { permissions } from "@/src/utils/constants"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
-import { sendAdvisorRequestResponseNotification } from "@/src/services/notifications/AdvisorRequest/utils"
+import {
+  sendAdvisorRequestExpiredNotification,
+  sendAdvisorRequestResponseNotification,
+  sendAdvisorRequestSingleDeclineNotification
+} from "@/src/services/notifications/AdvisorRequest/utils"
 import { createAdvisorRequestResponseEmailNotification } from "@/src/services/notify/advisorRequest/advisorRequest"
 import { advisorRequestsTable } from "@/src/db/schema"
 import type { SelectFile, SelectTag, SelectUser } from "@/src/db/schema"
 import { notifyAdvisorsOfNewAdvisorRequest } from "@/src/services/notify/advisor-request/advisor-request"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
+  ADVISOR_REJECTION_REASON_MAX_LENGTH,
   ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
@@ -253,8 +259,7 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
           await sendAdvisorRequestResponseNotification(
             notifyContext,
             "accepted",
-            { unique_id: user.unique_id, profile_url: user.profile_url },
-            advisorName
+            { unique_id: user.unique_id, profile_url: user.profile_url }
           )
           await createAdvisorRequestResponseEmailNotification(
             notifyContext,
@@ -280,6 +285,13 @@ export const RejectAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string, reason: string) => {
     try {
+      if (reason.length > ADVISOR_REJECTION_REASON_MAX_LENGTH) {
+        return {
+          success: false,
+          error: `Reason must be ${ADVISOR_REJECTION_REASON_MAX_LENGTH} characters or fewer.`
+        }
+      }
+
       const user = await AuthUserAction()
 
       const before = await GetAdvisorRequestById(requestId)
@@ -297,11 +309,11 @@ export const RejectAdvisorRequestAction = CreateServerAction(
 
       try {
         const after = await GetAdvisorRequestById(requestId)
-        if (
-          after &&
-          !wasAlreadyRejected &&
+        const isNowFullyRejected =
+          !!after &&
           getStudentRequestStatus(after) === AdvisorRequestStatus.REJECTED
-        ) {
+
+        if (after && !wasAlreadyRejected) {
           const notifyContext = {
             requested_by: after.requested_by,
             fyp_title: after.fyp_title,
@@ -309,15 +321,27 @@ export const RejectAdvisorRequestAction = CreateServerAction(
             channel_slug: after.space.channel?.channel_slug
           }
 
-          await sendAdvisorRequestResponseNotification(
-            notifyContext,
-            "rejected",
-            { unique_id: user.unique_id, profile_url: null }
-          )
-          await createAdvisorRequestResponseEmailNotification(
-            notifyContext,
-            "rejected"
-          )
+          if (isNowFullyRejected) {
+            // Final resolution — every advisor has rejected, or the deadline
+            // passed with at least one rejection.
+            await sendAdvisorRequestResponseNotification(
+              notifyContext,
+              "rejected",
+              { unique_id: user.unique_id, profile_url: null }
+            )
+            await createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "rejected"
+            )
+          } else {
+            // Still alive — other advisors haven't all responded yet. Notify
+            // with a generic notice, never identifying which advisor declined.
+            await sendAdvisorRequestSingleDeclineNotification(notifyContext)
+            await createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "declined"
+            )
+          }
         }
       } catch (notifyError) {
         console.error(
@@ -367,6 +391,46 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       await Promise.all(proccessingRequest)
 
       return { success: true }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const ExpireOverdueAdvisorRequestsAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const expired = await ExpireOverdueAdvisorRequests()
+
+      const results = await Promise.allSettled(
+        expired.map((request) => {
+          const notifyContext = {
+            requested_by: request.requested_by,
+            fyp_title: request.fyp_title,
+            space_slug: request.space.space_slug,
+            channel_slug: request.space.channel?.channel_slug
+          }
+          return Promise.all([
+            sendAdvisorRequestExpiredNotification(notifyContext),
+            createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "expired"
+            )
+          ])
+        })
+      )
+
+      results.forEach((result, i) => {
+        if (result.status === "rejected") {
+          console.error(
+            `Failed to notify student for expired request ${expired[i].id}:`,
+            result.reason
+          )
+        }
+      })
+
+      return { success: true, data: { expiredCount: expired.length } }
     } catch (error) {
       return { success: false, error }
     }

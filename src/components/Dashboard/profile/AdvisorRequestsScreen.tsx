@@ -15,7 +15,7 @@ import type {
   AdvisorRequestListItem,
   AdvisorViewerStatus
 } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
-import type { StudentRequestStatus } from "@/src/db/data-access/advisor-requests/query"
+import type { StudentRequestStatus } from "@/src/utils/advisorRequest"
 
 type StatusTab = "all" | AdvisorViewerStatus
 

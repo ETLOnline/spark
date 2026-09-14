@@ -354,6 +354,9 @@ export async function attachSpaceFeatures(
       await tx
         .delete(spaceFeaturesTable)
         .where(eq(spaceFeaturesTable.space_id, spaceId))
+      if (spaceFeatureList.length === 0) {
+        return []
+      }
       return await tx
         .insert(spaceFeaturesTable)
         .values(spaceFeatureList)
