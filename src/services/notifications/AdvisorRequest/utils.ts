@@ -12,17 +12,16 @@ interface AdvisorRequestNotificationContext {
 export async function sendAdvisorRequestResponseNotification(
   request: AdvisorRequestNotificationContext,
   status: "accepted" | "rejected",
-  actor: { unique_id: string; profile_url?: string | null },
-  advisorName?: string
+  actor: { unique_id: string; profile_url?: string | null }
 ) {
   const deepLink = `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
   const accepted = status === "accepted"
 
   const template = {
-    title: accepted ? "Advisor request accepted" : "Advisor request update",
+    title: accepted ? "FYP Request Accepted" : "FYP Request Rejected",
     body: accepted
-      ? `${advisorName ?? "An advisor"} accepted your advisor request for "${request.fyp_title}".`
-      : `Your advisor request for "${request.fyp_title}" was not accepted by any advisor. You can resubmit anytime.`,
+      ? "Your FYP request has been accepted. Visit your Space to get started."
+      : "Your FYP request was not accepted by any advisor. You may submit a new request.",
     deep_link: deepLink,
     icon: accepted ? actor.profile_url || "" : ""
   }
@@ -50,8 +49,8 @@ export async function sendAdvisorRequestSingleDeclineNotification(
   const deepLink = `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
 
   const template = {
-    title: "Advisor request update",
-    body: `One of the advisors reviewing your request for "${request.fyp_title}" has declined it. Other advisors are still reviewing your request.`,
+    title: "FYP Request Declined",
+    body: "An advisor has declined your FYP request. View your dashboard for details.",
     deep_link: deepLink,
     icon: ""
   }
@@ -76,8 +75,8 @@ export async function sendAdvisorRequestExpiredNotification(
   const deepLink = `${getSpaceBasePath(request.channel_slug, request.space_slug)}?page-type=fyp`
 
   const template = {
-    title: "Advisor request expired",
-    body: `Your advisor request for "${request.fyp_title}" has expired — no advisor accepted it within the 14-day window. You can resubmit anytime.`,
+    title: "FYP Request Expired",
+    body: "Your FYP request has expired with no response. You may submit a new request.",
     deep_link: deepLink,
     icon: ""
   }

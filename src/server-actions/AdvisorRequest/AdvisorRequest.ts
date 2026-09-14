@@ -259,8 +259,7 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
           await sendAdvisorRequestResponseNotification(
             notifyContext,
             "accepted",
-            { unique_id: user.unique_id, profile_url: user.profile_url },
-            advisorName
+            { unique_id: user.unique_id, profile_url: user.profile_url }
           )
           await createAdvisorRequestResponseEmailNotification(
             notifyContext,
