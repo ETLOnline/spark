@@ -101,6 +101,11 @@ const emailTemplates = [
     file: "session_slot_suggested.html"
   },
   {
+    value: "session_slot_time_changed",
+    label: "Session Slot Time Changed (Mentee)",
+    file: "session_slot_time_changed.html"
+  },
+  {
     value: "session_request_accepted",
     label: "Session Request Accepted Email",
     file: "session_request_response.html"
@@ -118,6 +123,16 @@ const emailTemplates = [
   {
     value: "advisor_request_rejected",
     label: "Advisor Request Rejected Email",
+    file: "advisor_request_response.html"
+  },
+  {
+    value: "advisor_request_expired",
+    label: "Advisor Request Expired Email",
+    file: "advisor_request_response.html"
+  },
+  {
+    value: "advisor_request_advisor_declined",
+    label: "Advisor Request Single Advisor Declined Email",
     file: "advisor_request_response.html"
   },
   {

@@ -131,6 +131,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("advisor_request_response.html")
   },
   {
+    name: NotificationEvent.ADVISOR_REQUEST_ADVISOR_DECLINED,
+    subject: "Update on your advisor request",
+    body: loadTemplate("advisor_request_response.html")
+  },
+  {
     name: NotificationEvent.NEW_ADVISOR_REQUEST,
     subject: "New Advisor Request in {{domainName}}",
     body: loadTemplate("new_advisor_request.html")

@@ -25,7 +25,8 @@ import {
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import {
   sendAdvisorRequestExpiredNotification,
-  sendAdvisorRequestResponseNotification
+  sendAdvisorRequestResponseNotification,
+  sendAdvisorRequestSingleDeclineNotification
 } from "@/src/services/notifications/AdvisorRequest/utils"
 import { createAdvisorRequestResponseEmailNotification } from "@/src/services/notify/advisorRequest/advisorRequest"
 import { advisorRequestsTable } from "@/src/db/schema"
@@ -309,11 +310,11 @@ export const RejectAdvisorRequestAction = CreateServerAction(
 
       try {
         const after = await GetAdvisorRequestById(requestId)
-        if (
-          after &&
-          !wasAlreadyRejected &&
+        const isNowFullyRejected =
+          !!after &&
           getStudentRequestStatus(after) === AdvisorRequestStatus.REJECTED
-        ) {
+
+        if (after && !wasAlreadyRejected) {
           const notifyContext = {
             requested_by: after.requested_by,
             fyp_title: after.fyp_title,
@@ -321,15 +322,27 @@ export const RejectAdvisorRequestAction = CreateServerAction(
             channel_slug: after.space.channel?.channel_slug
           }
 
-          await sendAdvisorRequestResponseNotification(
-            notifyContext,
-            "rejected",
-            { unique_id: user.unique_id, profile_url: null }
-          )
-          await createAdvisorRequestResponseEmailNotification(
-            notifyContext,
-            "rejected"
-          )
+          if (isNowFullyRejected) {
+            // Final resolution — every advisor has rejected, or the deadline
+            // passed with at least one rejection.
+            await sendAdvisorRequestResponseNotification(
+              notifyContext,
+              "rejected",
+              { unique_id: user.unique_id, profile_url: null }
+            )
+            await createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "rejected"
+            )
+          } else {
+            // Still alive — other advisors haven't all responded yet. Notify
+            // with a generic notice, never identifying which advisor declined.
+            await sendAdvisorRequestSingleDeclineNotification(notifyContext)
+            await createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "declined"
+            )
+          }
         }
       } catch (notifyError) {
         console.error(

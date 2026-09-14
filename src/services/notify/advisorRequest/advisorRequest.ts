@@ -35,12 +35,21 @@ const RESPONSE_COPY = {
     actionVerb: "expired — the 14-day window to find an advisor has passed",
     ctaText: "Resubmit Request",
     footerText: "You can update your details and resubmit anytime."
+  },
+  declined: {
+    event: NotificationEvent.ADVISOR_REQUEST_ADVISOR_DECLINED,
+    statusLabel: "Update",
+    headerBgColor: "#f1f5f9",
+    actionVerb:
+      "been declined by one of the advisors reviewing it — other advisors are still reviewing your request",
+    ctaText: "View Request",
+    footerText: "You'll be notified once a final decision is made."
   }
 } as const
 
 export async function createAdvisorRequestResponseEmailNotification(
   request: AdvisorRequestEmailContext,
-  status: "accepted" | "rejected" | "expired",
+  status: "accepted" | "rejected" | "expired" | "declined",
   advisorName?: string
 ) {
   const studentRes = await FindUserByUniqueIdAction(request.requested_by)
