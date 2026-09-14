@@ -22,6 +22,7 @@ import {
   Check,
   CheckCircle2,
   Circle,
+  CircleDashed,
   Clock,
   GripVertical,
   Info,
@@ -32,7 +33,8 @@ import {
   PlusCircle,
   RotateCcw,
   Trash2,
-  X
+  X,
+  ArrowUpDownIcon
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
@@ -82,6 +84,7 @@ import {
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -102,10 +105,10 @@ function StatusIcon({ status }: { status: string }) {
   if (status === MilestoneStatus.VERIFIED)
     return <CheckCircle2 className="h-5 w-5 text-emerald-500" />
   if (status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
-    return <Clock className="h-5 w-5 text-amber-500" />
+    return <Clock className="h-5 w-5 text-amber-600" />
   if (status === MilestoneStatus.IN_PROGRESS)
     return <Clock className="h-5 w-5 text-blue-500" />
-  return <Circle className="h-5 w-5 text-muted-foreground/40" />
+  return <CircleDashed className="h-5 w-5 text-muted-foreground/50" />
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -337,6 +340,7 @@ function SortableRow({
         <Input
           type="date"
           value={item.end_date}
+          min={item.start_date || undefined}
           onChange={(e) => onChange(item.id, "end_date", e.target.value)}
           className={`h-8 text-sm ${errorFields.end_date ? "border-destructive focus-visible:ring-destructive/40" : ""}`}
         />
@@ -627,7 +631,6 @@ function MilestoneSetup({
       })
       return
     }
-    setDateErrors({})
 
     // Show confirmation when applying built-in template over existing custom milestones
     if (isReconfigure && mode === "template") {
@@ -658,9 +661,9 @@ function MilestoneSetup({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">Set Up Project Milestones</h2>
+        <h2 className="text-lg font-semibold">No milestones yet</h2>
         <p className="text-sm text-muted-foreground">
-          Choose how you want to set up milestones for this project.
+          Set up a template or create custom milestones to get started.
         </p>
       </div>
 
@@ -755,7 +758,7 @@ function MilestoneSetup({
             <h3 className="text-sm font-semibold">
               Preview & Configure Milestones
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Adjust names and dates. You can edit them further after applying.
             </p>
           </div>
@@ -774,8 +777,10 @@ function MilestoneSetup({
             <table className="w-full text-sm">
               <thead className="bg-muted/40">
                 <tr>
-                  <th className="w-8 py-2 pl-2" />
-                  <th className="w-8 py-2 text-left text-xs text-muted-foreground font-medium">
+                  <th className="w-14 py-2 pl-2 text-left text-sm text-muted-foreground font-medium">
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                  </th>
+                  <th className="w-12 py-2 text-left text-sm text-muted-foreground font-medium">
                     #
                   </th>
                   <th className="py-2 pr-3 text-left text-xs text-muted-foreground font-medium">
@@ -802,8 +807,8 @@ function MilestoneSetup({
                       index={i}
                       errorFields={
                         dateErrors[row.id] ?? {
-                          start_date: false,
-                          end_date: false
+                          start_date: "",
+                          end_date: ""
                         }
                       }
                       isDeleting={deletingRowId === row.id}
@@ -1067,7 +1072,7 @@ function MilestoneView({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold">Project Milestones</h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-1">
             Track progress across each phase of the FYP.
           </p>
         </div>
@@ -1109,7 +1114,9 @@ function MilestoneView({
               <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
                 End Date
               </th>
-              <th className="w-10 py-2.5 px-2" />
+              <th className="py-2.5 px-2 text-right text-xs text-muted-foreground font-medium">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1189,8 +1196,8 @@ function MilestoneView({
                         canManage)
 
                     return (
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-1 justify-end">
+                      <td className="py-3 px-2 align-middle relative">
+                        <div className="flex items-center ">
                           {canManageArtifact && (
                             <Button
                               variant="outline"
@@ -1217,6 +1224,8 @@ function MilestoneView({
                               View Artifacts
                             </Button>
                           )}
+                        </div>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -1272,7 +1281,7 @@ function MilestoneView({
                                         }
                                       }}
                                     >
-                                      <Clock className="h-3.5 w-3.5 mr-2 text-primary" />
+                                      <Clock className="h-3.5 w-3.5 mr-2 text-amber-600" />
                                       Complete (Pending Verification)
                                     </DropdownMenuItem>
                                   </>
@@ -1375,22 +1384,22 @@ function MilestoneView({
       <div className="flex flex-wrap items-start gap-x-8 gap-y-3 pt-1">
         {[
           {
-            icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />,
+            icon: <CheckCircle2 className="h-6 w-6 text-emerald-500" />,
             title: "Verified",
             desc: "Verified by Advisor"
           },
           {
-            icon: <Clock className="h-4 w-4 text-amber-500" />,
+            icon: <Clock className="h-6 w-6 text-amber-600" />,
             title: "Completed (Pending Verification)",
             desc: "Submitted by Student"
           },
           {
-            icon: <Clock className="h-4 w-4 text-blue-500" />,
+            icon: <Clock className="h-6 w-6 text-blue-500" />,
             title: "In Progress",
             desc: "Work in Progress"
           },
           {
-            icon: <Circle className="h-4 w-4 text-muted-foreground/40" />,
+            icon: <CircleDashed className="h-6 w-6 text-muted-foreground/50" />,
             title: "Incomplete",
             desc: "Not Started"
           }
@@ -1408,7 +1417,7 @@ function MilestoneView({
           </div>
         ))}
         <div className="flex items-start gap-2 ml-auto">
-          <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+          <Info className="h-6 w-6 text-muted-foreground shrink-0 mt-0.5" />
           <span className="text-xs text-muted-foreground max-w-[200px] leading-snug">
             Only Advisors and University Admins can verify or modify milestones.
           </span>
@@ -1542,14 +1551,11 @@ function FYPMilestones() {
 
   if (view === "setup" && !canManage) {
     return (
-      <div className="flex flex-col items-center gap-2 py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No milestones have been set up for this project yet.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          An Advisor or University Admin will configure them soon.
-        </p>
-      </div>
+      <NoDataCard
+        icon={<LayoutList className="h-16 w-16 text-muted-foreground mb-4" />}
+        title="No milestones yet"
+        description="Your Advisor or University Admin will set up your project milestones. Check back here once they're configured."
+      />
     )
   }
 
