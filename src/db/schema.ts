@@ -1604,6 +1604,7 @@ export const advisorRequestsTable = pgTable("advisor_requests", {
   space_id: varchar("space_id", { length: 36 })
     .notNull()
     .references(() => spacesTable.id, { onDelete: "cascade" }),
+  project_ids: jsonb("project_ids").$type<string[]>().default([]),
   requested_by: varchar().notNull(),
   group_members: jsonb("group_members")
     .$type<{ name: string; registration_number: string }[]>()

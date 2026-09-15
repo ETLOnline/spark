@@ -9,10 +9,11 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { SelectSpace } from "@/src/db/schema"
+import { SelectProject, SelectSpace } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useCanRequestAdvisor } from "@/src/hooks/useCanRequestAdvisor"
 import { GetActiveAdvisorRequestForSpaceAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
+import { GetProjectsAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import RequestAdvisorModal from "./RequestAdvisorModal"
 
 interface Props {
@@ -38,9 +39,11 @@ function RequestAdvisorButton({
 }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasActiveAdvisorRequest, setHasActiveAdvisorRequest] = useState(false)
+  const [projects, setProjects] = useState<SelectProject[]>([])
   const [checkingActiveRequest, , , getActiveAdvisorRequest] = useServerAction(
     GetActiveAdvisorRequestForSpaceAction
   )
+  const [, , , getProjects] = useServerAction(GetProjectsAction)
 
   const canSubmitRequest = useCanRequestAdvisor(space?.id, space?.is_FYP_enable)
 
@@ -49,6 +52,9 @@ function RequestAdvisorButton({
 
     getActiveAdvisorRequest(space.id).then((res) => {
       if (res?.success) setHasActiveAdvisorRequest(!!res.data)
+    })
+    getProjects(space.id).then((res) => {
+      if (res?.success) setProjects(res.data ?? [])
     })
   }, [space?.id, canSubmitRequest])
 
@@ -88,6 +94,7 @@ function RequestAdvisorButton({
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         spaceId={space.id}
+        projects={projects}
         onSubmitted={handleSubmitted}
       />
     </>
