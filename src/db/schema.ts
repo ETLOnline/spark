@@ -1,10 +1,7 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
-import {
-  MilestoneStatus,
-  MilestoneArtifactEntry
-} from "@/src/types/Milestone/Milestone"
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import {
   integer,
   pgTable,
@@ -1673,26 +1670,58 @@ export const fypMilestonesTable = pgTable("fyp_milestones", {
   end_date: varchar(),
   order_index: integer().notNull().default(0),
   created_by: varchar().notNull(),
-  // Artifacts — JSON array; at least one required before marking as Done
-  artifacts: json()
-    .$type<MilestoneArtifactEntry[]>()
-    .notNull()
-    .default(sql`'[]'::json`),
   ...timestamps
 })
 
 export const fypMilestonesRelations = relations(
   fypMilestonesTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     space: one(spacesTable, {
       fields: [fypMilestonesTable.space_id],
       references: [spacesTable.id]
-    })
+    }),
+    artifacts: many(fypArtifactFilesTable)
   })
 )
 
 export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
 export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
+
+// ─── FYP Milestone Artifacts ────────────────────────────────────────────────────
+// Child table — one row per artifact, mirroring post_files (one row per file
+// attached to a post). Lets a milestone have any number of artifacts via a
+// real FK relation, instead of a JSON array Drizzle/Postgres can't join
+// against or enforce referential integrity on.
+
+export const fypArtifactFilesTable = pgTable("fyp_artifact_files", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  milestone_id: varchar("milestone_id", { length: 36 })
+    .notNull()
+    .references(() => fypMilestonesTable.id, { onDelete: "cascade" }),
+  // "image" | "file" | "link" — decided once at insert time from the
+  // uploaded file's mime type, so nothing downstream re-parses mime_type.
+  type: varchar().notNull(),
+  file_id: integer().references(() => filesTable.id, { onDelete: "cascade" }), // null for links
+  url: varchar(), // null for files/images
+  ...timestamps
+})
+
+export const fypArtifactFilesRelations = relations(
+  fypArtifactFilesTable,
+  ({ one }) => ({
+    milestone: one(fypMilestonesTable, {
+      fields: [fypArtifactFilesTable.milestone_id],
+      references: [fypMilestonesTable.id]
+    }),
+    file: one(filesTable, {
+      fields: [fypArtifactFilesTable.file_id],
+      references: [filesTable.id]
+    })
+  })
+)
+
+export type InsertFypArtifactFile = typeof fypArtifactFilesTable.$inferInsert
+export type SelectFypArtifactFile = typeof fypArtifactFilesTable.$inferSelect
 
 // ─────────────────────────────────────────────────────────────────────────────
 

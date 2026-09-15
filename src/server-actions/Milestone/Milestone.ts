@@ -3,12 +3,17 @@
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
+  AddMilestoneArtifact,
   ApplyMilestoneDiff,
   BulkCreateMilestones,
+  CountMilestoneArtifacts,
   DeleteMilestone,
+  DeleteMilestoneArtifact,
   GetMilestoneById,
   GetMilestoneWithSpace,
   GetMilestonesForSpace,
+  RawMilestoneArtifact,
+  RawMilestoneWithArtifacts,
   UpdateMilestone
 } from "@/src/db/data-access/milestones/query"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
@@ -30,6 +35,45 @@ import {
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 import pusherServer from "@/src/services/realtime/pusherServer"
 
+// ─── Response shaping ─────────────────────────────────────────────────────────
+// Turns a raw fyp_artifact_files row (joined with its file, if any) into the
+// flat shape the client consumes. Lives here rather than in the data-access
+// layer — same reasoning as getAdvisorViewerStatus living in
+// AdvisorRequest.ts instead of advisor-requests/query.ts: deciding what the
+// response looks like is a server-action concern, not a query concern.
+// A dangling file_id (file row missing) is dropped rather than surfaced as a
+// broken entry.
+
+export type MilestoneWithArtifacts = Omit<
+  RawMilestoneWithArtifacts,
+  "artifacts"
+> & { artifacts: MilestoneArtifactEntry[] }
+
+function toArtifactEntry(row: RawMilestoneArtifact): MilestoneArtifactEntry | null {
+  if (row.type === "link") {
+    return row.url ? { id: row.id, type: "link", url: row.url } : null
+  }
+  if (!row.file) return null
+  return {
+    id: row.id,
+    type: row.type as "image" | "file",
+    file_id: row.file.id,
+    file_name: row.file.file_name,
+    file_path: row.file.file_path
+  }
+}
+
+function withMappedArtifacts<T extends RawMilestoneWithArtifacts>(
+  milestone: T
+): Omit<T, "artifacts"> & { artifacts: MilestoneArtifactEntry[] } {
+  return {
+    ...milestone,
+    artifacts: milestone.artifacts
+      .map(toArtifactEntry)
+      .filter((a): a is MilestoneArtifactEntry => a !== null)
+  }
+}
+
 // ─── Get single milestone ─────────────────────────────────────────────────────
 
 export const GetMilestoneByIdAction = CreateServerAction(
@@ -38,7 +82,7 @@ export const GetMilestoneByIdAction = CreateServerAction(
     try {
       const milestone = await GetMilestoneById(milestoneId)
       if (!milestone) return { success: false, message: "Milestone not found" }
-      return { success: true, data: milestone }
+      return { success: true, data: withMappedArtifacts(milestone) }
     } catch (error) {
       return { error }
     }
@@ -52,7 +96,7 @@ export const GetMilestonesForSpaceAction = CreateServerAction(
   async (spaceId: string) => {
     try {
       const milestones = await GetMilestonesForSpace(spaceId)
-      return { success: true, data: milestones }
+      return { success: true, data: milestones.map(withMappedArtifacts) }
     } catch (error) {
       return { error: error }
     }
@@ -86,7 +130,11 @@ export const SetupMilestonesAction = CreateServerAction(
       }))
 
       const created = await BulkCreateMilestones(rows)
-      return { success: true, data: created }
+      const withArtifacts: MilestoneWithArtifacts[] = created.map((m) => ({
+        ...m,
+        artifacts: []
+      }))
+      return { success: true, data: withArtifacts }
     } catch (error) {
       return { error: error }
     }
@@ -150,7 +198,7 @@ export const ReconfigureMilestonesAction = CreateServerAction(
         toDelete
       })
 
-      return { success: true, data: milestones }
+      return { success: true, data: milestones.map(withMappedArtifacts) }
     } catch (error) {
       return { error: error }
     }
@@ -195,9 +243,7 @@ export const UpdateMilestoneAction = CreateServerAction(
           newStatus === MilestoneStatus.COMPLETED_PENDING_VERIFICATION ||
           newStatus === MilestoneStatus.VERIFIED
         ) {
-          const artifacts =
-            (ctx.milestone.artifacts as MilestoneArtifactEntry[]) ?? []
-          if (artifacts.length === 0) {
+          if (ctx.milestone.artifacts.length === 0) {
             return {
               success: false,
               message:
@@ -256,12 +302,12 @@ export const UpdateMilestoneAction = CreateServerAction(
           id,
           status: newStatus
         })
-        return { success: true, data: updated }
+        return { success: true, data: updated ? withMappedArtifacts(updated) : null }
       }
 
       // Metadata-only update (name, dates, order)
       const updated = await UpdateMilestone(id, data)
-      return { success: true, data: updated }
+      return { success: true, data: updated ? withMappedArtifacts(updated) : null }
     } catch (error) {
       return { error: error }
     }
@@ -269,7 +315,7 @@ export const UpdateMilestoneAction = CreateServerAction(
 )
 
 // ─── Submit artifact ──────────────────────────────────────────────────────────
-// Student appends a file or link to the milestone's artifacts array.
+// Student adds one row to fyp_artifact_files for this milestone.
 // Multiple artifacts are allowed; at least one is required to mark as Done.
 
 export const SubmitMilestoneArtifactAction = CreateServerAction(
@@ -306,11 +352,6 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
         }
       }
 
-      const current: MilestoneArtifactEntry[] =
-        (milestone.artifacts as MilestoneArtifactEntry[]) ?? []
-
-      let newEntry: MilestoneArtifactEntry
-
       if (artifact.file) {
         if (!MILESTONE_ARTIFACT_MIME_TYPES.includes(artifact.file.mimeType)) {
           return {
@@ -330,26 +371,29 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
           artifact.file.mimeType,
           "milestone-artifacts"
         )
-        newEntry = {
-          type: "file",
-          file_id: fileRecord.id,
-          file_name: fileRecord.file_name,
-          file_path: fileRecord.file_path
-        }
+        await AddMilestoneArtifact({
+          milestone_id: milestoneId,
+          type: artifact.file.mimeType.startsWith("image/") ? "image" : "file",
+          file_id: fileRecord.id
+        })
       } else {
-        newEntry = { type: "link", url: artifact.link!.trim() }
+        await AddMilestoneArtifact({
+          milestone_id: milestoneId,
+          type: "link",
+          url: artifact.link!.trim()
+        })
       }
 
-      const updated = await UpdateMilestone(milestoneId, {
-        artifacts: [...current, newEntry]
-      })
+      const updated = await GetMilestoneById(milestoneId)
+      const mapped = updated ? withMappedArtifacts(updated) : null
 
       await pusherServer.trigger(
         `milestone-${milestoneId}`,
         "artifacts-update",
-        { id: milestoneId, artifacts: updated?.artifacts ?? [] }
+        { id: milestoneId, artifacts: mapped?.artifacts ?? [] }
       )
-      return { success: true, data: updated }
+
+      return { success: true, data: mapped }
     } catch (error) {
       return { error: error }
     }
@@ -357,12 +401,12 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
 )
 
 // ─── Delete artifact ──────────────────────────────────────────────────────────
-// Removes one artifact by index.
+// Removes one artifact row by its id.
 // Nobody can delete artifacts once the milestone is Verified.
 
 export const DeleteMilestoneArtifactAction = CreateServerAction(
   true,
-  async (milestoneId: string, index: number) => {
+  async (milestoneId: string, artifactId: number) => {
     try {
       const user = await AuthUserAction()
       if (!user) return { success: false, message: "Unauthorized" }
@@ -380,27 +424,28 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
         }
       }
 
-      const current: MilestoneArtifactEntry[] =
-        (milestone.artifacts as MilestoneArtifactEntry[]) ?? []
-
-      const newArtifacts = current.filter((_, i) => i !== index)
+      await DeleteMilestoneArtifact(artifactId)
+      const remaining = await CountMilestoneArtifacts(milestoneId)
 
       // If the student removed the last artifact while pending verification,
       // revert the milestone back to IN_PROGRESS so Advisors don't see an
       // empty evidence state awaiting review.
       const shouldRevert =
-        newArtifacts.length === 0 &&
+        remaining === 0 &&
         status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
 
-      const updated = await UpdateMilestone(milestoneId, {
-        artifacts: newArtifacts,
-        ...(shouldRevert ? { status: MilestoneStatus.IN_PROGRESS } : {})
-      })
+      const updated = shouldRevert
+        ? await UpdateMilestone(milestoneId, {
+            status: MilestoneStatus.IN_PROGRESS
+          })
+        : await GetMilestoneById(milestoneId)
+
+      const mapped = updated ? withMappedArtifacts(updated) : null
 
       await pusherServer.trigger(
         `milestone-${milestoneId}`,
         "artifacts-update",
-        { id: milestoneId, artifacts: updated?.artifacts ?? [] }
+        { id: milestoneId, artifacts: mapped?.artifacts ?? [] }
       )
 
       if (shouldRevert) {
@@ -411,7 +456,7 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
         )
       }
 
-      return { success: true, data: updated }
+      return { success: true, data: mapped }
     } catch (error) {
       return { error: error }
     }
@@ -451,7 +496,7 @@ export const RevertMilestoneAction = CreateServerAction(
         id: milestoneId,
         status: targetStatus
       })
-      return { success: true, data: updated }
+      return { success: true, data: updated ? withMappedArtifacts(updated) : null }
     } catch (error) {
       return { error: error }
     }

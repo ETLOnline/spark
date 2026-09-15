@@ -23,6 +23,16 @@ import {
   DialogFooter
 } from "@/src/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -39,7 +49,7 @@ import {
   UpdateMilestoneAction,
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
-import { SelectFypMilestone } from "@/src/db/schema"
+import type { MilestoneWithArtifacts } from "@/src/server-actions/Milestone/Milestone"
 import {
   MilestoneArtifactEntry,
   MilestoneStatus
@@ -132,7 +142,7 @@ function AddArtifactDialog({
         const res = await submitArtifact(milestoneId, { link: link.trim() })
         if (res?.success && res.data) {
           onAdded(
-            (res.data as SelectFypMilestone)
+            (res.data as MilestoneWithArtifacts)
               .artifacts as MilestoneArtifactEntry[]
           )
           toast({ title: "Link added" })
@@ -172,7 +182,7 @@ function AddArtifactDialog({
         })
         if (res?.success && res.data) {
           onAdded(
-            (res.data as SelectFypMilestone)
+            (res.data as MilestoneWithArtifacts)
               .artifacts as MilestoneArtifactEntry[]
           )
           toast({ title: "File uploaded" })
@@ -289,9 +299,11 @@ export default function MilestoneArtifactsView({
   const router = useRouter()
   const { toast } = useToast()
 
-  const [milestone, setMilestone] = useState<SelectFypMilestone | null>(null)
+  const [milestone, setMilestone] = useState<MilestoneWithArtifacts | null>(null)
   const [loading, setLoading] = useState(true)
-  const [deletingIdx, setDeletingIdx] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [confirmMarkDone, setConfirmMarkDone] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
 
@@ -311,7 +323,7 @@ export default function MilestoneArtifactsView({
 
   const status = (milestone?.status ??
     MilestoneStatus.INCOMPLETE) as MilestoneStatus
-  const artifacts = (milestone?.artifacts as MilestoneArtifactEntry[]) ?? []
+  const artifacts = milestone?.artifacts ?? []
 
   const canEdit =
     canArtifactAdd &&
@@ -328,7 +340,7 @@ export default function MilestoneArtifactsView({
     try {
       const res = await getMilestone(milestoneId)
       if (res?.success && res.data) {
-        setMilestone(res.data as SelectFypMilestone)
+        setMilestone(res.data as MilestoneWithArtifacts)
       } else {
         toast({ title: "Milestone not found", variant: "destructive" })
         router.push(backUrl)
@@ -384,12 +396,12 @@ export default function MilestoneArtifactsView({
     d && moment(d).isValid() ? moment(d).format(MILESTONE_DATE_FORMAT) : "—"
 
   // ── Handlers ──
-  const handleDelete = async (index: number) => {
-    setDeletingIdx(index)
+  const handleDelete = async (artifactId: number) => {
+    setDeletingId(artifactId)
     try {
-      const res = await deleteArtifact(milestoneId, index)
+      const res = await deleteArtifact(milestoneId, artifactId)
       if (res?.success && res.data) {
-        const updated = res.data as SelectFypMilestone
+        const updated = res.data as MilestoneWithArtifacts
         setMilestone(updated)
         const statusReverted = updated.status !== status
         toast({
@@ -406,7 +418,7 @@ export default function MilestoneArtifactsView({
     } catch {
       toast({ title: "Failed to remove artifact", variant: "destructive" })
     } finally {
-      setDeletingIdx(null)
+      setDeletingId(null)
     }
   }
 
@@ -472,7 +484,7 @@ export default function MilestoneArtifactsView({
     try {
       const res = await revertMilestone(milestoneId)
       if (res?.success && res.data) {
-        setMilestone(res.data as SelectFypMilestone)
+        setMilestone(res.data as MilestoneWithArtifacts)
         toast({ title: "Milestone status reverted." })
       } else {
         toast({
@@ -546,8 +558,8 @@ export default function MilestoneArtifactsView({
             <ArtifactFeed
               artifacts={artifacts}
               canDelete={canDelete}
-              deletingIdx={deletingIdx}
-              onDelete={handleDelete}
+              deletingId={deletingId}
+              onDelete={setConfirmDeleteId}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] rounded-xl border border-dashed bg-muted/20 space-y-2 text-center p-8">
@@ -628,7 +640,7 @@ export default function MilestoneArtifactsView({
             <div className="px-5 py-4 space-y-2 mt-auto border-t">
               {canArtifactAdd && status === MilestoneStatus.IN_PROGRESS && (
                 <Button
-                  onClick={handleMarkDone}
+                  onClick={() => setConfirmMarkDone(true)}
                   disabled={artifacts.length === 0 || actionLoading}
                   className="w-full cursor-pointer"
                 >
@@ -692,6 +704,65 @@ export default function MilestoneArtifactsView({
           setShowAddDialog(false)
         }}
       />
+
+      {/* ── Confirm delete artifact ── */}
+      <AlertDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDeleteId(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this artifact?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This can&apos;t be undone. The file or link will be permanently
+              removed from this milestone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDeleteId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDeleteId !== null) handleDelete(confirmDeleteId)
+                setConfirmDeleteId(null)
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Confirm mark as done ── */}
+      <AlertDialog open={confirmMarkDone} onOpenChange={setConfirmMarkDone}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark milestone as done?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This submits your artifacts for verification. You won&apos;t be
+              able to add or remove artifacts until it&apos;s reverted back to
+              In Progress.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmMarkDone(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmMarkDone(false)
+                handleMarkDone()
+              }}
+            >
+              Mark as Done
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
