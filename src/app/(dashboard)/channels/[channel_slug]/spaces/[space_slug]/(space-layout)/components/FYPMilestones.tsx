@@ -59,7 +59,7 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { userStore } from "@/src/store/user/userStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useMilestonePermissions } from "@/src/hooks/useMilestonePermissions"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   GetMilestonesForSpaceAction,
@@ -70,7 +70,10 @@ import {
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
 import type { MilestoneWithArtifacts } from "@/src/server-actions/Milestone/Milestone"
-import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import {
+  MilestoneStatus,
+  MilestoneArtifactEntry
+} from "@/src/types/Milestone/Milestone"
 import { useToast } from "@/src/hooks/use-toast"
 import moment from "moment"
 import {
@@ -81,6 +84,7 @@ import {
 } from "./constants"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import pusherClient from "@/src/services/realtime/PusherClient"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -929,6 +933,7 @@ function MilestoneSetup({
 function MilestoneView({
   milestones: initial,
   canManage,
+  canArtifactAdd,
   canCreateMilestone,
   canUpdateMilestone,
   canDeleteMilestone,
@@ -939,6 +944,7 @@ function MilestoneView({
 }: {
   milestones: MilestoneWithArtifacts[]
   canManage: boolean
+  canArtifactAdd: boolean
   canCreateMilestone: boolean
   canUpdateMilestone: boolean
   canDeleteMilestone: boolean
@@ -961,6 +967,51 @@ function MilestoneView({
     id: string
     name: string
   } | null>(null)
+
+  // Real-time: subscribe to a private per-milestone channel for each milestone.
+  // Follows the same pattern as private-chat-${chatId} used in ChatScreen.
+  useEffect(() => {
+    if (!initial.length) return
+
+    const subscriptions = initial.map((m) => {
+      const channelName = `milestone-${m.id}`
+      const channel = pusherClient.subscribe(channelName)
+
+      channel.bind(
+        "status-update",
+        (data: { id: string; status: MilestoneStatus }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, status: data.status } : ms
+            )
+          )
+        }
+      )
+
+      channel.bind(
+        "artifacts-update",
+        (data: { id: string; artifacts: MilestoneArtifactEntry[] }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, artifacts: data.artifacts } : ms
+            )
+          )
+        }
+      )
+
+      return channelName
+    })
+
+    return () => {
+      subscriptions.forEach((channelName) => {
+        const ch = pusherClient.channel(channelName)
+        if (ch) {
+          ch.unbind_all()
+          pusherClient.unsubscribe(channelName)
+        }
+      })
+    }
+  }, [])
 
   const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
   const [, , , deleteMilestone] = useServerAction(DeleteMilestoneAction)
@@ -1183,13 +1234,17 @@ function MilestoneView({
                   {(() => {
                     const arts = m.artifacts
                     const canManageArtifact =
+                      canArtifactAdd &&
                       !canManage &&
                       (m.status === MilestoneStatus.IN_PROGRESS ||
                         m.status ===
                           MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
                     const canViewArtifact =
                       arts.length > 0 &&
-                      ((!canManage && m.status === MilestoneStatus.VERIFIED) ||
+                      ((!canArtifactAdd && !canManage) ||
+                        (canArtifactAdd &&
+                          !canManage &&
+                          m.status === MilestoneStatus.VERIFIED) ||
                         canManage)
 
                     return (
@@ -1239,24 +1294,26 @@ function MilestoneView({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
-                              {/* Mark In Progress — available to all users */}
-                              {m.status === MilestoneStatus.INCOMPLETE && (
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    handleStatusChange(
-                                      m.id,
-                                      MilestoneStatus.IN_PROGRESS
-                                    )
-                                  }
-                                >
-                                  <Clock className="h-3.5 w-3.5 mr-2 text-blue-500" />
-                                  Mark In Progress
-                                </DropdownMenuItem>
-                              )}
+                              {/* Mark In Progress — student or manager only */}
+                              {(canArtifactAdd || canManage) &&
+                                m.status === MilestoneStatus.INCOMPLETE && (
+                                  <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                      handleStatusChange(
+                                        m.id,
+                                        MilestoneStatus.IN_PROGRESS
+                                      )
+                                    }
+                                  >
+                                    <Clock className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                                    Mark In Progress
+                                  </DropdownMenuItem>
+                                )}
 
                               {/* Student actions */}
-                              {!canManage &&
+                              {canArtifactAdd &&
+                                !canManage &&
                                 (m.status === MilestoneStatus.IN_PROGRESS ? (
                                   <>
                                     <DropdownMenuItem
@@ -1361,6 +1418,15 @@ function MilestoneView({
                                     </>
                                   )}
                                 </>
+                              )}
+                              {!canArtifactAdd && !canManage && (
+                                <DropdownMenuItem
+                                  disabled
+                                  className="text-xs text-muted-foreground"
+                                >
+                                  You don&apos;t have permission to perform
+                                  actions.
+                                </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1473,50 +1539,20 @@ function MilestoneView({
 function FYPMilestones() {
   const currentSpace = useAtomValue(spaceStore.currentSpace)
   const spaceId = currentSpace?.id
-  const communityId = currentSpace?.channel?.community_id ?? undefined
   const [view, setView] = useState<View>("milestones")
   const [milestones, setMilestones] = useState<MilestoneWithArtifacts[]>([])
   const [loadingMs, setLoadingMs] = useState(true)
   const [, , , fetchMilestones] = useServerAction(GetMilestonesForSpaceAction)
 
-  // industry_partner: fyp permissions are GLOBAL
-  // community_admin: fyp permissions are SCOPED to COMMUNITY (entity_type='COMMUNITY')
-  const { permissionChecker: globalChecker } = usePermissionChecker("global")
-  const { permissionChecker: scopedChecker } = usePermissionChecker(
-    "scoped",
-    "COMMUNITY",
-    communityId
-  )
-  // Space-scoped checker — used to verify advisor has space_admin or space_editor (not just space_viewer)
-  const { permissionChecker: spaceChecker } = usePermissionChecker(
-    "scoped",
-    "SPACE",
-    spaceId
-  )
-
-  // Check a fyp permission against both global (advisor) and community-scoped (university admin) checkers.
-  // Advisors (global) must also have space.update — i.e. be space_admin or space_editor, not space_viewer.
-  const canFyp = (action: string): boolean => {
-    const isAdvisor = globalChecker?.canAccess(action) ?? false
-    const isCommunityAdmin = scopedChecker?.canAccess(action) ?? false
-    if (isAdvisor) {
-      return spaceChecker?.canAccess("space.update") ?? false
-    }
-    return isCommunityAdmin
-  }
-
-  const canCreateMilestone = canFyp("fyp.milestone.create")
-  const canUpdateMilestone = canFyp("fyp.milestone.update")
-  const canDeleteMilestone = canFyp("fyp.milestone.delete")
-  const canVerifyMilestone = canFyp("fyp.milestone.verify")
-  const canRevertMilestone = canFyp("fyp.milestone.revert")
-
-  const canManage =
-    canCreateMilestone ||
-    canUpdateMilestone ||
-    canDeleteMilestone ||
-    canVerifyMilestone ||
-    canRevertMilestone
+  const {
+    canManage,
+    canCreateMilestone,
+    canUpdateMilestone,
+    canDeleteMilestone,
+    canVerifyMilestone,
+    canRevertMilestone,
+    canArtifactAdd
+  } = useMilestonePermissions()
 
   const load = useCallback(async () => {
     if (!spaceId) return
@@ -1577,6 +1613,7 @@ function FYPMilestones() {
     <MilestoneView
       milestones={milestones}
       canManage={canManage}
+      canArtifactAdd={canArtifactAdd}
       canCreateMilestone={canCreateMilestone}
       canUpdateMilestone={canUpdateMilestone}
       canDeleteMilestone={canDeleteMilestone}
