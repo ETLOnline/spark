@@ -1,3 +1,26 @@
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+
+// ─── Milestone Status Flow ────────────────────────────────────────────────────
+// Strict forward order used to validate status transitions.
+
+export const MILESTONE_STATUS_FLOW: MilestoneStatus[] = [
+  MilestoneStatus.INCOMPLETE,
+  MilestoneStatus.IN_PROGRESS,
+  MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
+  MilestoneStatus.VERIFIED
+]
+
+// ─── Milestone Allowed Reversions ─────────────────────────────────────────────
+// Maps each status to the one it can be reverted to by an Advisor / Admin.
+
+export const MILESTONE_ALLOWED_REVERSIONS: Partial<
+  Record<MilestoneStatus, MilestoneStatus>
+> = {
+  [MilestoneStatus.VERIFIED]: MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
+  [MilestoneStatus.COMPLETED_PENDING_VERIFICATION]: MilestoneStatus.IN_PROGRESS,
+  [MilestoneStatus.IN_PROGRESS]: MilestoneStatus.INCOMPLETE
+}
+
 export const spaceStaticFeatures = [
   {
     name: "Settings",
@@ -51,6 +74,25 @@ export const MILESTONE_STATUS_TOAST: Record<string, string> = {
     "Milestone marked as Completed (Pending Verification).",
   verified: "Milestone verified successfully."
 }
+
+// ─── Milestone Artifact Image Extensions ─────────────────────────────────────
+
+export const MILESTONE_IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "jfif",
+  "jpe",
+  "gif",
+  "webp",
+  "bmp",
+  "svg",
+  "avif"
+])
+
+// ─── Milestone Date Format ────────────────────────────────────────────────────
+
+export const MILESTONE_DATE_FORMAT = "DD MMM YYYY"
 
 // ─── Milestone Artifact Upload Constraints ────────────────────────────────────
 // Single source of truth used by both the server action and the upload dialog.
