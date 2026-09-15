@@ -442,6 +442,13 @@
       "when": 1788353259783,
       "tag": "0062_2026_09_02_174737__create_milstone_table_and_drop_reject_reason_in_advisor_request",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1789397248591,
+      "tag": "0063_2026_09_14_194725__create_MoM_table",
+      "breakpoints": true
     }
   ]
 }
