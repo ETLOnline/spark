@@ -29,5 +29,6 @@ export enum NotificationEvent {
   ADVISOR_REQUEST_ACCEPTED = "advisor_request_accepted",
   ADVISOR_REQUEST_REJECTED = "advisor_request_rejected",
   ADVISOR_REQUEST_EXPIRED = "advisor_request_expired",
+  ADVISOR_REQUEST_ADVISOR_DECLINED = "advisor_request_advisor_declined",
   NEW_ADVISOR_REQUEST = "new_advisor_request"
 }

@@ -13,6 +13,7 @@ import {
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { RejectAdvisorRequestAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
+import { ADVISOR_REJECTION_REASON_MAX_LENGTH } from "@/src/utils/constants"
 
 interface Props {
   open: boolean
@@ -74,12 +75,18 @@ export function RejectRequestDialog({
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-sm font-semibold">Reason (optional)</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">Reason (optional)</p>
+            <span className="text-xs text-muted-foreground">
+              {reason.length}/{ADVISOR_REJECTION_REASON_MAX_LENGTH}
+            </span>
+          </div>
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Let the student know why their request was rejected..."
             rows={3}
+            maxLength={ADVISOR_REJECTION_REASON_MAX_LENGTH}
             className="resize-none text-sm"
           />
         </div>

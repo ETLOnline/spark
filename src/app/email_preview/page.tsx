@@ -8,15 +8,10 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/src/components/ui/select"
+import { Input } from "@/src/components/ui/input"
 import { Badge } from "@/src/components/ui/badge"
-import { RefreshCw } from "lucide-react"
+import { cn } from "@/src/lib/utils"
+import { RefreshCw, Search } from "lucide-react"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 
 const emailTemplates = [
@@ -118,12 +113,22 @@ const emailTemplates = [
   {
     value: "advisor_request_accepted",
     label: "Advisor Request Accepted Email",
-    file: "advisor_request_response.html"
+    file: "advisor_request_accepted.html"
   },
   {
     value: "advisor_request_rejected",
     label: "Advisor Request Rejected Email",
-    file: "advisor_request_response.html"
+    file: "advisor_request_rejected.html"
+  },
+  {
+    value: "advisor_request_expired",
+    label: "Advisor Request Expired Email",
+    file: "advisor_request_expired.html"
+  },
+  {
+    value: "advisor_request_advisor_declined",
+    label: "Advisor Request Single Advisor Declined Email",
+    file: "advisor_request_advisor_declined.html"
   },
   {
     value: "identity_verification_otp",
@@ -153,6 +158,17 @@ export default function EmailPreviewPage() {
   const [templateHTML, setTemplateHTML] = useState<string>("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
+  const [search, setSearch] = useState("")
+
+  const filteredTemplates = emailTemplates.filter((template) => {
+    const q = search.trim().toLowerCase()
+    if (!q) return true
+    return (
+      template.label.toLowerCase().includes(q) ||
+      template.value.toLowerCase().includes(q) ||
+      template.file.toLowerCase().includes(q)
+    )
+  })
 
   const loadTemplate = async (templateName: string) => {
     setLoading(true)
@@ -216,21 +232,36 @@ export default function EmailPreviewPage() {
                 <label className="text-sm font-medium mb-2 block">
                   Select Template
                 </label>
-                <Select
-                  value={selectedTemplate}
-                  onValueChange={setSelectedTemplate}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {emailTemplates.map((template) => (
-                      <SelectItem key={template.value} value={template.value}>
-                        {template.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative mb-2">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search templates..."
+                    className="pl-8"
+                  />
+                </div>
+                <div className="max-h-80 overflow-y-auto rounded-md border divide-y">
+                  {filteredTemplates.length === 0 && (
+                    <p className="p-3 text-sm text-muted-foreground">
+                      No templates match "{search}".
+                    </p>
+                  )}
+                  {filteredTemplates.map((template) => (
+                    <button
+                      key={template.value}
+                      type="button"
+                      onClick={() => setSelectedTemplate(template.value)}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors",
+                        selectedTemplate === template.value &&
+                          "bg-muted font-medium"
+                      )}
+                    >
+                      {template.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <Button
