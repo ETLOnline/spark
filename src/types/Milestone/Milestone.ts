@@ -5,13 +5,19 @@ export enum MilestoneStatus {
   VERIFIED = "verified"
 }
 
-// Artifact entries stored as a JSON array on each milestone
+// One row from `fyp_artifact_files`, joined with its `files` row when
+// type is "image"/"file". `type` is decided once at insert time (from the
+// uploaded file's mime type) — nothing downstream re-parses mime_type.
 export type MilestoneArtifactEntry =
   | {
-      type: "file"
+      id: number
+      type: "image" | "file"
       file_id: number
       file_name: string
       file_path: string
-      mime_type: string
     }
-  | { type: "link"; url: string }
+  | {
+      id: number
+      type: "link"
+      url: string
+    }

@@ -20,8 +20,8 @@ import { MilestoneArtifactEntry } from "@/src/types/Milestone/Milestone"
 export interface ArtifactFeedProps {
   artifacts: MilestoneArtifactEntry[]
   canDelete?: boolean
-  deletingIdx?: number | null
-  onDelete?: (index: number) => void
+  deletingId?: number | null
+  onDelete?: (artifactId: number) => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -29,19 +29,14 @@ export interface ArtifactFeedProps {
 export function ArtifactFeed({
   artifacts,
   canDelete = false,
-  deletingIdx = null,
+  deletingId = null,
   onDelete
 }: ArtifactFeedProps) {
   const [lightboxFileId, setLightboxFileId] = useState<number | null>(null)
 
-  const imageArtifacts = artifacts.filter(
-    (a): a is Extract<MilestoneArtifactEntry, { type: "file" }> =>
-      a.type === "file" && (a.mime_type?.startsWith("image/") ?? false)
-  )
-  const imageUrls = imageArtifacts.map((a) => a.file_path)
-  const lightboxIndex = imageArtifacts.findIndex(
-    (a) => a.file_id === lightboxFileId
-  )
+  
+  const imageUrls: string[] = []
+  let lightboxIndex = -1
 
   return (
     <>
@@ -52,16 +47,19 @@ export function ArtifactFeed({
         )}
 
         <div className="space-y-3">
-          {artifacts.map((a, i) => {
-            const isDeleting = deletingIdx === i
-            const isImg =
-              a.type === "file" && (a.mime_type?.startsWith("image/") ?? false)
+          {artifacts.map((a) => {
+            const isDeleting = deletingId === a.id
+
+            if (a.type === "image") {
+              if (a.file_id === lightboxFileId) lightboxIndex = imageUrls.length
+              imageUrls.push(a.file_path)
+            }
 
             // ── Timeline dot ──
             const dotIcon =
               a.type === "link" ? (
                 <Link2 className="h-3.5 w-3.5" />
-              ) : isImg ? (
+              ) : a.type === "image" ? (
                 <ImageIcon className="h-3.5 w-3.5" />
               ) : (
                 <FileText className="h-3.5 w-3.5" />
@@ -70,7 +68,7 @@ export function ArtifactFeed({
             const dotColor =
               a.type === "link"
                 ? "border-primary/40 bg-primary/10 text-primary"
-                : isImg
+                : a.type === "image"
                   ? "border-purple-400/40 bg-purple-500/10 text-purple-500"
                   : "border-blue-400/40 bg-blue-500/10 text-blue-500"
 
@@ -81,7 +79,7 @@ export function ArtifactFeed({
                 size="icon"
                 className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
                 disabled={isDeleting}
-                onClick={() => onDelete(i)}
+                onClick={() => onDelete(a.id)}
               >
                 {isDeleting ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -92,7 +90,7 @@ export function ArtifactFeed({
             )
 
             return (
-              <div key={i} className="relative flex gap-3 items-start">
+              <div key={a.id} className="relative flex gap-3 items-start">
                 {/* Dot */}
                 <div
                   className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${dotColor}`}
@@ -102,7 +100,38 @@ export function ArtifactFeed({
 
                 {/* Post card */}
                 <div className="flex-1 min-w-0 rounded-xl border bg-card overflow-hidden">
-                  {isImg && a.type === "file" ? (
+                  {a.type === "link" ? (
+                    // ── Link post ──
+                    <div className="flex items-center gap-3 px-3 py-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Link2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block truncate text-sm font-medium text-primary hover:underline"
+                        >
+                          {a.url}
+                        </Link>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          External link
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Link
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
+                        {deleteBtn}
+                      </div>
+                    </div>
+                  ) : a.type === "image" ? (
                     // ── Image post: show the image ──
                     <>
                       <div
@@ -132,7 +161,7 @@ export function ArtifactFeed({
                         {deleteBtn}
                       </div>
                     </>
-                  ) : a.type === "file" ? (
+                  ) : (
                     // ── Non-image file post ──
                     <div className="flex items-center gap-3 px-3 py-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -149,37 +178,6 @@ export function ArtifactFeed({
                       <div className="flex shrink-0 items-center gap-1">
                         <Link
                           href={a.file_path}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </Link>
-                        {deleteBtn}
-                      </div>
-                    </div>
-                  ) : (
-                    // ── Link post ──
-                    <div className="flex items-center gap-3 px-3 py-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <Link2 className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={a.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block truncate text-sm font-medium text-primary hover:underline"
-                        >
-                          {a.url}
-                        </Link>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          External link
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Link
-                          href={a.url}
                           target="_blank"
                           rel="noreferrer"
                           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"

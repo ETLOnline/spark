@@ -69,11 +69,8 @@ import {
   DeleteMilestoneAction,
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
-import { SelectFypMilestone } from "@/src/db/schema"
-import {
-  MilestoneStatus,
-  MilestoneArtifactEntry
-} from "@/src/types/Milestone/Milestone"
+import type { MilestoneWithArtifacts } from "@/src/server-actions/Milestone/Milestone"
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import { useToast } from "@/src/hooks/use-toast"
 import moment from "moment"
 import {
@@ -143,7 +140,7 @@ function StatusBadge({ status }: { status: string }) {
 function MilestoneStepper({
   milestones
 }: {
-  milestones: SelectFypMilestone[]
+  milestones: MilestoneWithArtifacts[]
 }) {
   const completed = milestones.filter(
     (m) => m.status === MilestoneStatus.VERIFIED
@@ -374,9 +371,9 @@ function MilestoneSetup({
   onMilestoneDeleted
 }: {
   spaceId: string
-  initialMilestones?: SelectFypMilestone[]
+  initialMilestones?: MilestoneWithArtifacts[]
   onCancel?: () => void
-  onComplete: (milestones: SelectFypMilestone[]) => void
+  onComplete: (milestones: MilestoneWithArtifacts[]) => void
   onMilestoneDeleted?: (deletedId: string) => void
 }) {
   const { toast } = useToast()
@@ -533,7 +530,7 @@ function MilestoneSetup({
         if (
           dbM &&
           dbM.status === MilestoneStatus.IN_PROGRESS &&
-          ((dbM.artifacts as MilestoneArtifactEntry[]) ?? []).length > 0
+          dbM.artifacts.length > 0
         ) {
           setConfirmDelete({ rowId: id, name: row.name || "this milestone" })
           return
@@ -564,7 +561,7 @@ function MilestoneSetup({
         const res = await reconfigureMilestones(spaceId, inputs)
         if (res?.success && res.data) {
           toast({ title: "Milestones updated successfully" })
-          onComplete(res.data as SelectFypMilestone[])
+          onComplete(res.data as MilestoneWithArtifacts[])
         } else {
           toast({
             title: "Failed to update milestones",
@@ -582,7 +579,7 @@ function MilestoneSetup({
         const res = await setupMilestones(spaceId, inputs)
         if (res?.success && res.data) {
           toast({ title: "Milestones set up successfully" })
-          onComplete(res.data as SelectFypMilestone[])
+          onComplete(res.data as MilestoneWithArtifacts[])
         } else {
           toast({
             title: "Failed to set up milestones",
@@ -940,7 +937,7 @@ function MilestoneView({
   onSetupAgain,
   onMilestoneDeleted
 }: {
-  milestones: SelectFypMilestone[]
+  milestones: MilestoneWithArtifacts[]
   canManage: boolean
   canCreateMilestone: boolean
   canUpdateMilestone: boolean
@@ -988,7 +985,7 @@ function MilestoneView({
     }
   }
 
-  const handleStartEdit = (m: SelectFypMilestone) => {
+  const handleStartEdit = (m: MilestoneWithArtifacts) => {
     setEditingId(m.id)
     setEditName(m.name)
   }
@@ -1011,8 +1008,8 @@ function MilestoneView({
     }
   }
 
-  const handleDeleteClick = (m: SelectFypMilestone) => {
-    const arts = (m.artifacts as MilestoneArtifactEntry[]) ?? []
+  const handleDeleteClick = (m: MilestoneWithArtifacts) => {
+    const arts = m.artifacts
     const needsConfirm =
       m.status === MilestoneStatus.IN_PROGRESS || arts.length > 0
     if (needsConfirm) {
@@ -1046,7 +1043,7 @@ function MilestoneView({
     try {
       const res = await revertMilestone(id)
       if (res?.success && res.data) {
-        const reverted = res.data as SelectFypMilestone
+        const reverted = res.data as MilestoneWithArtifacts
         setMilestones((prev) =>
           prev.map((m) => (m.id === id ? { ...m, status: reverted.status } : m))
         )
@@ -1184,7 +1181,7 @@ function MilestoneView({
 
                   {/* Actions */}
                   {(() => {
-                    const arts = (m.artifacts as MilestoneArtifactEntry[]) ?? []
+                    const arts = m.artifacts
                     const canManageArtifact =
                       !canManage &&
                       (m.status === MilestoneStatus.IN_PROGRESS ||
@@ -1265,9 +1262,7 @@ function MilestoneView({
                                     <DropdownMenuItem
                                       className="cursor-pointer"
                                       onClick={() => {
-                                        const arts =
-                                          (m.artifacts as MilestoneArtifactEntry[]) ??
-                                          []
+                                        const arts = m.artifacts
                                         if (arts.length === 0) {
                                           // No artifacts yet — navigate to artifact page so student can add one first
                                           router.push(
@@ -1439,7 +1434,7 @@ function MilestoneView({
                 <strong>{confirmDelete?.name}</strong> is{" "}
                 {(() => {
                   const m = milestones.find((x) => x.id === confirmDelete?.id)
-                  const arts = (m?.artifacts as MilestoneArtifactEntry[]) ?? []
+                  const arts = m?.artifacts ?? []
                   const isIP = m?.status === MilestoneStatus.IN_PROGRESS
                   if (isIP && arts.length > 0)
                     return "currently In Progress and has submitted artifacts. Deleting it will permanently remove all associated artifacts."
@@ -1480,7 +1475,7 @@ function FYPMilestones() {
   const spaceId = currentSpace?.id
   const communityId = currentSpace?.channel?.community_id ?? undefined
   const [view, setView] = useState<View>("milestones")
-  const [milestones, setMilestones] = useState<SelectFypMilestone[]>([])
+  const [milestones, setMilestones] = useState<MilestoneWithArtifacts[]>([])
   const [loadingMs, setLoadingMs] = useState(true)
   const [, , , fetchMilestones] = useServerAction(GetMilestonesForSpaceAction)
 
@@ -1529,7 +1524,7 @@ function FYPMilestones() {
     try {
       const res = await fetchMilestones(spaceId)
       if (res?.success && res.data) {
-        setMilestones(res.data as SelectFypMilestone[])
+        setMilestones(res.data as MilestoneWithArtifacts[])
         setView(res.data.length > 0 ? "milestones" : "setup")
       }
     } finally {
