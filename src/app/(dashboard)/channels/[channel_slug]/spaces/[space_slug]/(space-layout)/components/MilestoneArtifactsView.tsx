@@ -13,15 +13,6 @@ import {
   RotateCcw
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { Badge } from "@/src/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/src/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,258 +23,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/src/components/ui/tabs"
-import { FileUpload } from "@/src/components/ui/file-upload"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { useMilestonePermissions } from "@/src/hooks/useMilestonePermissions"
 import {
   GetMilestoneByIdAction,
   DeleteMilestoneArtifactAction,
-  SubmitMilestoneArtifactAction,
   UpdateMilestoneAction,
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
 import type { MilestoneWithArtifacts } from "@/src/server-actions/Milestone/Milestone"
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import {
-  MilestoneArtifactEntry,
-  MilestoneStatus
-} from "@/src/types/Milestone/Milestone"
-import {
-  MILESTONE_ARTIFACT_ACCEPT,
   MILESTONE_DATE_FORMAT,
   MILESTONE_STATUS_TOAST
 } from "./constants"
 import { ArtifactFeed } from "./ArtifactFeed"
+import { MilestoneStatusBadge } from "./MilestoneStatusBadge"
+import { AddArtifactDialog } from "./AddArtifactDialog"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import pusherClient from "@/src/services/realtime/PusherClient"
-
-// ─── Status badge ─────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; className: string }> = {
-    [MilestoneStatus.VERIFIED]: {
-      label: "Verified",
-      className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20"
-    },
-    [MilestoneStatus.COMPLETED_PENDING_VERIFICATION]: {
-      label: "Pending Verification",
-      className: "bg-amber-500/10 text-amber-600 border-amber-500/20"
-    },
-    [MilestoneStatus.IN_PROGRESS]: {
-      label: "In Progress",
-      className: "bg-blue-500/10 text-blue-600 border-blue-500/20"
-    },
-    [MilestoneStatus.INCOMPLETE]: {
-      label: "Incomplete",
-      className: "bg-muted/60 text-muted-foreground border-muted-foreground/20"
-    }
-  }
-  const { label, className } = map[status] ?? map[MilestoneStatus.INCOMPLETE]
-  return (
-    <Badge variant="outline" className={`text-xs font-medium ${className}`}>
-      {label}
-    </Badge>
-  )
-}
-
-// ─── Add Artifact Dialog ──────────────────────────────────────────────────────
-
-function AddArtifactDialog({
-  open,
-  milestoneId,
-  onClose,
-  onAdded
-}: {
-  open: boolean
-  milestoneId: string
-  onClose: () => void
-  onAdded: (updated: MilestoneArtifactEntry[]) => void
-}) {
-  const { toast } = useToast()
-  const [tab, setTab] = useState<"file" | "link">("file")
-  const [link, setLink] = useState("")
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isAdding, setIsAdding] = useState(false)
-
-  const [, , , submitArtifact] = useServerAction(SubmitMilestoneArtifactAction)
-
-  const reset = () => {
-    setTab("file")
-    setLink("")
-    setSelectedFile(null)
-  }
-
-  const handleClose = () => {
-    reset()
-    onClose()
-  }
-
-  const handleAdd = async () => {
-    if (tab === "link") {
-      if (!link.trim()) {
-        toast({ title: "Please enter a URL", variant: "destructive" })
-        return
-      }
-      try {
-        new URL(link.trim())
-      } catch {
-        toast({ title: "Please enter a valid URL", variant: "destructive" })
-        return
-      }
-      setIsAdding(true)
-      try {
-        const res = await submitArtifact(milestoneId, { link: link.trim() })
-        if (res?.success && res.data) {
-          onAdded(
-            (res.data as MilestoneWithArtifacts)
-              .artifacts as MilestoneArtifactEntry[]
-          )
-          toast({ title: "Link added" })
-          handleClose()
-        } else {
-          toast({
-            title:
-              (res as { message?: string })?.message ?? "Failed to add link",
-            variant: "destructive"
-          })
-        }
-      } catch {
-        toast({ title: "Failed to add link", variant: "destructive" })
-      } finally {
-        setIsAdding(false)
-      }
-    } else {
-      if (!selectedFile) {
-        toast({ title: "Please select a file", variant: "destructive" })
-        return
-      }
-      setIsAdding(true)
-      try {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve((reader.result as string).split(",")[1])
-          reader.onerror = reject
-          reader.readAsDataURL(selectedFile)
-        })
-        const res = await submitArtifact(milestoneId, {
-          file: {
-            name: selectedFile.name,
-            sizeBytes: selectedFile.size,
-            base64,
-            mimeType: selectedFile.type
-          }
-        })
-        if (res?.success && res.data) {
-          onAdded(
-            (res.data as MilestoneWithArtifacts)
-              .artifacts as MilestoneArtifactEntry[]
-          )
-          toast({ title: "File uploaded" })
-          handleClose()
-        } else {
-          toast({
-            title:
-              (res as { message?: string })?.message ?? "Failed to upload file",
-            variant: "destructive"
-          })
-        }
-      } catch {
-        toast({ title: "Failed to upload file", variant: "destructive" })
-      } finally {
-        setIsAdding(false)
-      }
-    }
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        if (!v) handleClose()
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Artifact</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 py-1">
-          <Tabs
-            value={tab}
-            onValueChange={(v) => {
-              setTab(v as "file" | "link")
-              setSelectedFile(null)
-              setLink("")
-            }}
-          >
-            <TabsList className="w-full">
-              <TabsTrigger value="file" className="flex-1">
-                Upload file
-              </TabsTrigger>
-              <TabsTrigger value="link" className="flex-1">
-                Paste link
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="file" className="space-y-3 pt-2">
-              <FileUpload
-                fileType="file"
-                accept={MILESTONE_ARTIFACT_ACCEPT}
-                multiple={false}
-                onChange={(files) => setSelectedFile(files[0] ?? null)}
-                onRemove={() => setSelectedFile(null)}
-              />
-              <p className="text-xs text-muted-foreground text-center">
-                PDF, DOC, DOCX, or image (PNG, JPG, GIF, WebP). Max 200 MB.
-              </p>
-              <Button
-                onClick={handleAdd}
-                disabled={isAdding || !selectedFile}
-                className="w-full cursor-pointer"
-              >
-                {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Upload
-              </Button>
-            </TabsContent>
-
-            <TabsContent value="link" className="space-y-3 pt-2">
-              <Input
-                placeholder="https://github.com/..."
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAdd()
-                }}
-                autoFocus
-              />
-              <Button
-                onClick={handleAdd}
-                disabled={isAdding || !link.trim()}
-                className="w-full cursor-pointer"
-              >
-                {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Add Link
-              </Button>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isAdding}>
-            Cancel
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 // ─── Main view ────────────────────────────────────────────────────────────────
 
@@ -611,7 +371,7 @@ export default function MilestoneArtifactsView({
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Status
             </p>
-            <StatusBadge status={status} />
+            <MilestoneStatusBadge status={status} />
           </div>
 
           {/* Dates */}
