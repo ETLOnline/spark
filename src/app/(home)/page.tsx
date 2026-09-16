@@ -357,7 +357,7 @@ const roadmapPhases = [
   {
     phase: "Phase 2",
     title: "Enhancement (Q4 2025)",
-    status: "current",
+    status: "completed",
     items: [
       // "AI-Powered Recommendations",
       "Advanced Event Management",
@@ -369,7 +369,7 @@ const roadmapPhases = [
   {
     phase: "Phase 3",
     title: "Scale (Q1 2026 - Q4 2026)",
-    status: "upcoming",
+    status: "current",
     items: [
       "Industry Partner Integration",
       "Advanced Analytics Dashboard",
