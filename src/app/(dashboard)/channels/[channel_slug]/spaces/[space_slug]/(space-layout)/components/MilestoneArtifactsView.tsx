@@ -33,7 +33,10 @@ import {
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
 import type { MilestoneWithArtifacts } from "@/src/server-actions/Milestone/Milestone"
-import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import {
+  MilestoneStatus,
+  MilestoneArtifactEntry
+} from "@/src/types/Milestone/Milestone"
 import {
   MILESTONE_DATE_FORMAT,
   MILESTONE_STATUS_TOAST
@@ -74,7 +77,6 @@ export default function MilestoneArtifactsView({
 
   // ── Permissions ──
   const {
-    canManage,
     canVerifyMilestone: canVerify,
     canRevertMilestone: canRevert,
     canArtifactAdd,
