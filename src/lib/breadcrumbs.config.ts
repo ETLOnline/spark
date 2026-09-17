@@ -2,6 +2,7 @@ import { GetCommunityDetailsAction } from "@/src/server-actions/Community/Commun
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { GetMilestoneByIdAction } from "@/src/server-actions/Milestone/Milestone"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
 
@@ -134,7 +135,26 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
                 children: [
                   { path: "/users", label: "Users" },
                   { path: "/settings", label: "Settings" },
-                  { path: "/projects", label: "Projects" }
+                  { path: "/projects", label: "Projects" },
+                  {
+                    path: "/milestones",
+                    label: "Milestones",
+                    children: [
+                      {
+                        path: "/[milestone_id]",
+                        dynamicLabelFetcher: async (milestoneId: string) => {
+                          try {
+                            const res =
+                              await GetMilestoneByIdAction(milestoneId)
+                            return res?.data?.name || milestoneId
+                          } catch {
+                            return milestoneId
+                          }
+                        },
+                        children: [{ path: "/artifacts", label: "Artifacts" }]
+                      }
+                    ]
+                  }
                 ]
               }
             ]
