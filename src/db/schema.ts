@@ -1687,19 +1687,13 @@ export const fypMilestonesRelations = relations(
 export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
 export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
 
-// ─── FYP Milestone Artifacts ────────────────────────────────────────────────────
-// Child table — one row per artifact, mirroring post_files (one row per file
-// attached to a post). Lets a milestone have any number of artifacts via a
-// real FK relation, instead of a JSON array Drizzle/Postgres can't join
-// against or enforce referential integrity on.
+
 
 export const fypArtifactFilesTable = pgTable("fyp_artifact_files", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   milestone_id: varchar("milestone_id", { length: 36 })
     .notNull()
     .references(() => fypMilestonesTable.id, { onDelete: "cascade" }),
-  // "image" | "file" | "link" — decided once at insert time from the
-  // uploaded file's mime type, so nothing downstream re-parses mime_type.
   type: varchar().notNull(),
   file_id: integer().references(() => filesTable.id, { onDelete: "cascade" }), // null for links
   url: varchar(), // null for files/images
