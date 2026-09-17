@@ -188,16 +188,10 @@ function SpaceSidebar({ space }: Props) {
   const canViewSetting =
     permissionChecker?.canAccess("space.setting.update") ?? false
 
-  // Feedback is only shown once: FYP is enabled for this space, all
-  // milestones are verified, and the current user is either the accepted
-  // advisor or a member of the student group for this specific space (same
-  // space.update scoping used for milestone actions — see
-  // useProgramFeedbackPermissions-equivalent logic in FYPFeedback.tsx).
-  const isSpaceEditor = permissionChecker?.canAccess("space.update") ?? false
+
   const canSubmitFeedback =
-    isSpaceEditor &&
-    ((globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false) ||
-      (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false))
+    (globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false) ||
+    (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false)
   const canViewFeedback =
     (currentSpace ?? space).is_FYP_enable === true &&
     allMilestonesVerified &&

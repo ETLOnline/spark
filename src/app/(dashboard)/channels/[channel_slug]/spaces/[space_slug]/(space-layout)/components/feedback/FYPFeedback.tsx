@@ -134,24 +134,11 @@ function FYPFeedback() {
   const spaceId = currentSpace?.id
   const { toast } = useToast()
 
-  // Same requirement as milestone actions: both the advisor and the student
-  // must also hold the space-scoped editor/admin role for this specific
-  // space, not just the matching global role — otherwise any industry_partner
-  // or student user anywhere on the platform would qualify, not just the
-  // advisor accepted on this space / the student who owns it.
   const { permissionChecker: globalChecker } = usePermissionChecker("global")
-  const { permissionChecker: spaceChecker } = usePermissionChecker(
-    "scoped",
-    "SPACE",
-    spaceId
-  )
-  const isSpaceEditor = spaceChecker?.canAccess("space.update") ?? false
   const canSubmitAsAdvisor =
-    isSpaceEditor &&
-    (globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false)
+    globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false
   const canSubmitAsStudent =
-    isSpaceEditor &&
-    (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false)
+    globalChecker?.canAccess("fyp.feedback.submit_student") ?? false
   const role: FeedbackRole | null = canSubmitAsAdvisor
     ? "advisor"
     : canSubmitAsStudent
@@ -204,6 +191,9 @@ function FYPFeedback() {
   const verifiedMilestones = milestones.filter(
     (m) => m.status === MilestoneStatus.VERIFIED
   ).length
+  const allMilestonesVerified =
+    milestones.length > 0 && verifiedMilestones === milestones.length
+  const fypEnabled = currentSpace?.is_FYP_enable === true
 
   const sections = useMemo(
     () =>
@@ -274,6 +264,26 @@ function FYPFeedback() {
         icon={<ShieldOff className="h-16 w-16 text-muted-foreground mb-4" />}
         title="No feedback form available"
         description="Only the assigned advisor and student group members can submit program feedback for this space."
+      />
+    )
+  }
+
+  if (!fypEnabled) {
+    return (
+      <NoDataCard
+        icon={<ShieldOff className="h-16 w-16 text-muted-foreground mb-4" />}
+        title="FYP is not enabled"
+        description="Program feedback is only available for FYP-enabled spaces."
+      />
+    )
+  }
+
+  if (!allMilestonesVerified) {
+    return (
+      <NoDataCard
+        icon={<ShieldOff className="h-16 w-16 text-muted-foreground mb-4" />}
+        title="Feedback not available yet"
+        description="Program feedback opens once every project milestone has been verified."
       />
     )
   }
