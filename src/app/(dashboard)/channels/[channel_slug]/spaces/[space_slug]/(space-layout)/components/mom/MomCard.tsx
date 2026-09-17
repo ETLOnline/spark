@@ -21,12 +21,7 @@ import {
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
 import { SelectMom } from "@/src/db/schema"
-
-function formatMeetingDate(date: string) {
-  return moment(date, "YYYY-MM-DD").isValid()
-    ? moment(date, "YYYY-MM-DD").format("DD MMM YYYY")
-    : date
-}
+import { formatDate } from "@/src/components/Dashboard/ProjectManagement/ProjectOverView/utils/Helper"
 
 function formatMeetingTime(time: string) {
   return moment(time, "HH:mm").isValid()
@@ -54,7 +49,7 @@ function MomCard({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
           <span className="flex items-center gap-1.5 text-sm font-semibold">
             <CalendarDays className="h-4 w-4 text-primary" />
-            {formatMeetingDate(mom.meeting_date)}
+            {formatDate(mom.meeting_date)}
           </span>
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />

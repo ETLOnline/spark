@@ -53,9 +53,12 @@ function FYPMom() {
     if (!spaceId) return
     setLoading(true)
     try {
-      const res = await fetchMoms(spaceId)
-      if (res?.success && res.data) {
-        setMoms(res.data as SelectMom[])
+      const [momsRes] = await Promise.all([
+        fetchMoms(spaceId),
+        fetchSpaceUsers(spaceId)
+      ])
+      if (momsRes?.success && momsRes.data) {
+        setMoms(momsRes.data as SelectMom[])
       }
     } finally {
       setLoading(false)
@@ -64,7 +67,6 @@ function FYPMom() {
 
   useEffect(() => {
     load()
-    if (spaceId) fetchSpaceUsers(spaceId)
   }, [spaceId])
 
   const spaceMembers = useMemo(
