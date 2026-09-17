@@ -145,7 +145,11 @@ const permissionSeedList = [
   { namespace: "fyp", action: permissions.fyp.advisorViewRequests },
   { namespace: "fyp", action: permissions.fyp.advisorViewDetails },
   { namespace: "fyp", action: permissions.fyp.advisorAccept },
-  { namespace: "fyp", action: permissions.fyp.advisorReject }
+  { namespace: "fyp", action: permissions.fyp.advisorReject },
+
+  // FYP — Program feedback
+  { namespace: "fyp", action: permissions.fyp.feedbackSubmitStudent },
+  { namespace: "fyp", action: permissions.fyp.feedbackSubmitAdvisor }
 ]
 
 export const PermissionsSeed = async () => {

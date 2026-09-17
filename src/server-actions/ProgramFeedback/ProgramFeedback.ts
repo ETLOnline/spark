@@ -46,9 +46,6 @@ export const GetProgramFeedbackForSpaceAction = CreateServerAction(
 
 // ─── Submit feedback ────────────────────────────────────────────────────────────
 // One submission per user per space, enforced here (not a DB constraint).
-// Role/permission validation (who is allowed to submit which version of the
-// form) is intentionally not enforced yet — deferred until the form + hook work
-// is wired up.
 
 export const SubmitProgramFeedbackAction = CreateServerAction(
   true,
@@ -56,7 +53,6 @@ export const SubmitProgramFeedbackAction = CreateServerAction(
     spaceId: string,
     input: Pick<
       InsertProgramFeedback,
-      | "role"
       | "overall_program_rating"
       | "spark_overall_rating"
       | "partner_rating"
@@ -81,7 +77,6 @@ export const SubmitProgramFeedbackAction = CreateServerAction(
       const created = await CreateProgramFeedback({
         space_id: spaceId,
         submitted_by: user.unique_id,
-        role: input.role,
         overall_program_rating: input.overall_program_rating,
         spark_overall_rating: input.spark_overall_rating,
         partner_rating: input.partner_rating,

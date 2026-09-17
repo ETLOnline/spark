@@ -1704,15 +1704,10 @@ export const programFeedbackTable = pgTable("program_feedback", {
   submitted_by: varchar("submitted_by")
     .notNull()
     .references(() => usersTable.unique_id, { onDelete: "cascade" }),
-  role: varchar().notNull(),
   overall_program_rating: integer().notNull(),
   spark_overall_rating: integer().notNull(),
   partner_rating: integer().notNull(),
-  // Ordered snapshot of every question on the form as it was asked at
-  // submission time (question text + type + value), including the 3 ratings
-  // above — array order is display order. Rendering a past submission should
-  // always iterate this array rather than re-deriving labels/order from
-  // current code, since the form's questions can change between cohorts.
+
   answers: jsonb("answers")
     .$type<
       {

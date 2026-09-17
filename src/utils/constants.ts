@@ -246,7 +246,11 @@ export const permissions = {
     advisorViewRequests: "advisor.view_requests",
     advisorViewDetails: "advisor.view_details",
     advisorAccept: "advisor.accept",
-    advisorReject: "advisor.reject"
+    advisorReject: "advisor.reject",
+
+    // Program feedback — which version of the form a user submits
+    feedbackSubmitStudent: "feedback.submit_student",
+    feedbackSubmitAdvisor: "feedback.submit_advisor"
   }
 }
 

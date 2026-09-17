@@ -510,6 +510,7 @@ function MilestoneSetup({
           order_index: i
         }))
         const res = await setupMilestones(spaceId, inputs)
+        console.log("res", res)
         if (res?.success && res.data) {
           toast({ title: "Milestones set up successfully" })
           onComplete(res.data as SelectFypMilestone[])

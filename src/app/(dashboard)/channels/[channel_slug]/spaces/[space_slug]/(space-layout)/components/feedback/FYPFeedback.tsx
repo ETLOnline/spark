@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useAtomValue } from "jotai"
-import { CheckCircle2, Clock, Send } from "lucide-react"
+import { CheckCircle2, Clock, Send, ShieldOff } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import {
   GetMyProgramFeedbackAction,
@@ -19,20 +20,22 @@ import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import type { SelectFypMilestone } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import { cn } from "@/src/lib/utils"
 import {
-  PROGRAM_FEEDBACK_FIELDS,
-  PROGRAM_FEEDBACK_SECTIONS,
-  FeedbackField
+  getFeedbackFieldsForRole,
+  getFeedbackSectionsForRole,
+  FeedbackField,
+  FeedbackRole
 } from "./constants"
 import { RatingInput } from "./RatingInput"
 import { FeedbackRightRail } from "./FeedbackRightRail"
 
 type FieldValue = number | string | string[] | null
 
-function initialAnswers(): Record<string, FieldValue> {
+function initialAnswers(fields: FeedbackField[]): Record<string, FieldValue> {
   return Object.fromEntries(
-    PROGRAM_FEEDBACK_FIELDS.map((f) => [
+    fields.map((f) => [
       f.key,
       f.type === "multi_choice" ? [] : f.type === "rating" ? 0 : ""
     ])
@@ -131,14 +134,49 @@ function FYPFeedback() {
   const spaceId = currentSpace?.id
   const { toast } = useToast()
 
+  // Same requirement as milestone actions: both the advisor and the student
+  // must also hold the space-scoped editor/admin role for this specific
+  // space, not just the matching global role — otherwise any industry_partner
+  // or student user anywhere on the platform would qualify, not just the
+  // advisor accepted on this space / the student who owns it.
+  const { permissionChecker: globalChecker } = usePermissionChecker("global")
+  const { permissionChecker: spaceChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    spaceId
+  )
+  const isSpaceEditor = spaceChecker?.canAccess("space.update") ?? false
+  const canSubmitAsAdvisor =
+    isSpaceEditor &&
+    (globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false)
+  const canSubmitAsStudent =
+    isSpaceEditor &&
+    (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false)
+  const role: FeedbackRole | null = canSubmitAsAdvisor
+    ? "advisor"
+    : canSubmitAsStudent
+      ? "student"
+      : null
+
+  const roleFields = useMemo(
+    () => (role ? getFeedbackFieldsForRole(role) : []),
+    [role]
+  )
+  const roleSections = useMemo(
+    () => (role ? getFeedbackSectionsForRole(role) : []),
+    [role]
+  )
+
   const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState<SelectProgramFeedback | null>(
     null
   )
   const [milestones, setMilestones] = useState<SelectFypMilestone[]>([])
-  const [answers, setAnswers] = useState<Record<string, FieldValue>>(
-    initialAnswers()
-  )
+  const [answers, setAnswers] = useState<Record<string, FieldValue>>({})
+
+  useEffect(() => {
+    setAnswers(initialAnswers(roleFields))
+  }, [roleFields])
 
   const [, , , getMyFeedback] = useServerAction(GetMyProgramFeedbackAction)
   const [, , , getMilestones] = useServerAction(GetMilestonesForSpaceAction)
@@ -169,11 +207,12 @@ function FYPFeedback() {
 
   const sections = useMemo(
     () =>
-      PROGRAM_FEEDBACK_SECTIONS.map((section) => ({
+      roleSections.map((section, i) => ({
         section,
-        fields: PROGRAM_FEEDBACK_FIELDS.filter((f) => f.section === section)
+        number: i + 1,
+        fields: roleFields.filter((f) => f.section === section)
       })),
-    []
+    [roleSections, roleFields]
   )
 
   const handleChange = (key: string, value: FieldValue) => {
@@ -181,9 +220,9 @@ function FYPFeedback() {
   }
 
   const handleSubmit = async () => {
-    if (!spaceId) return
+    if (!spaceId || !role) return
 
-    const missingRating = PROGRAM_FEEDBACK_FIELDS.some(
+    const missingRating = roleFields.some(
       (f) => f.type === "rating" && !answers[f.key]
     )
     if (missingRating) {
@@ -191,7 +230,7 @@ function FYPFeedback() {
       return
     }
 
-    const answerSnapshot = PROGRAM_FEEDBACK_FIELDS.map((f) => ({
+    const answerSnapshot = roleFields.map((f) => ({
       key: f.key,
       question: f.question,
       type: f.type,
@@ -199,12 +238,11 @@ function FYPFeedback() {
     }))
 
     const partnerRating =
-      (answers.guidance_satisfaction as number) ||
-      (answers.team_engagement as number) ||
-      0
+      role === "student"
+        ? (answers.guidance_satisfaction as number)
+        : (answers.team_engagement as number)
 
     const res = await submitFeedback(spaceId, {
-      role: "student",
       overall_program_rating: answers.overall_program_rating as number,
       spark_overall_rating: answers.spark_overall_rating as number,
       partner_rating: partnerRating,
@@ -227,6 +265,16 @@ function FYPFeedback() {
       <div className="flex items-center justify-center py-12">
         <Loader size={LoaderSizes.xl} />
       </div>
+    )
+  }
+
+  if (!role) {
+    return (
+      <NoDataCard
+        icon={<ShieldOff className="h-16 w-16 text-muted-foreground mb-4" />}
+        title="No feedback form available"
+        description="Only the assigned advisor and student group members can submit program feedback for this space."
+      />
     )
   }
 
@@ -275,10 +323,12 @@ function FYPFeedback() {
 
       <div className="flex items-start gap-5">
         <div className="rounded-xl border overflow-hidden flex-1 min-w-0">
-          {sections.map(({ section, fields }) => (
+          {sections.map(({ section, number, fields }) => (
             <div key={section} className="border-b last:border-0">
               <div className="bg-muted/40 px-4 py-2.5">
-                <p className="text-sm font-semibold">{section}</p>
+                <p className="text-sm font-semibold">
+                  {number}. {section}
+                </p>
               </div>
               <div className="px-4">
                 {fields.map((field) => (
