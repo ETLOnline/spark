@@ -101,6 +101,8 @@ function SpaceFeatures({ features, space }: Props) {
       redirect(`./${encodedSpaceSlug}/settings`)
     } else if (featureSlug === "users") {
       redirect(`./${encodedSpaceSlug}/users`)
+    } else if (featureSlug === "feedback") {
+      redirect(`./${encodedSpaceSlug}/feedback`)
     } else if (featureSlug === "fyp") {
       if (!space.is_FYP_enable) {
         return (

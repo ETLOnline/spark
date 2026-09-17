@@ -8,6 +8,11 @@ export const spaceStaticFeatures = [
     name: "Users",
     icon: "users",
     slug: "users"
+  },
+  {
+    name: "Feedback",
+    icon: "message-square-heart",
+    slug: "feedback"
   }
 ]
 

@@ -1694,6 +1694,56 @@ export const fypMilestonesRelations = relations(
 export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
 export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
 
+// ─── FYP Program Feedback ─────────────────────────────────────────────────────
+
+export const programFeedbackTable = pgTable("program_feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  submitted_by: varchar("submitted_by")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  role: varchar().notNull(),
+  overall_program_rating: integer().notNull(),
+  spark_overall_rating: integer().notNull(),
+  partner_rating: integer().notNull(),
+  // Ordered snapshot of every question on the form as it was asked at
+  // submission time (question text + type + value), including the 3 ratings
+  // above — array order is display order. Rendering a past submission should
+  // always iterate this array rather than re-deriving labels/order from
+  // current code, since the form's questions can change between cohorts.
+  answers: jsonb("answers")
+    .$type<
+      {
+        key: string
+        question: string
+        type: "rating" | "single_choice" | "multi_choice" | "text"
+        value: number | string | string[] | null
+      }[]
+    >()
+    .notNull()
+    .default([]),
+  ...timestamps
+})
+
+export const programFeedbackRelations = relations(
+  programFeedbackTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [programFeedbackTable.space_id],
+      references: [spacesTable.id]
+    }),
+    submittedBy: one(usersTable, {
+      fields: [programFeedbackTable.submitted_by],
+      references: [usersTable.unique_id]
+    })
+  })
+)
+
+export type InsertProgramFeedback = typeof programFeedbackTable.$inferInsert
+export type SelectProgramFeedback = typeof programFeedbackTable.$inferSelect
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const shortcutsTable = pgTable("shortcuts", {
