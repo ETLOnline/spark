@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useAtomValue } from "jotai"
+import { Controller, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle2, Clock, Send, ShieldOff } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -25,15 +27,16 @@ import { cn } from "@/src/lib/utils"
 import {
   getFeedbackFieldsForRole,
   getFeedbackSectionsForRole,
+  buildFeedbackSchema,
   FeedbackField,
   FeedbackRole
 } from "./constants"
 import { RatingInput } from "./RatingInput"
 import { FeedbackRightRail } from "./FeedbackRightRail"
 
-type FieldValue = number | string | string[] | null
+type FieldValue = number | string | string[]
 
-function initialAnswers(fields: FeedbackField[]): Record<string, FieldValue> {
+function defaultAnswers(fields: FeedbackField[]): Record<string, FieldValue> {
   return Object.fromEntries(
     fields.map((f) => [
       f.key,
@@ -44,44 +47,57 @@ function initialAnswers(fields: FeedbackField[]): Record<string, FieldValue> {
 
 function FeedbackFieldRow({
   field,
-  value,
-  onChange
+  control,
+  error
 }: {
   field: FeedbackField
-  value: FieldValue
-  onChange: (value: FieldValue) => void
+  control: any
+  error?: string
 }) {
   if (field.type === "rating" || field.type === "single_choice") {
     return (
-      <div className="py-4 border-b last:border-0 flex items-center justify-between gap-4">
-        <p className="text-sm flex-1">{field.question}</p>
+      <div className="py-4 border-b last:border-0">
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm flex-1">{field.question}</p>
 
-        {field.type === "rating" && (
-          <RatingInput
-            value={(value as number) ?? 0}
-            onChange={(v) => onChange(v)}
-          />
-        )}
+          {field.type === "rating" && (
+            <Controller
+              name={field.key}
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <RatingInput value={value ?? 0} onChange={onChange} />
+              )}
+            />
+          )}
 
-        {field.type === "single_choice" && (
-          <div className="flex flex-wrap justify-end gap-2 shrink-0">
-            {field.options?.map((opt) => (
-              <Button
-                key={opt}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onChange(opt)}
-                className={cn(
-                  "cursor-pointer",
-                  value === opt && "border-primary bg-primary/5 text-primary"
-                )}
-              >
-                {opt}
-              </Button>
-            ))}
-          </div>
-        )}
+          {field.type === "single_choice" && (
+            <Controller
+              name={field.key}
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <div className="flex flex-wrap justify-end gap-2 shrink-0">
+                  {field.options?.map((opt) => (
+                    <Button
+                      key={opt}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onChange(opt)}
+                      className={cn(
+                        "cursor-pointer",
+                        value === opt &&
+                          "border-primary bg-primary/5 text-primary"
+                      )}
+                    >
+                      {opt}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            />
+          )}
+        </div>
+        {error && <p className="text-xs text-destructive mt-1">{error}</p>}
       </div>
     )
   }
@@ -91,40 +107,49 @@ function FeedbackFieldRow({
       <p className="text-sm">{field.question}</p>
 
       {field.type === "multi_choice" && (
-        <div className="flex flex-wrap gap-3">
-          {field.options?.map((opt) => {
-            const selected = ((value as string[]) ?? []).includes(opt)
-            return (
-              <label
-                key={opt}
-                className="flex items-center gap-2 text-sm cursor-pointer"
-              >
-                <Checkbox
-                  checked={selected}
-                  onCheckedChange={(checked) => {
-                    const current = (value as string[]) ?? []
-                    onChange(
-                      checked
-                        ? [...current, opt]
-                        : current.filter((o) => o !== opt)
-                    )
-                  }}
-                />
-                {opt}
-              </label>
-            )
-          })}
-        </div>
+        <Controller
+          name={field.key}
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <div className="flex flex-wrap gap-3">
+              {field.options?.map((opt) => {
+                const selected = ((value as string[]) ?? []).includes(opt)
+                return (
+                  <label
+                    key={opt}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={selected}
+                      onCheckedChange={(checked) => {
+                        const current = (value as string[]) ?? []
+                        onChange(
+                          checked
+                            ? [...current, opt]
+                            : current.filter((o) => o !== opt)
+                        )
+                      }}
+                    />
+                    {opt}
+                  </label>
+                )
+              })}
+            </div>
+          )}
+        />
       )}
 
       {field.type === "text" && (
-        <Textarea
-          rows={3}
-          placeholder={field.placeholder}
-          value={(value as string) ?? ""}
-          onChange={(e) => onChange(e.target.value)}
+        <Controller
+          name={field.key}
+          control={control}
+          render={({ field: rhfField }) => (
+            <Textarea rows={3} placeholder={field.placeholder} {...rhfField} />
+          )}
         />
       )}
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 }
@@ -153,17 +178,21 @@ function FYPFeedback() {
     () => (role ? getFeedbackSectionsForRole(role) : []),
     [role]
   )
+  const schema = useMemo(() => buildFeedbackSchema(roleFields), [roleFields])
+
+  const form = useForm<Record<string, FieldValue>>({
+    resolver: zodResolver(schema)
+  })
+
+  useEffect(() => {
+    form.reset(defaultAnswers(roleFields))
+  }, [roleFields])
 
   const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState<SelectProgramFeedback | null>(
     null
   )
   const [milestones, setMilestones] = useState<SelectFypMilestone[]>([])
-  const [answers, setAnswers] = useState<Record<string, FieldValue>>({})
-
-  useEffect(() => {
-    setAnswers(initialAnswers(roleFields))
-  }, [roleFields])
 
   const [, , , getMyFeedback] = useServerAction(GetMyProgramFeedbackAction)
   const [, , , getMilestones] = useServerAction(GetMilestonesForSpaceAction)
@@ -205,40 +234,28 @@ function FYPFeedback() {
     [roleSections, roleFields]
   )
 
-  const handleChange = (key: string, value: FieldValue) => {
-    setAnswers((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const handleSubmit = async () => {
+  const onSubmit = async (data: Record<string, FieldValue>) => {
     if (!spaceId || !role) return
-
-    const missingRating = roleFields.some(
-      (f) => f.type === "rating" && !answers[f.key]
-    )
-    if (missingRating) {
-      toast({ title: "Please provide all ratings", variant: "destructive" })
-      return
-    }
 
     const answerSnapshot = roleFields.map((f) => ({
       key: f.key,
       question: f.question,
       type: f.type,
-      value: answers[f.key]
+      value: data[f.key]
     }))
 
     const partnerRating =
       role === "student"
-        ? (answers.guidance_satisfaction as number)
-        : (answers.team_engagement as number)
+        ? (data.guidance_satisfaction as number)
+        : (data.team_engagement as number)
 
     const res = await submitFeedback(spaceId, {
-      overall_program_rating: answers.overall_program_rating as number,
-      spark_overall_rating: answers.spark_overall_rating as number,
+      role,
+      overall_program_rating: data.overall_program_rating as number,
+      spark_overall_rating: data.spark_overall_rating as number,
       partner_rating: partnerRating,
       answers: answerSnapshot
     })
-
     if (res?.success && res.data) {
       setSubmitted(res.data as SelectProgramFeedback)
       toast({ title: "Feedback submitted — thank you!" })
@@ -292,9 +309,7 @@ function FYPFeedback() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
         <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-        <h2 className="text-base font-semibold">
-          Thanks for your feedback!
-        </h2>
+        <h2 className="text-base font-semibold">Thanks for your feedback!</h2>
         <p className="text-sm text-muted-foreground max-w-sm">
           Your feedback has been recorded and is reflected in the
           Recommendations section.
@@ -304,7 +319,7 @@ function FYPFeedback() {
   }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Program Feedback</h2>
@@ -345,8 +360,12 @@ function FYPFeedback() {
                   <FeedbackFieldRow
                     key={field.key}
                     field={field}
-                    value={answers[field.key]}
-                    onChange={(v) => handleChange(field.key, v)}
+                    control={form.control}
+                    error={
+                      form.formState.errors[field.key]?.message as
+                        | string
+                        | undefined
+                    }
                   />
                 ))}
               </div>
@@ -354,7 +373,7 @@ function FYPFeedback() {
           ))}
 
           <div className="flex justify-end gap-3 px-4 py-4">
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               <Send className="h-4 w-4 mr-2" />
               Submit Feedback
             </Button>
@@ -366,7 +385,7 @@ function FYPFeedback() {
           verifiedMilestones={verifiedMilestones}
         />
       </div>
-    </div>
+    </form>
   )
 }
 

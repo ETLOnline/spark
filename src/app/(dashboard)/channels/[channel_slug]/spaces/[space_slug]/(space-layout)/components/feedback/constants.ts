@@ -1,3 +1,5 @@
+import z from "zod"
+
 export type FeedbackFieldType =
   | "rating"
   | "single_choice"
@@ -16,10 +18,7 @@ export interface FeedbackField {
   roles: FeedbackRole[]
 }
 
-// Section names are unnumbered here — the numbering shown to the user is
-// derived from the role-filtered section list at render time, since the
-// advisor form has an extra section (Project Outcome) the student form
-// doesn't, which would otherwise throw off the numbering.
+
 export const PROGRAM_FEEDBACK_FIELDS: FeedbackField[] = [
   {
     key: "overall_program_rating",
@@ -171,4 +170,24 @@ export function getFeedbackSectionsForRole(role: FeedbackRole): string[] {
   return Array.from(
     new Set(getFeedbackFieldsForRole(role).map((f) => f.section))
   )
+}
+
+
+export function buildFeedbackSchema(fields: FeedbackField[]) {
+  const shape: Record<string, z.ZodTypeAny> = {}
+  for (const f of fields) {
+    if (f.type === "rating") {
+      shape[f.key] = z
+        .number()
+        .min(1, "Please provide a rating")
+        .max(5)
+    } else if (f.type === "single_choice") {
+      shape[f.key] = z.string().min(1, "Please select an option")
+    } else if (f.type === "multi_choice") {
+      shape[f.key] = z.array(z.string()).min(1, "Please select at least one")
+    } else {
+      shape[f.key] = z.string().optional()
+    }
+  }
+  return z.object(shape)
 }
