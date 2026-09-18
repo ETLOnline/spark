@@ -10,6 +10,8 @@ import {
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 import { AddRecommendationAction } from "../Recommendation/recommendation"
 import { InsertProgramFeedback, SelectRecommendation } from "@/src/db/schema"
+import { permissions } from "@/src/utils/constants"
+import { filterUserIdsByPermission } from "@/src/utils/serverHelpers"
 
 // ─── Get my submission (or null) for a space ───────────────────────────────────
 // Used to decide whether to show the feedback prompt/page.
@@ -85,40 +87,36 @@ export const SubmitProgramFeedbackAction = CreateServerAction(
         answers: input.answers
       })
 
-
       try {
-        const spaceUsers = await getSpaceUsers(spaceId)
         const content = "Submitted via FYP Program Feedback"
 
-        if (input.role === "advisor") {
-          const studentIds = spaceUsers
-            .map((su) => su.user?.unique_id)
-            .filter((id): id is string => !!id && id !== user.unique_id)
+        // Student feedback goes only to space members who can submit as an
+        // advisor (i.e. the advisor(s)); advisor feedback goes only to
+        // members who can submit as a student.
+        const recipientAction =
+          input.role === "advisor"
+            ? permissions.fyp.feedbackSubmitStudent
+            : permissions.fyp.feedbackSubmitAdvisor
+        const spaceUsers = await getSpaceUsers(spaceId)
+        const memberIds = spaceUsers
+          .map((su) => su.user?.unique_id)
+          .filter((id): id is string => !!id && id !== user.unique_id)
 
-          for (const studentId of studentIds) {
-            await AddRecommendationAction({
-              content,
-              rating: input.partner_rating,
-              recommender_id: user.unique_id,
-              receiver_id: studentId,
-              type: "fyp"
-            } as SelectRecommendation)
-          }
-        } else {
-          const advisor = spaceUsers.find((su) =>
-            su.user?.roles?.some((r) => r.role?.slug === "industry_partner")
-          )
-          const advisorId = advisor?.user?.unique_id
+        const recipientIds = await filterUserIdsByPermission(
+          memberIds,
+          "fyp",
+          recipientAction,
+          { entityType: "SPACE", entityId: spaceId }
+        )
 
-          if (advisorId) {
-            await AddRecommendationAction({
-              content,
-              rating: input.partner_rating,
-              recommender_id: user.unique_id,
-              receiver_id: advisorId,
-              type: "fyp"
-            } as SelectRecommendation)
-          }
+        for (const recipientId of recipientIds) {
+          await AddRecommendationAction({
+            content,
+            rating: input.partner_rating,
+            recommender_id: user.unique_id,
+            receiver_id: recipientId,
+            type: "fyp"
+          } as SelectRecommendation)
         }
       } catch (recommendationError) {
         console.error(

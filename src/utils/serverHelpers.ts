@@ -6,10 +6,46 @@ import * as path from "path"
 import { randomUUID } from "crypto"
 import { AddFile } from "../db/data-access/file/query"
 import { GetSpaceById } from "../db/data-access/spaces/query"
-import { createAbsoluteUrl } from "./clientHelper"
+import { createAbsoluteUrl, buildUserPerms } from "./clientHelper"
 import { getEmailTemplateByName } from "../db/data-access/emails/query"
+import { getUserPermissionRows } from "../db/data-access/roles/query"
+import { PermissionChecker } from "../lib/PermissionCheker"
 import Handlebars from "handlebars"
 import { MailService } from "../services/mail/sendMail"
+
+// Given a list of user ids, returns only those who hold the given
+// permission — either granted globally, or via a role scoped to the
+// passed entity (e.g. a space).
+export const filterUserIdsByPermission = async (
+  userIds: string[],
+  namespace: string,
+  action: string,
+  scope?: { entityType: string; entityId: string }
+): Promise<string[]> => {
+  const permissionKey = `${namespace}.${action}`
+  const allowedIds: string[] = []
+
+  for (const userId of userIds) {
+    const userPerms = buildUserPerms(await getUserPermissionRows(userId))
+
+    const hasGlobal = new PermissionChecker("global", userPerms).canAccess(
+      permissionKey
+    )
+    const hasScoped = scope
+      ? new PermissionChecker(
+          "scoped",
+          userPerms,
+          false,
+          scope.entityType,
+          scope.entityId
+        ).canAccess(permissionKey)
+      : false
+
+    if (hasGlobal || hasScoped) allowedIds.push(userId)
+  }
+
+  return allowedIds
+}
 
 async function sendEmailToRecipient({
   to,
