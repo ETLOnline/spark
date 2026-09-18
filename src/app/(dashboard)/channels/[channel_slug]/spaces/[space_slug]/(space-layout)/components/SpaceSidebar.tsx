@@ -188,9 +188,8 @@ function SpaceSidebar({ space }: Props) {
   const canViewSetting =
     permissionChecker?.canAccess("space.setting.update") ?? false
 
-
   const canSubmitFeedback =
-    (globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false) ||
+    (globalChecker?.canAccess("advisory.feedback.submit_advisor") ?? false) ||
     (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false)
   const canViewFeedback =
     (currentSpace ?? space).is_FYP_enable === true &&

@@ -75,18 +75,23 @@ const userRolePermissions = [
       {
         namespace: "fyp",
         actions: [
-          permissions.fyp.canReceiveAdvisorRequest,
           permissions.fyp.milestoneCreate,
           permissions.fyp.milestoneUpdate,
           permissions.fyp.milestoneDelete,
-          permissions.fyp.milestoneVerify,
-          permissions.fyp.milestoneRevert,
-          permissions.fyp.milestoneArtifactDelete,
-          permissions.fyp.advisorViewRequests,
-          permissions.fyp.advisorViewDetails,
-          permissions.fyp.advisorAccept,
-          permissions.fyp.advisorReject,
-          permissions.fyp.feedbackSubmitAdvisor
+          permissions.fyp.milestoneArtifactDelete
+        ]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.canReceiveAdvisorRequest,
+          permissions.advisory.milestoneVerify,
+          permissions.advisory.milestoneRevert,
+          permissions.advisory.feedbackSubmitAdvisor,
+          permissions.advisory.advisorViewRequests,
+          permissions.advisory.advisorViewDetails,
+          permissions.advisory.advisorAccept,
+          permissions.advisory.advisorReject
         ]
       }
     ]
@@ -138,8 +143,6 @@ const userRolePermissions = [
           permissions.fyp.milestoneCreate,
           permissions.fyp.milestoneUpdate,
           permissions.fyp.milestoneDelete,
-          permissions.fyp.milestoneVerify,
-          permissions.fyp.milestoneRevert,
           permissions.fyp.milestoneArtifactDelete
         ]
       }
@@ -250,6 +253,18 @@ const userRolePermissions = [
           permissions.space.userUpdate,
           permissions.space.userView,
           permissions.space.view
+        ]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.canReceiveAdvisorRequest,
+          permissions.advisory.milestoneVerify,
+          permissions.advisory.milestoneRevert,
+          permissions.advisory.advisorViewRequests,
+          permissions.advisory.advisorViewDetails,
+          permissions.advisory.advisorAccept,
+          permissions.advisory.advisorReject
         ]
       }
     ]

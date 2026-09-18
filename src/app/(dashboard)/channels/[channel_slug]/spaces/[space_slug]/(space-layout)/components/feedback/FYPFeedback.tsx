@@ -49,7 +49,7 @@ function FYPFeedback() {
 
   const { permissionChecker: globalChecker } = usePermissionChecker("global")
   const canSubmitAsAdvisor =
-    globalChecker?.canAccess("fyp.feedback.submit_advisor") ?? false
+    globalChecker?.canAccess("advisory.feedback.submit_advisor") ?? false
   const canSubmitAsStudent =
     globalChecker?.canAccess("fyp.feedback.submit_student") ?? false
   const role: FeedbackRole | null = canSubmitAsAdvisor
@@ -77,9 +77,7 @@ function FYPFeedback() {
   }, [roleFields])
 
   const [loading, setLoading] = useState(true)
-  const [submitted, setSubmitted] = useState<SelectProgramFeedback | null>(
-    null
-  )
+  const [submitted, setSubmitted] = useState<SelectProgramFeedback | null>(null)
   const [milestones, setMilestones] = useState<SelectFypMilestone[]>([])
 
   const [, , , getMyFeedback] = useServerAction(GetMyProgramFeedbackAction)
