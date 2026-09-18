@@ -34,7 +34,7 @@ const userRolePermissions = [
           permissions.fyp.canRequestAdvisor,
           permissions.fyp.milestoneMarkDone,
           permissions.fyp.milestoneArtifactAdd,
-          permissions.fyp.feedbackSubmitStudent
+          permissions.fyp.feedbackSubmitStudent,
           permissions.fyp.milestoneArtifactDelete
         ]
       }
