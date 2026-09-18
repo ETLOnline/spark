@@ -35,14 +35,7 @@ import {
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 import pusherServer from "@/src/services/realtime/pusherServer"
 
-// ─── Response shaping ─────────────────────────────────────────────────────────
-// Turns a raw fyp_artifact_files row (joined with its file, if any) into the
-// flat shape the client consumes. Lives here rather than in the data-access
-// layer — same reasoning as getAdvisorViewerStatus living in
-// AdvisorRequest.ts instead of advisor-requests/query.ts: deciding what the
-// response looks like is a server-action concern, not a query concern.
-// A dangling file_id (file row missing) is dropped rather than surfaced as a
-// broken entry.
+
 
 export type MilestoneWithArtifacts = Omit<
   RawMilestoneWithArtifacts,
@@ -401,8 +394,7 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
 )
 
 // ─── Delete artifact ──────────────────────────────────────────────────────────
-// Removes one artifact row by its id.
-// Nobody can delete artifacts once the milestone is Verified.
+
 
 export const DeleteMilestoneArtifactAction = CreateServerAction(
   true,
@@ -427,9 +419,7 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
       await DeleteMilestoneArtifact(artifactId)
       const remaining = await CountMilestoneArtifacts(milestoneId)
 
-      // If the student removed the last artifact while pending verification,
-      // revert the milestone back to IN_PROGRESS so Advisors don't see an
-      // empty evidence state awaiting review.
+
       const shouldRevert =
         remaining === 0 &&
         status === MilestoneStatus.COMPLETED_PENDING_VERIFICATION
@@ -464,10 +454,7 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
 )
 
 // ─── Revert milestone status ───────────────────────────────────────────────────
-// Advisor / Admin only. Moves status back and notifies the student.
-// Allowed reversions:
-//   completed_pending_verification → in_progress
-//   verified                       → completed_pending_verification
+
 
 export const RevertMilestoneAction = CreateServerAction(
   true,

@@ -2,12 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useAtomValue } from "jotai"
-import { Controller, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle2, Clock, Send, ShieldOff } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { Textarea } from "@/src/components/ui/textarea"
-import { Checkbox } from "@/src/components/ui/checkbox"
 import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
@@ -23,7 +21,6 @@ import type { SelectFypMilestone } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
-import { cn } from "@/src/lib/utils"
 import {
   getFeedbackFieldsForRole,
   getFeedbackSectionsForRole,
@@ -31,7 +28,7 @@ import {
   FeedbackField,
   FeedbackRole
 } from "./constants"
-import { RatingInput } from "./RatingInput"
+import { FeedbackFieldRow } from "./FeedbackFieldRow"
 import { FeedbackRightRail } from "./FeedbackRightRail"
 
 type FieldValue = number | string | string[]
@@ -42,115 +39,6 @@ function defaultAnswers(fields: FeedbackField[]): Record<string, FieldValue> {
       f.key,
       f.type === "multi_choice" ? [] : f.type === "rating" ? 0 : ""
     ])
-  )
-}
-
-function FeedbackFieldRow({
-  field,
-  control,
-  error
-}: {
-  field: FeedbackField
-  control: any
-  error?: string
-}) {
-  if (field.type === "rating" || field.type === "single_choice") {
-    return (
-      <div className="py-4 border-b last:border-0">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm flex-1">{field.question}</p>
-
-          {field.type === "rating" && (
-            <Controller
-              name={field.key}
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <RatingInput value={value ?? 0} onChange={onChange} />
-              )}
-            />
-          )}
-
-          {field.type === "single_choice" && (
-            <Controller
-              name={field.key}
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <div className="flex flex-wrap justify-end gap-2 shrink-0">
-                  {field.options?.map((opt) => (
-                    <Button
-                      key={opt}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onChange(opt)}
-                      className={cn(
-                        "cursor-pointer",
-                        value === opt &&
-                          "border-primary bg-primary/5 text-primary"
-                      )}
-                    >
-                      {opt}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            />
-          )}
-        </div>
-        {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-      </div>
-    )
-  }
-
-  return (
-    <div className="py-4 border-b last:border-0 space-y-3">
-      <p className="text-sm">{field.question}</p>
-
-      {field.type === "multi_choice" && (
-        <Controller
-          name={field.key}
-          control={control}
-          render={({ field: { value, onChange } }) => (
-            <div className="flex flex-wrap gap-3">
-              {field.options?.map((opt) => {
-                const selected = ((value as string[]) ?? []).includes(opt)
-                return (
-                  <label
-                    key={opt}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={selected}
-                      onCheckedChange={(checked) => {
-                        const current = (value as string[]) ?? []
-                        onChange(
-                          checked
-                            ? [...current, opt]
-                            : current.filter((o) => o !== opt)
-                        )
-                      }}
-                    />
-                    {opt}
-                  </label>
-                )
-              })}
-            </div>
-          )}
-        />
-      )}
-
-      {field.type === "text" && (
-        <Controller
-          name={field.key}
-          control={control}
-          render={({ field: rhfField }) => (
-            <Textarea rows={3} placeholder={field.placeholder} {...rhfField} />
-          )}
-        />
-      )}
-
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
   )
 }
 

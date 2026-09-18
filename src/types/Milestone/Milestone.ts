@@ -5,9 +5,7 @@ export enum MilestoneStatus {
   VERIFIED = "verified"
 }
 
-// One row from `fyp_artifact_files`, joined with its `files` row when
-// type is "image"/"file". `type` is decided once at insert time (from the
-// uploaded file's mime type) — nothing downstream re-parses mime_type.
+
 export type MilestoneArtifactEntry =
   | {
       id: number
