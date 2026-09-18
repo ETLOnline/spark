@@ -23,7 +23,7 @@ import { useSetAtom } from "jotai"
 import useHashtags from "../profile/hooks/useHashtags"
 import { Label } from "../../ui/label"
 import TagsInput from "../../TagsInput/TagsInput"
-import { Textarea } from "../../ui/textarea"
+import Tiptap from "../../common/Tiptap/TiptapRichEditor"
 import z from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -302,7 +302,7 @@ function UpdatePostModal({
                   control={form.control}
                   render={({ field }) => (
                     <div className="flex flex-col gap-2">
-                      <Textarea {...field} />
+                      <Tiptap value={field.value} onChange={field.onChange} />
                       <div className="text-red-500 text-sm">
                         {error.content?.message}
                       </div>
@@ -344,7 +344,9 @@ function UpdatePostModal({
                     <Controller
                       name="content"
                       control={form.control}
-                      render={({ field }) => <Textarea {...field} />}
+                      render={({ field }) => (
+                        <Tiptap value={field.value} onChange={field.onChange} />
+                      )}
                     />
                   </div>
 
