@@ -232,26 +232,31 @@ export const permissions = {
 
   fyp: {
     canRequestAdvisor: "can_request_advisor",
-    canReceiveAdvisorRequest: "can_receive_advisor_request",
 
     // Milestone permissions
     milestoneCreate: "milestone.create",
     milestoneUpdate: "milestone.update",
     milestoneDelete: "milestone.delete",
-    milestoneVerify: "milestone.verify", // mark as Completed — advisor/admin only
-    milestoneRevert: "milestone.revert", // revert status — advisor/admin only
-    milestoneMarkDone: "milestone.mark_done", // student: submit for review
-    milestoneArtifactAdd: "milestone.artifact.add", // student: add artifact
-    milestoneArtifactDelete: "milestone.artifact.delete", // student/advisor/admin: delete artifact
+    milestoneMarkDone: "milestone.mark_done",
+    milestoneArtifactAdd: "milestone.artifact.add",
+    milestoneArtifactDelete: "milestone.artifact.delete",
+
+    // Program feedback — which version of the form a user submits
+    feedbackSubmitStudent: "feedback.submit_student"
+  },
+
+  advisory: {
+    canReceiveAdvisorRequest: "can_receive_advisor_request",
+
+    milestoneVerify: "milestone.verify",
+    milestoneRevert: "milestone.revert",
+
+    feedbackSubmitAdvisor: "feedback.submit_advisor",
 
     advisorViewRequests: "advisor.view_requests",
     advisorViewDetails: "advisor.view_details",
     advisorAccept: "advisor.accept",
-    advisorReject: "advisor.reject",
-
-    // Program feedback — which version of the form a user submits
-    feedbackSubmitStudent: "feedback.submit_student",
-    feedbackSubmitAdvisor: "feedback.submit_advisor"
+    advisorReject: "advisor.reject"
   }
 }
 
