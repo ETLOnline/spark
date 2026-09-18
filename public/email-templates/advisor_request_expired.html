@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Advisor Request {{statusLabel}}</title>
+    <title>Advisor Request Expired</title>
   </head>
   <body
     style="
@@ -53,7 +53,7 @@
             <tr>
               <td
                 align="center"
-                bgcolor="{{headerBgColor}}"
+                bgcolor="#f1f5f9"
                 style="
                   padding: 20px;
                   color: #0f172a;
@@ -61,7 +61,7 @@
                   font-weight: bold;
                 "
               >
-                Advisor Request {{statusLabel}}
+                Advisor Request Expired
               </td>
             </tr>
 
@@ -79,7 +79,8 @@
                   Hi <strong>{{studentName}}</strong>,
                 </p>
                 <p style="margin: 0 0 24px">
-                  Your advisor request has {{actionVerb}}.
+                  Your advisor request has expired — the 14-day window to find
+                  an advisor has passed.
                 </p>
 
                 <table
@@ -99,11 +100,6 @@
                       <p style="margin: 0">
                         <strong>FYP Title:</strong> {{fypTitle}}
                       </p>
-                      {{#if advisorName}}
-                      <p style="margin: 8px 0 0">
-                        <strong>Assigned Advisor:</strong> {{advisorName}}
-                      </p>
-                      {{/if}}
                     </td>
                   </tr>
                 </table>
@@ -135,14 +131,14 @@
                           text-decoration: none;
                         "
                       >
-                        {{ctaText}}
+                        Resubmit Request
                       </a>
                     </td>
                   </tr>
                 </table>
 
                 <p style="margin: 0; font-size: 14px; color: #6b7280">
-                  {{footerText}}
+                  You can update your details and resubmit anytime.
                 </p>
               </td>
             </tr>

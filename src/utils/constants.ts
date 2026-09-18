@@ -242,6 +242,7 @@ export const permissions = {
     milestoneRevert: "milestone.revert", // revert status — advisor/admin only
     milestoneMarkDone: "milestone.mark_done", // student: submit for review
     milestoneArtifactAdd: "milestone.artifact.add", // student: add artifact
+    milestoneArtifactDelete: "milestone.artifact.delete", // student/advisor/admin: delete artifact
 
     advisorViewRequests: "advisor.view_requests",
     advisorViewDetails: "advisor.view_details",
@@ -369,6 +370,9 @@ export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
 
 /** Max length for a session request's Description field. */
 export const SESSION_REQUEST_DESCRIPTION_MAX_LENGTH = 500
+
+/** Max length for an advisor's rejection reason on an FYP advisor request. */
+export const ADVISOR_REJECTION_REASON_MAX_LENGTH = 1000
 
 export const MONTH_NAMES = [
   "January",
