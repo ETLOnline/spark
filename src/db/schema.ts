@@ -1601,6 +1601,7 @@ export const advisorRequestsTable = pgTable("advisor_requests", {
   space_id: varchar("space_id", { length: 36 })
     .notNull()
     .references(() => spacesTable.id, { onDelete: "cascade" }),
+  project_ids: jsonb("project_ids").$type<string[]>().default([]),
   requested_by: varchar().notNull(),
   group_members: jsonb("group_members")
     .$type<{ name: string; registration_number: string }[]>()
@@ -2334,3 +2335,42 @@ export type SelectLeaderboardSnapshot =
     user?: SelectUser
     community?: SelectCommunity
   }
+
+// ─── FYP Minutes of Meeting (MoM) ─────────────────────────────────────────────
+
+export const momsTable = pgTable("moms", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  created_by: varchar().notNull(),
+  meeting_date: varchar().notNull(), // YYYY-MM-DD
+  meeting_start_time: varchar().notNull(), // HH:mm
+  meeting_end_time: varchar().notNull(), // HH:mm
+  participants: jsonb("participants").$type<string[]>().notNull().default([]),
+  discussion_summary: text().notNull(),
+  action_items: jsonb("action_items")
+    .$type<{ id: string; text: string; done: boolean }[]>()
+    .notNull()
+    .default([]),
+  ...timestamps
+})
+
+export const momsRelations = relations(momsTable, ({ one }) => ({
+  space: one(spacesTable, {
+    fields: [momsTable.space_id],
+    references: [spacesTable.id]
+  }),
+  creator: one(usersTable, {
+    fields: [momsTable.created_by],
+    references: [usersTable.unique_id]
+  })
+}))
+
+export type InsertMom = typeof momsTable.$inferInsert
+export type SelectMom = typeof momsTable.$inferSelect & {
+  space?: SelectSpace
+  creator?: SelectUser
+}

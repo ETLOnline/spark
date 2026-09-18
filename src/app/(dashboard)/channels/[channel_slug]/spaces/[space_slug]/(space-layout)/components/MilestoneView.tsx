@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import moment from "moment"
 import {
@@ -43,8 +43,12 @@ import {
   RevertMilestoneAction
 } from "@/src/server-actions/Milestone/Milestone"
 import type { MilestoneWithArtifacts } from "@/src/server-actions/Milestone/Milestone"
-import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import {
+  MilestoneStatus,
+  MilestoneArtifactEntry
+} from "@/src/types/Milestone/Milestone"
 import { useToast } from "@/src/hooks/use-toast"
+import pusherClient from "@/src/services/realtime/PusherClient"
 import { MILESTONE_STATUS_TOAST, MILESTONE_DATE_FORMAT } from "./constants"
 import { MilestoneStepper } from "./MilestoneStepper"
 import { StatusIcon } from "./StatusIcon"
@@ -53,6 +57,7 @@ import { MilestoneStatusBadge } from "./MilestoneStatusBadge"
 export function MilestoneView({
   milestones: initial,
   canManage,
+  canArtifactAdd,
   canCreateMilestone,
   canUpdateMilestone,
   canDeleteMilestone,
@@ -63,6 +68,7 @@ export function MilestoneView({
 }: {
   milestones: MilestoneWithArtifacts[]
   canManage: boolean
+  canArtifactAdd: boolean
   canCreateMilestone: boolean
   canUpdateMilestone: boolean
   canDeleteMilestone: boolean
@@ -85,6 +91,51 @@ export function MilestoneView({
     id: string
     name: string
   } | null>(null)
+
+  // Real-time: subscribe to a private per-milestone channel for each milestone.
+  // Follows the same pattern as private-chat-${chatId} used in ChatScreen.
+  useEffect(() => {
+    if (!initial.length) return
+
+    const subscriptions = initial.map((m) => {
+      const channelName = `milestone-${m.id}`
+      const channel = pusherClient.subscribe(channelName)
+
+      channel.bind(
+        "status-update",
+        (data: { id: string; status: MilestoneStatus }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, status: data.status } : ms
+            )
+          )
+        }
+      )
+
+      channel.bind(
+        "artifacts-update",
+        (data: { id: string; artifacts: MilestoneArtifactEntry[] }) => {
+          setMilestones((prev) =>
+            prev.map((ms) =>
+              ms.id === data.id ? { ...ms, artifacts: data.artifacts } : ms
+            )
+          )
+        }
+      )
+
+      return channelName
+    })
+
+    return () => {
+      subscriptions.forEach((channelName) => {
+        const ch = pusherClient.channel(channelName)
+        if (ch) {
+          ch.unbind_all()
+          pusherClient.unsubscribe(channelName)
+        }
+      })
+    }
+  }, [])
 
   const [, , , updateMilestone] = useServerAction(UpdateMilestoneAction)
   const [, , , deleteMilestone] = useServerAction(DeleteMilestoneAction)
@@ -307,13 +358,17 @@ export function MilestoneView({
                   {(() => {
                     const arts = m.artifacts
                     const canManageArtifact =
+                      canArtifactAdd &&
                       !canManage &&
                       (m.status === MilestoneStatus.IN_PROGRESS ||
                         m.status ===
                           MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
                     const canViewArtifact =
                       arts.length > 0 &&
-                      ((!canManage && m.status === MilestoneStatus.VERIFIED) ||
+                      ((!canArtifactAdd && !canManage) ||
+                        (canArtifactAdd &&
+                          !canManage &&
+                          m.status === MilestoneStatus.VERIFIED) ||
                         canManage)
 
                     return (
@@ -363,24 +418,26 @@ export function MilestoneView({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
-                              {/* Mark In Progress — available to all users */}
-                              {m.status === MilestoneStatus.INCOMPLETE && (
-                                <DropdownMenuItem
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    handleStatusChange(
-                                      m.id,
-                                      MilestoneStatus.IN_PROGRESS
-                                    )
-                                  }
-                                >
-                                  <Clock className="h-3.5 w-3.5 mr-2 text-blue-500" />
-                                  Mark In Progress
-                                </DropdownMenuItem>
-                              )}
+                              {/* Mark In Progress — student or manager only */}
+                              {(canArtifactAdd || canManage) &&
+                                m.status === MilestoneStatus.INCOMPLETE && (
+                                  <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                      handleStatusChange(
+                                        m.id,
+                                        MilestoneStatus.IN_PROGRESS
+                                      )
+                                    }
+                                  >
+                                    <Clock className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                                    Mark In Progress
+                                  </DropdownMenuItem>
+                                )}
 
                               {/* Student actions */}
-                              {!canManage &&
+                              {canArtifactAdd &&
+                                !canManage &&
                                 (m.status === MilestoneStatus.IN_PROGRESS ? (
                                   <>
                                     <DropdownMenuItem
@@ -485,6 +542,15 @@ export function MilestoneView({
                                     </>
                                   )}
                                 </>
+                              )}
+                              {!canArtifactAdd && !canManage && (
+                                <DropdownMenuItem
+                                  disabled
+                                  className="text-xs text-muted-foreground"
+                                >
+                                  You don&apos;t have permission to perform
+                                  actions.
+                                </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
