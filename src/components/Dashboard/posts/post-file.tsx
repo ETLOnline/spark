@@ -102,7 +102,12 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
             {post.category}
           </Badge>
         )}
-        <p className="text-lg pb-5">{post.content}</p>
+        {post.content && (
+          <div
+            className="rich-editor text-lg pb-5"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        )}
         {post?.file ? (
           <Link href={post?.file?.file_path} onClick={handleFileClick}>
             <div className="flex items-center space-x-2 bg-muted p-4 rounded-lg w-fit">

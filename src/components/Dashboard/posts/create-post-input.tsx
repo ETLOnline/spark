@@ -1,9 +1,9 @@
-import { Textarea } from "@/src/components/ui/textarea"
 import { NewPost, PostType, ImageFile } from "./types/posts-types"
 import TagsInput from "../../TagsInput/TagsInput"
 import "./create-post-input.css"
 import { FileUpload } from "../../ui/file-upload"
 import { useState } from "react"
+import Tiptap from "../../common/Tiptap/TiptapRichEditor"
 
 type PollOptionsSetter = (
   tags: string[] | ((tags: string[]) => string[])
@@ -110,18 +110,16 @@ const CreatePostInput: React.FC<Props> = ({
   }
 
   return type === PostType.text ? (
-    <Textarea
+    <Tiptap
       placeholder="What's on your mind?"
       value={newPost.content as string}
-      onChange={(e) =>
+      onChange={(content) =>
         setNewPost({
           ...newPost,
-          content: e.target.value,
+          content,
           type: PostType.text
         })
       }
-      required
-      className="min-h-[100px]"
     />
   ) : type === PostType.image ? (
     <div className="flex flex-col space-y-4">
@@ -134,16 +132,16 @@ const CreatePostInput: React.FC<Props> = ({
           fileType="image"
         />
       </div>
-      <Textarea
+      <Tiptap
         placeholder="Add a caption..."
         value={newPost.content as string}
-        onChange={(e) =>
+        onChange={(content) =>
           setNewPost({
             ...newPost,
-            content: e.target.value
+            content
           })
         }
-        className="min-h-[60px]"
+        minHeight="60px"
       />
     </div>
   ) : type === PostType.poll ? (
@@ -157,18 +155,16 @@ const CreatePostInput: React.FC<Props> = ({
           fileType="image"
         />
       </div>
-      <Textarea
+      <Tiptap
         placeholder="Enter your poll question"
         value={newPost.content as string}
-        onChange={(e) =>
+        onChange={(content) =>
           setNewPost({
             ...newPost,
-            content: e.target.value,
+            content,
             type: PostType.poll
           })
         }
-        className="min-h-[100px]"
-        required
       />
       <TagsInput
         tags={pollOptions as string[]}
@@ -184,16 +180,16 @@ const CreatePostInput: React.FC<Props> = ({
         onRemove={handleRemoveFile}
         fileType="file"
       />
-      <Textarea
+      <Tiptap
         placeholder="Add a description..."
         value={newPost.content as string}
-        onChange={(e) =>
+        onChange={(content) =>
           setNewPost({
             ...newPost,
-            content: e.target.value
+            content
           })
         }
-        className="min-h-[60px]"
+        minHeight="60px"
       />
     </div>
   )
