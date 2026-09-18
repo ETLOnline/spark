@@ -1,10 +1,7 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
-import {
-  MilestoneStatus,
-  MilestoneArtifactEntry
-} from "@/src/types/Milestone/Milestone"
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import {
   integer,
   pgTable,
@@ -1674,26 +1671,52 @@ export const fypMilestonesTable = pgTable("fyp_milestones", {
   end_date: varchar(),
   order_index: integer().notNull().default(0),
   created_by: varchar().notNull(),
-  // Artifacts — JSON array; at least one required before marking as Done
-  artifacts: json()
-    .$type<MilestoneArtifactEntry[]>()
-    .notNull()
-    .default(sql`'[]'::json`),
   ...timestamps
 })
 
 export const fypMilestonesRelations = relations(
   fypMilestonesTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     space: one(spacesTable, {
       fields: [fypMilestonesTable.space_id],
       references: [spacesTable.id]
-    })
+    }),
+    artifacts: many(fypArtifactFilesTable)
   })
 )
 
 export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
 export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
+
+
+
+export const fypArtifactFilesTable = pgTable("fyp_artifact_files", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  milestone_id: varchar("milestone_id", { length: 36 })
+    .notNull()
+    .references(() => fypMilestonesTable.id, { onDelete: "cascade" }),
+  type: varchar().notNull(),
+  file_id: integer().references(() => filesTable.id, { onDelete: "cascade" }), // null for links
+  url: varchar(), // null for files/images
+  ...timestamps
+})
+
+export const fypArtifactFilesRelations = relations(
+  fypArtifactFilesTable,
+  ({ one }) => ({
+    milestone: one(fypMilestonesTable, {
+      fields: [fypArtifactFilesTable.milestone_id],
+      references: [fypMilestonesTable.id]
+    }),
+    file: one(filesTable, {
+      fields: [fypArtifactFilesTable.file_id],
+      references: [filesTable.id]
+    })
+  })
+)
+
+export type InsertFypArtifactFile = typeof fypArtifactFilesTable.$inferInsert
+export type SelectFypArtifactFile = typeof fypArtifactFilesTable.$inferSelect
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2267,3 +2290,42 @@ export type SelectLeaderboardSnapshot =
     user?: SelectUser
     community?: SelectCommunity
   }
+
+// ─── FYP Minutes of Meeting (MoM) ─────────────────────────────────────────────
+
+export const momsTable = pgTable("moms", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  created_by: varchar().notNull(),
+  meeting_date: varchar().notNull(), // YYYY-MM-DD
+  meeting_start_time: varchar().notNull(), // HH:mm
+  meeting_end_time: varchar().notNull(), // HH:mm
+  participants: jsonb("participants").$type<string[]>().notNull().default([]),
+  discussion_summary: text().notNull(),
+  action_items: jsonb("action_items")
+    .$type<{ id: string; text: string; done: boolean }[]>()
+    .notNull()
+    .default([]),
+  ...timestamps
+})
+
+export const momsRelations = relations(momsTable, ({ one }) => ({
+  space: one(spacesTable, {
+    fields: [momsTable.space_id],
+    references: [spacesTable.id]
+  }),
+  creator: one(usersTable, {
+    fields: [momsTable.created_by],
+    references: [usersTable.unique_id]
+  })
+}))
+
+export type InsertMom = typeof momsTable.$inferInsert
+export type SelectMom = typeof momsTable.$inferSelect & {
+  space?: SelectSpace
+  creator?: SelectUser
+}
