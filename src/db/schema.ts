@@ -1688,7 +1688,52 @@ export const fypMilestonesRelations = relations(
 export type InsertFypMilestone = typeof fypMilestonesTable.$inferInsert
 export type SelectFypMilestone = typeof fypMilestonesTable.$inferSelect
 
+// ─── FYP Program Feedback ─────────────────────────────────────────────────────
 
+export const programFeedbackTable = pgTable("program_feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  space_id: varchar("space_id", { length: 36 })
+    .notNull()
+    .references(() => spacesTable.id, { onDelete: "cascade" }),
+  submitted_by: varchar("submitted_by")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  overall_program_rating: integer().notNull(),
+  spark_overall_rating: integer().notNull(),
+  partner_rating: integer().notNull(),
+
+  answers: jsonb("answers")
+    .$type<
+      {
+        key: string
+        question: string
+        type: "rating" | "single_choice" | "multi_choice" | "text"
+        value: number | string | string[] | null
+      }[]
+    >()
+    .notNull()
+    .default([]),
+  ...timestamps
+})
+
+export const programFeedbackRelations = relations(
+  programFeedbackTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [programFeedbackTable.space_id],
+      references: [spacesTable.id]
+    }),
+    submittedBy: one(usersTable, {
+      fields: [programFeedbackTable.submitted_by],
+      references: [usersTable.unique_id]
+    })
+  })
+)
+
+export type InsertProgramFeedback = typeof programFeedbackTable.$inferInsert
+export type SelectProgramFeedback = typeof programFeedbackTable.$inferSelect
+
+// ─── FYP Artifact Files ────────────────────────────────────────────────────────
 
 export const fypArtifactFilesTable = pgTable("fyp_artifact_files", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

@@ -34,6 +34,7 @@ const userRolePermissions = [
           permissions.fyp.canRequestAdvisor,
           permissions.fyp.milestoneMarkDone,
           permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.feedbackSubmitStudent,
           permissions.fyp.milestoneArtifactDelete
         ]
       }
@@ -84,7 +85,8 @@ const userRolePermissions = [
           permissions.fyp.advisorViewRequests,
           permissions.fyp.advisorViewDetails,
           permissions.fyp.advisorAccept,
-          permissions.fyp.advisorReject
+          permissions.fyp.advisorReject,
+          permissions.fyp.feedbackSubmitAdvisor
         ]
       }
     ]
