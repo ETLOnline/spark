@@ -19,12 +19,14 @@ export default async function AdvisorRequestsPage() {
     permsResponse.success ? permsResponse.data : null,
     isAdmin
   )
-  if (!permissionChecker.canAccess("fyp.advisor.view_requests"))
+  if (!permissionChecker.canAccess("advisory.advisor.view_requests"))
     redirect("/profile")
 
-  const canViewDetails = permissionChecker.canAccess("fyp.advisor.view_details")
-  const canAccept = permissionChecker.canAccess("fyp.advisor.accept")
-  const canReject = permissionChecker.canAccess("fyp.advisor.reject")
+  const canViewDetails = permissionChecker.canAccess(
+    "advisory.advisor.view_details"
+  )
+  const canAccept = permissionChecker.canAccess("advisory.advisor.accept")
+  const canReject = permissionChecker.canAccess("advisory.advisor.reject")
 
   const requestsResponse = await GetAdvisorRequestsForAdvisorAction()
   const requests = (requestsResponse.success ? requestsResponse.data : []) ?? []

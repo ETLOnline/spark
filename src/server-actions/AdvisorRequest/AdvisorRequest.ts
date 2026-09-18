@@ -129,8 +129,8 @@ export const CreateAdvisorRequestAction = CreateServerAction(
 
       const eligibleAdvisors = await GetEligibleAdvisorsForDomain(
         formData.domain_tag_id,
-        "fyp",
-        permissions.fyp.advisorViewRequests
+        "advisory",
+        permissions.advisory.advisorViewRequests
       )
       if (!eligibleAdvisors.length) {
         return {
@@ -401,8 +401,8 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       const proccessingRequest = recentRequests.map(async (request) => {
         const advisors = await GetEligibleAdvisorsForDomain(
           request.domain_tag_id,
-          "fyp",
-          permissions.fyp.canReceiveAdvisorRequest
+          "advisory",
+          permissions.advisory.canReceiveAdvisorRequest
         )
 
         await AddAdvisorsInRequest(
