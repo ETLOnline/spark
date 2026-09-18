@@ -33,6 +33,7 @@ import {
   MILESTONE_STATUS_FLOW,
   MILESTONE_ALLOWED_REVERSIONS
 } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 // ─── Response shaping ─────────────────────────────────────────────────────────
 // Turns a raw fyp_artifact_files row (joined with its file, if any) into the
@@ -295,6 +296,12 @@ export const UpdateMilestoneAction = CreateServerAction(
           })()
         }
 
+        // Broadcast status change on a private per-milestone channel
+        // (same pattern as private-chat-${chatId} used throughout this codebase)
+        await pusherServer.trigger(`milestone-${id}`, "status-update", {
+          id,
+          status: newStatus
+        })
         return { success: true, data: updated ? withMappedArtifacts(updated) : null }
       }
 
@@ -378,7 +385,15 @@ export const SubmitMilestoneArtifactAction = CreateServerAction(
       }
 
       const updated = await GetMilestoneById(milestoneId)
-      return { success: true, data: updated ? withMappedArtifacts(updated) : null }
+      const mapped = updated ? withMappedArtifacts(updated) : null
+
+      await pusherServer.trigger(
+        `milestone-${milestoneId}`,
+        "artifacts-update",
+        { id: milestoneId, artifacts: mapped?.artifacts ?? [] }
+      )
+
+      return { success: true, data: mapped }
     } catch (error) {
       return { error: error }
     }
@@ -425,7 +440,23 @@ export const DeleteMilestoneArtifactAction = CreateServerAction(
           })
         : await GetMilestoneById(milestoneId)
 
-      return { success: true, data: updated ? withMappedArtifacts(updated) : null }
+      const mapped = updated ? withMappedArtifacts(updated) : null
+
+      await pusherServer.trigger(
+        `milestone-${milestoneId}`,
+        "artifacts-update",
+        { id: milestoneId, artifacts: mapped?.artifacts ?? [] }
+      )
+
+      if (shouldRevert) {
+        await pusherServer.trigger(
+          `milestone-${milestoneId}`,
+          "status-update",
+          { id: milestoneId, status: MilestoneStatus.IN_PROGRESS }
+        )
+      }
+
+      return { success: true, data: mapped }
     } catch (error) {
       return { error: error }
     }
@@ -461,6 +492,10 @@ export const RevertMilestoneAction = CreateServerAction(
         status: targetStatus
       })
 
+      await pusherServer.trigger(`milestone-${milestoneId}`, "status-update", {
+        id: milestoneId,
+        status: targetStatus
+      })
       return { success: true, data: updated ? withMappedArtifacts(updated) : null }
     } catch (error) {
       return { error: error }

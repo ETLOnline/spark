@@ -33,7 +33,8 @@ const userRolePermissions = [
         actions: [
           permissions.fyp.canRequestAdvisor,
           permissions.fyp.milestoneMarkDone,
-          permissions.fyp.milestoneArtifactAdd
+          permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
@@ -79,7 +80,7 @@ const userRolePermissions = [
           permissions.fyp.milestoneDelete,
           permissions.fyp.milestoneVerify,
           permissions.fyp.milestoneRevert,
-          permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.milestoneArtifactDelete,
           permissions.fyp.advisorViewRequests,
           permissions.fyp.advisorViewDetails,
           permissions.fyp.advisorAccept,
@@ -136,7 +137,8 @@ const userRolePermissions = [
           permissions.fyp.milestoneUpdate,
           permissions.fyp.milestoneDelete,
           permissions.fyp.milestoneVerify,
-          permissions.fyp.milestoneRevert
+          permissions.fyp.milestoneRevert,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
