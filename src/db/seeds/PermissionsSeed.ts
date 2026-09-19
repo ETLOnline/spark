@@ -131,21 +131,30 @@ const permissionSeedList = [
 
   // FYP — Advisor request
   { namespace: "fyp", action: permissions.fyp.canRequestAdvisor },
-  { namespace: "fyp", action: permissions.fyp.canReceiveAdvisorRequest },
 
   // FYP — Milestones
   { namespace: "fyp", action: permissions.fyp.milestoneCreate },
   { namespace: "fyp", action: permissions.fyp.milestoneUpdate },
   { namespace: "fyp", action: permissions.fyp.milestoneDelete },
-  { namespace: "fyp", action: permissions.fyp.milestoneVerify },
-  { namespace: "fyp", action: permissions.fyp.milestoneRevert },
   { namespace: "fyp", action: permissions.fyp.milestoneMarkDone },
   { namespace: "fyp", action: permissions.fyp.milestoneArtifactAdd },
+  { namespace: "fyp", action: permissions.fyp.milestoneArtifactDelete },
 
-  { namespace: "fyp", action: permissions.fyp.advisorViewRequests },
-  { namespace: "fyp", action: permissions.fyp.advisorViewDetails },
-  { namespace: "fyp", action: permissions.fyp.advisorAccept },
-  { namespace: "fyp", action: permissions.fyp.advisorReject }
+  // FYP — Program feedback
+  { namespace: "fyp", action: permissions.fyp.feedbackSubmitStudent },
+
+  // Advisory
+  {
+    namespace: "advisory",
+    action: permissions.advisory.canReceiveAdvisorRequest
+  },
+  { namespace: "advisory", action: permissions.advisory.milestoneVerify },
+  { namespace: "advisory", action: permissions.advisory.milestoneRevert },
+  { namespace: "advisory", action: permissions.advisory.feedbackSubmitAdvisor },
+  { namespace: "advisory", action: permissions.advisory.advisorViewRequests },
+  { namespace: "advisory", action: permissions.advisory.advisorViewDetails },
+  { namespace: "advisory", action: permissions.advisory.advisorAccept },
+  { namespace: "advisory", action: permissions.advisory.advisorReject }
 ]
 
 export const PermissionsSeed = async () => {

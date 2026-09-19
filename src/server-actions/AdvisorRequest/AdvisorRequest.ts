@@ -16,6 +16,10 @@ import {
   RejectAdvisorRequest,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
+import {
+  createProjectUser,
+  getProjects
+} from "@/src/db/data-access/project-management/query"
 import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 import { permissions } from "@/src/utils/constants"
 import {
@@ -50,6 +54,7 @@ export interface AdvisorRequestFormData {
   tech_stack: string
   domain_tag_id: number
   proposal_link?: string
+  project_ids?: string[]
 }
 
 export interface AdvisorRequestProposalFile {
@@ -108,10 +113,24 @@ export const CreateAdvisorRequestAction = CreateServerAction(
         }
       }
 
+      if (formData.project_ids?.length) {
+        const spaceProjects = await getProjects(spaceId)
+        const spaceProjectIds = new Set(spaceProjects.map((p) => p.id))
+        const hasInvalidProject = formData.project_ids.some(
+          (projectId) => !spaceProjectIds.has(projectId)
+        )
+        if (hasInvalidProject) {
+          return {
+            success: false,
+            error: "One or more selected projects do not belong to this space."
+          }
+        }
+      }
+
       const eligibleAdvisors = await GetEligibleAdvisorsForDomain(
         formData.domain_tag_id,
-        "fyp",
-        permissions.fyp.advisorViewRequests
+        "advisory",
+        permissions.advisory.advisorViewRequests
       )
       if (!eligibleAdvisors.length) {
         return {
@@ -245,6 +264,19 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
         )
       }
 
+      if (request.project_ids?.length) {
+        for (const projectId of request.project_ids) {
+          try {
+            await createProjectUser(projectId, user.unique_id, "project_editor")
+          } catch (attachProjectError) {
+            console.error(
+              `Failed to add accepted advisor to project ${projectId}:`,
+              attachProjectError
+            )
+          }
+        }
+      }
+
       try {
         const withSpace = await GetAdvisorRequestById(requestId)
         if (withSpace) {
@@ -369,8 +401,8 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       const proccessingRequest = recentRequests.map(async (request) => {
         const advisors = await GetEligibleAdvisorsForDomain(
           request.domain_tag_id,
-          "fyp",
-          permissions.fyp.canReceiveAdvisorRequest
+          "advisory",
+          permissions.advisory.canReceiveAdvisorRequest
         )
 
         await AddAdvisorsInRequest(

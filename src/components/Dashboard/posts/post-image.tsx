@@ -102,7 +102,9 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
             {post.category}
           </Badge>
         )}
-        {post.content && <ExpandableText content={post?.content} lines={6} />}
+        {post.content && (
+          <ExpandableText content={post?.content} lines={6} isHtml />
+        )}
 
         {/* Images */}
         {images.length > 0 && (

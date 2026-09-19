@@ -21,9 +21,12 @@ import {
 } from "@/src/components/ui/tabs"
 import { FileUpload } from "@/src/components/ui/file-upload"
 import TagSelect from "@/src/components/TagsInput/tags"
-import { MultiSelectOption } from "@/src/components/ui/multi-select"
+import MultiSelect, {
+  MultiSelectOption
+} from "@/src/components/ui/multi-select"
 import { Badge } from "@/src/components/ui/badge"
 import { Separator } from "@/src/components/ui/separator"
+import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -38,6 +41,7 @@ import {
   ADVISOR_REQUEST_PROPOSAL_ACCEPT,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
+import { SelectProject } from "@/src/db/schema"
 
 const requestAdvisorSchema = z
   .object({
@@ -60,7 +64,9 @@ const requestAdvisorSchema = z
     tech_stack: z.string().min(1, "Tech stack is required"),
     domain_tag_id: z.number().optional(),
     proposal_method: z.enum(["file", "link"]),
-    proposal_link: z.string().optional()
+    proposal_link: z.string().optional(),
+    advisor_scope: z.enum(["space", "space_project"]),
+    project_ids: z.array(z.string()).optional()
   })
   .refine((data) => typeof data.domain_tag_id === "number", {
     message: "Domain is required",
@@ -73,6 +79,13 @@ const requestAdvisorSchema = z
         : true,
     { message: "Proposal link is required", path: ["proposal_link"] }
   )
+  .refine(
+    (data) =>
+      data.advisor_scope === "space_project"
+        ? !!data.project_ids?.length
+        : true,
+    { message: "Select at least one project", path: ["project_ids"] }
+  )
 
 type RequestAdvisorFormValues = z.infer<typeof requestAdvisorSchema>
 
@@ -80,6 +93,7 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   spaceId: string
+  projects: SelectProject[]
   onSubmitted: () => void
 }
 
@@ -102,9 +116,13 @@ function RequestAdvisorModal({
   open,
   onOpenChange,
   spaceId,
+  projects,
   onSubmitted
 }: Props) {
   const [selectedDomain, setSelectedDomain] = useState<MultiSelectOption[]>([])
+  const [selectedProjects, setSelectedProjects] = useState<MultiSelectOption[]>(
+    []
+  )
   const [proposalFile, setProposalFile] = useState<File | null>(null)
   const [submitting, , , submitRequest] = useServerAction(
     CreateAdvisorRequestAction
@@ -120,7 +138,9 @@ function RequestAdvisorModal({
       problem_statement: "",
       tech_stack: "",
       proposal_method: "file",
-      proposal_link: ""
+      proposal_link: "",
+      advisor_scope: "space",
+      project_ids: []
     }
   })
 
@@ -135,6 +155,7 @@ function RequestAdvisorModal({
   })
 
   const proposalMethod = form.watch("proposal_method")
+  const advisorScope = form.watch("advisor_scope")
 
   useEffect(() => {
     if (!open) return
@@ -147,11 +168,37 @@ function RequestAdvisorModal({
       problem_statement: "",
       tech_stack: "",
       proposal_method: "file",
-      proposal_link: ""
+      proposal_link: "",
+      advisor_scope: "space",
+      project_ids: []
     })
     setProposalFile(null)
     setSelectedDomain([])
+    setSelectedProjects([])
   }, [open])
+
+  useEffect(() => {
+    if (advisorScope !== "space_project") {
+      form.setValue("project_ids", [], { shouldValidate: true })
+      setSelectedProjects([])
+      return
+    }
+
+    if (projects.length === 1) {
+      form.setValue("project_ids", [projects[0].id], { shouldValidate: true })
+      setSelectedProjects([
+        { label: projects[0].project_name, value: projects[0].id }
+      ])
+    }
+  }, [advisorScope, projects])
+
+  useEffect(() => {
+    form.setValue(
+      "project_ids",
+      selectedProjects.map((p) => p.value),
+      { shouldDirty: true, shouldValidate: true }
+    )
+  }, [selectedProjects])
 
   useEffect(() => {
     const nextDomainTagId = selectedDomain[0]
@@ -233,7 +280,9 @@ function RequestAdvisorModal({
       tech_stack: data.tech_stack,
       domain_tag_id: data.domain_tag_id as number,
       proposal_link:
-        data.proposal_method === "link" ? data.proposal_link : undefined
+        data.proposal_method === "link" ? data.proposal_link : undefined,
+      project_ids:
+        data.advisor_scope === "space_project" ? data.project_ids : undefined
     }
 
     const res = await submitRequest(spaceId, submitData, proposalFilePayload)
@@ -470,8 +519,75 @@ function RequestAdvisorModal({
                 </div>
               </div>
 
+              {projects.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  <SectionHeading step="03" title="Advisor scope" />
+
+                  <div className="flex flex-col gap-2">
+                    <Label className="font-semibold">
+                      Where should the advisor be added?
+                    </Label>
+                    <Controller
+                      name="advisor_scope"
+                      control={control}
+                      render={({ field }) => (
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <RadioGroupItem value="space" id="scope-space" />
+                            <Label
+                              htmlFor="scope-space"
+                              className="cursor-pointer font-normal"
+                            >
+                              Space only
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <RadioGroupItem
+                              value="space_project"
+                              id="scope-space-project"
+                            />
+                            <Label
+                              htmlFor="scope-space-project"
+                              className="cursor-pointer font-normal"
+                            >
+                              Space +{" "}
+                              {projects.length === 1
+                                ? projects[0].project_name
+                                : "Project(s)"}
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      )}
+                    />
+                  </div>
+
+                  {advisorScope === "space_project" && projects.length > 1 && (
+                    <div className="flex flex-col gap-2">
+                      <Label className="font-semibold">Projects</Label>
+                      <MultiSelect
+                        selected={selectedProjects}
+                        onChange={setSelectedProjects}
+                        options={projects.map((project) => ({
+                          label: project.project_name,
+                          value: project.id
+                        }))}
+                        placeholder="Select projects..."
+                      />
+                      {errors.project_ids && (
+                        <span className="text-red-500 text-sm">
+                          {errors.project_ids.message}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex flex-col gap-4">
-                <SectionHeading step="03" title="Project proposal" />
+                <SectionHeading step="04" title="Project proposal" />
 
                 <div className="flex flex-col gap-2">
                   <Controller

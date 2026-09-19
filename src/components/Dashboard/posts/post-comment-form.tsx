@@ -1,6 +1,6 @@
 import { Button } from "@/src/components/ui/button"
 import { useRef, useEffect } from "react"
-import { Input } from "@/src/components/ui/input"
+import { Textarea } from "@/src/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { postStore } from "@/src/store/post/postStore"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -29,7 +29,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
   onUpdateComment
 }) => {
   const commentText = useRef<string>("")
-  const commentInput = useRef<HTMLInputElement>(null)
+  const commentInput = useRef<HTMLTextAreaElement>(null)
 
   const setPosts = useSetAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
@@ -134,10 +134,11 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
           <AvatarImage src={user?.profile_url as string} alt="Current User" />
           <AvatarFallback>{name}</AvatarFallback>
         </Avatar>
-        <Input
+        <Textarea
           placeholder={isEditMode ? "Edit your comment..." : "Add a comment..."}
           onChange={(e) => (commentText.current = e.target.value)}
-          className="flex-1"
+          className="flex-1 min-h-[40px] "
+          rows={1}
           ref={commentInput}
         />
         {isEditMode && onCancelEdit && (
