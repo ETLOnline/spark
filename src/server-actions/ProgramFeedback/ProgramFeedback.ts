@@ -10,7 +10,11 @@ import {
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 import { AddRecommendationAction } from "../Recommendation/recommendation"
 import { InsertProgramFeedback, SelectRecommendation } from "@/src/db/schema"
-import { permissions } from "@/src/utils/constants"
+import {
+  FEEDBACK_ROLES,
+  FeedbackRole,
+  permissions
+} from "@/src/utils/constants"
 import { filterUserIdsByPermission } from "@/src/utils/serverHelpers"
 
 // ─── Get my submission (or null) for a space ───────────────────────────────────
@@ -61,7 +65,7 @@ export const SubmitProgramFeedbackAction = CreateServerAction(
       | "spark_overall_rating"
       | "partner_rating"
       | "answers"
-    > & { role: "student" | "advisor" }
+    > & { role: FeedbackRole }
   ) => {
     try {
       const user = await AuthUserAction()
@@ -93,10 +97,13 @@ export const SubmitProgramFeedbackAction = CreateServerAction(
         // Student feedback goes only to space members who can submit as an
         // advisor (i.e. the advisor(s)); advisor feedback goes only to
         // members who can submit as a student.
-        const recipientAction =
-          input.role === "advisor"
-            ? permissions.fyp.feedbackSubmitStudent
-            : permissions.fyp.feedbackSubmitAdvisor
+        const [recipientNamespace, recipientAction] =
+          input.role === FEEDBACK_ROLES.advisor
+            ? (["fyp", permissions.fyp.feedbackSubmitStudent] as const)
+            : ([
+                "advisory",
+                permissions.advisory.feedbackSubmitAdvisor
+              ] as const)
         const spaceUsers = await getSpaceUsers(spaceId)
         const memberIds = spaceUsers
           .map((su) => su.user?.unique_id)
@@ -104,7 +111,7 @@ export const SubmitProgramFeedbackAction = CreateServerAction(
 
         const recipientIds = await filterUserIdsByPermission(
           memberIds,
-          "fyp",
+          recipientNamespace,
           recipientAction,
           { entityType: "SPACE", entityId: spaceId }
         )

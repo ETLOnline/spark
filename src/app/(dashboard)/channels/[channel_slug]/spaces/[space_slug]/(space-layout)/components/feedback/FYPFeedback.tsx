@@ -28,6 +28,7 @@ import {
   FeedbackField,
   FeedbackRole
 } from "./constants"
+import { FEEDBACK_ROLES } from "@/src/utils/constants"
 import { FeedbackFieldRow } from "./FeedbackFieldRow"
 import { FeedbackRightRail } from "./FeedbackRightRail"
 
@@ -53,9 +54,9 @@ function FYPFeedback() {
   const canSubmitAsStudent =
     globalChecker?.canAccess("fyp.feedback.submit_student") ?? false
   const role: FeedbackRole | null = canSubmitAsAdvisor
-    ? "advisor"
+    ? FEEDBACK_ROLES.advisor
     : canSubmitAsStudent
-      ? "student"
+      ? FEEDBACK_ROLES.student
       : null
 
   const roleFields = useMemo(
@@ -131,7 +132,7 @@ function FYPFeedback() {
     }))
 
     const partnerRating =
-      role === "student"
+      role === FEEDBACK_ROLES.student
         ? (data.guidance_satisfaction as number)
         : (data.team_engagement as number)
 
