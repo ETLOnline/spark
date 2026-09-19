@@ -1,4 +1,5 @@
 import z from "zod"
+import { FeedbackRole } from "@/src/utils/constants"
 
 export type FeedbackFieldType =
   | "rating"
@@ -6,7 +7,7 @@ export type FeedbackFieldType =
   | "multi_choice"
   | "text"
 
-export type FeedbackRole = "student" | "advisor"
+export type { FeedbackRole }
 
 export interface FeedbackField {
   key: string
@@ -17,7 +18,6 @@ export interface FeedbackField {
   options?: string[]
   roles: FeedbackRole[]
 }
-
 
 export const PROGRAM_FEEDBACK_FIELDS: FeedbackField[] = [
   {
@@ -172,15 +172,11 @@ export function getFeedbackSectionsForRole(role: FeedbackRole): string[] {
   )
 }
 
-
 export function buildFeedbackSchema(fields: FeedbackField[]) {
   const shape: Record<string, z.ZodTypeAny> = {}
   for (const f of fields) {
     if (f.type === "rating") {
-      shape[f.key] = z
-        .number()
-        .min(1, "Please provide a rating")
-        .max(5)
+      shape[f.key] = z.number().min(1, "Please provide a rating").max(5)
     } else if (f.type === "single_choice") {
       shape[f.key] = z.string().min(1, "Please select an option")
     } else if (f.type === "multi_choice") {

@@ -383,6 +383,14 @@ export const SESSION_REQUEST_DESCRIPTION_MAX_LENGTH = 500
 /** Max length for an advisor's rejection reason on an FYP advisor request. */
 export const ADVISOR_REJECTION_REASON_MAX_LENGTH = 1000
 
+/** Role a user submits FYP program feedback as. */
+export const FEEDBACK_ROLES = {
+  student: "student",
+  advisor: "advisor"
+} as const
+
+export type FeedbackRole = (typeof FEEDBACK_ROLES)[keyof typeof FEEDBACK_ROLES]
+
 export const MONTH_NAMES = [
   "January",
   "February",
