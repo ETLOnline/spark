@@ -16,6 +16,13 @@ import { useToast } from "@/src/hooks/use-toast"
 import { useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import ExpandableText from "./ExpandableText"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext
+} from "@/src/components/ui/carousel"
 
 type Props = {
   post: SelectFilePost
@@ -108,35 +115,56 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
 
         {/* Images */}
         {images.length > 0 && (
-          <div
-            className={`mt-4 grid gap-3 ${
-              isSingle ? "grid-cols-1" : "grid-cols-2"
-            }`}
-          >
-            {images.map((file, idx) => (
+          <div className="mt-4">
+            {isSingle ? (
               <div
-                key={`${post.id}-file-${idx}`}
-                className={`overflow-hidden rounded-lg bg-gradient-to-r from-accent to-secondary ${
-                  isSingle ? "w-full" : "w-full"
-                } cursor-pointer`}
+                className="w-full cursor-pointer overflow-hidden rounded-lg bg-background"
                 onClick={(e) => {
                   e.stopPropagation()
-                  setLightboxIndex(idx)
+                  setLightboxIndex(0)
                   setIsLightboxOpen(true)
                 }}
               >
                 <Image
-                  src={file.file_path}
-                  alt={`Post image ${idx + 1}`}
-                  width={isSingle ? 1200 : 600}
-                  height={isSingle ? 700 : 350}
-                  className={`w-full object-cover transition-transform duration-300 hover:scale-105 ${
-                    isSingle ? "max-h-[32rem]" : "h-56"
-                  }`}
-                  priority={isSingle}
+                  src={images[0].file_path}
+                  alt="Post image 1"
+                  width={1200}
+                  height={700}
+                  className="h-96 w-full object-contain transition-transform duration-300 hover:scale-105"
+                  priority
                 />
               </div>
-            ))}
+            ) : (
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {images.map((file, idx) => (
+                    <CarouselItem
+                      key={`${post.id}-file-${idx}`}
+                      className="basis-full"
+                    >
+                      <div
+                        className="cursor-pointer overflow-hidden rounded-lg bg-background"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setLightboxIndex(idx)
+                          setIsLightboxOpen(true)
+                        }}
+                      >
+                        <Image
+                          src={file.file_path}
+                          alt={`Post image ${idx + 1}`}
+                          width={1200}
+                          height={700}
+                          className="h-96 w-full object-contain"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
+            )}
             {imageUrls.length > 0 && (
               <ImageLightbox
                 open={isLightboxOpen}
