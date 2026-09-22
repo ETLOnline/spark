@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Button } from "@/src/components/ui/button"
+import { Button, buttonVariants } from "@/src/components/ui/button"
+import { cn } from "@/src/lib/utils"
 import { Badge } from "@/src/components/ui/badge"
 import {
   Card,
@@ -22,7 +23,8 @@ import {
   PlusCircle,
   PencilRuler,
   Check,
-  LogOut
+  LogOut,
+  LayoutDashboard
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -738,6 +740,33 @@ export default function CommunityDetailsClient({
                     </div>
                   </CardContent>
                 </Card>
+                {canManageCommunity && communityFypEnabled && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base lg:text-lg">
+                        Faculty Dashboard
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-0">
+                      <p className="text-xs lg:text-sm text-muted-foreground">
+                        Monitor advisor requests, project progress, and
+                        milestones across this community.
+                      </p>
+                      <Link
+                        href={`/communities/${encodedCommunitySlug}/faculty-dashboard`}
+                        className={cn(
+                          buttonVariants({ variant: "outline" }),
+                          "w-full justify-between"
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <LayoutDashboard className="h-4 w-4" />
+                          Open Dashboard
+                        </span>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
                 {/* About */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -848,6 +877,33 @@ export default function CommunityDetailsClient({
                 </div>
               </CardContent>
             </Card>
+            {canManageCommunity && communityFypEnabled && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg">
+                    Faculty Dashboard
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <p className="text-xs lg:text-sm text-muted-foreground">
+                    Monitor advisor requests, project progress, and milestones
+                    across this community.
+                  </p>
+                  <Link
+                    href={`/communities/${encodedCommunitySlug}/faculty-dashboard`}
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "w-full justify-between"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Open Dashboard
+                    </span>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
             {communityHasRanking === null ? (
               <Skeleton className="h-32 w-full" />
             ) : (

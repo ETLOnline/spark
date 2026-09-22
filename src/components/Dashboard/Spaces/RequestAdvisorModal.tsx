@@ -286,7 +286,7 @@ function RequestAdvisorModal({
     }
 
     const res = await submitRequest(spaceId, submitData, proposalFilePayload)
-
+    console.log(res, "res")
     if (res?.success) {
       toast({ title: "Advisor request submitted", duration: 3000 })
       onOpenChange(false)
