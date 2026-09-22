@@ -36,6 +36,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/src/components/ui/popover"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   UpdateMilestoneAction,
@@ -286,7 +291,7 @@ export function MilestoneView({
               <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
                 End Date
               </th>
-              <th className="py-2.5 px-2 text-right text-xs text-muted-foreground font-medium">
+              <th className="py-2.5 px-4 text-right text-xs text-muted-foreground font-medium">
                 Actions
               </th>
             </tr>
@@ -602,8 +607,24 @@ export function MilestoneView({
           </div>
         ))}
         <div className="flex items-start gap-2 ml-auto">
-          <Info className="h-6 w-6 text-muted-foreground shrink-0 mt-0.5" />
-          <span className="text-xs text-muted-foreground max-w-[200px] leading-snug">
+          {/* Small screens: icon-only with popover (click-safe on touch) */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <span className="sm:hidden mt-0.5 cursor-pointer">
+                <Info className="h-6 w-6 text-muted-foreground" />
+              </span>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              className="max-w-[220px] text-xs text-center p-3"
+            >
+              Only Advisors and University Admins can verify or modify
+              milestones.
+            </PopoverContent>
+          </Popover>
+          {/* Larger screens: icon + full text */}
+          <Info className="hidden sm:block h-6 w-6 text-muted-foreground shrink-0 mt-0.5" />
+          <span className="hidden sm:block text-xs text-muted-foreground max-w-[200px] leading-snug">
             Only Advisors and University Admins can verify or modify milestones.
           </span>
         </div>
