@@ -77,19 +77,20 @@ export default function ChannelPage() {
 
     channel.bind("space-add", (newSpace: SelectSpace) => {
       if (newSpace.channel_id === selectedChannel?.id) {
-        const isUserMember = newSpace.users?.some(
+        const spaceWithChannel = { ...newSpace, channel: selectedChannel }
+        const isUserMember = spaceWithChannel.users?.some(
           (u) => u.user_id === currentUserId
         )
 
         if (isUserMember) {
           setJoinedSpaces((prev) => {
-            if (prev.some((s) => s.id === newSpace.id)) return prev
-            return [...prev, newSpace]
+            if (prev.some((s) => s.id === spaceWithChannel.id)) return prev
+            return [...prev, spaceWithChannel]
           })
         } else {
           setSpaces((prev) => {
-            if (prev.some((s) => s.id === newSpace.id)) return prev
-            return [...prev, newSpace]
+            if (prev.some((s) => s.id === spaceWithChannel.id)) return prev
+            return [...prev, spaceWithChannel]
           })
         }
       }
@@ -97,14 +98,15 @@ export default function ChannelPage() {
 
     channel.bind("space-edit", (updatedSpace: SelectSpace) => {
       if (updatedSpace.channel_id === selectedChannel?.id) {
+        const spaceWithChannel = { ...updatedSpace, channel: selectedChannel }
         setSpaces((prev) =>
           prev.map((space) =>
-            space.id === updatedSpace.id ? updatedSpace : space
+            space.id === spaceWithChannel.id ? spaceWithChannel : space
           )
         )
         setJoinedSpaces((prev) =>
           prev.map((space) =>
-            space.id === updatedSpace.id ? updatedSpace : space
+            space.id === spaceWithChannel.id ? spaceWithChannel : space
           )
         )
       }
