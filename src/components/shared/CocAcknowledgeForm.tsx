@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/src/components/ui/button"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import { Label } from "@/src/components/ui/label"
@@ -12,25 +13,29 @@ import Link from "next/link"
 interface CocAcknowledgeFormProps {
   userId: string
   submitLabel?: string
-  onSuccess: () => void
+  redirectTo?: string
+  onSuccess?: () => void
   onPrevious?: () => void
 }
 
 export function CocAcknowledgeForm({
   userId,
   submitLabel = "I Agree & Continue",
+  redirectTo,
   onSuccess,
   onPrevious
 }: CocAcknowledgeFormProps) {
   const [acknowledged, setAcknowledged] = useState(false)
   const [loading, , , updateProfile] = useServerAction(updateUserProfileAction)
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleSubmit = async () => {
     if (!acknowledged) return
     const res = await updateProfile(userId, { coc_acknowledged: true })
     if (res?.success) {
-      onSuccess()
+      if (redirectTo) router.push(redirectTo)
+      else onSuccess?.()
     } else {
       toast({
         title: "Something went wrong. Please try again.",

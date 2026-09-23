@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Mail } from "lucide-react"
-import { CocAcknowledgementForm } from "./CocAcknowledgementForm"
+import { CocAcknowledgeForm } from "@/src/components/shared/CocAcknowledgeForm"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export default async function CodeOfConductPage() {
@@ -291,7 +291,18 @@ export default async function CodeOfConductPage() {
           </div>
 
           {/* Acknowledgement form — shown only if logged-in user hasn't acknowledged yet */}
-          {userId && <CocAcknowledgementForm userId={userId} />}
+          {userId && (
+            <div className="bg-card/70 backdrop-blur-sm border border-primary/30 rounded-2xl p-8 shadow-lg space-y-5">
+              <h3 className="text-lg font-semibold text-foreground">
+                Acknowledge &amp; Continue
+              </h3>
+              <CocAcknowledgeForm
+                userId={userId}
+                submitLabel="I Agree & Continue to SPARK"
+                redirectTo="/profile"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
