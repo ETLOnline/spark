@@ -41,11 +41,13 @@ import {
   GetFypDashboardProjectsAction,
   GetFypDashboardStatsAction
 } from "@/src/server-actions/Fyp/Fyp"
+import { GetAdvisorRequestDetailsAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
 import { GetAllTAgsAction } from "@/src/server-actions/Tag/Tag"
 import { SelectTag } from "@/src/db/schema"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import { FypDashboardProject, FypDashboardStats } from "@/src/types/Fyp/Fyp"
 import { getSpaceBasePath } from "@/src/utils/helpers"
+import { RequestDetailsDialog } from "@/src/components/Dashboard/profile/RequestDetailsDialog"
 
 const STATUS_BADGE_CLASS: Record<AdvisorRequestStatus, string> = {
   [AdvisorRequestStatus.PENDING]: "bg-slate-500/15 text-slate-500",
@@ -129,11 +131,18 @@ export default function FacultyDashboardView({
   const [domainTagId, setDomainTagId] = useState("all")
   const [status, setStatus] = useState("all")
 
+  const [selectedRequest, setSelectedRequest] = useState<
+    Parameters<typeof RequestDetailsDialog>[0]["request"]
+  >(null)
+
   const [statsLoading, , , fetchStats] = useServerAction(
     GetFypDashboardStatsAction
   )
   const [projectsLoading, , , fetchProjects] = useServerAction(
     GetFypDashboardProjectsAction
+  )
+  const [, , , fetchRequestDetails] = useServerAction(
+    GetAdvisorRequestDetailsAction
   )
   const [, , , fetchTags] = useServerAction(GetAllTAgsAction)
 
@@ -183,6 +192,12 @@ export default function FacultyDashboardView({
     setSearchTerm(value)
     resetToFirstPage()
   }, 400)
+
+  const handleViewRequest = (requestId: string) => {
+    fetchRequestDetails(requestId).then((res) => {
+      if (res?.success && res.data) setSelectedRequest(res.data)
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -319,13 +334,10 @@ export default function FacultyDashboardView({
                 {projects.map((project) => {
                   const isAccepted =
                     project.request_status === AdvisorRequestStatus.ACCEPTED
-                  const basePath = getSpaceBasePath(
+                  const spaceHref = getSpaceBasePath(
                     project.channel_slug,
                     project.space_slug
                   )
-                  const href = isAccepted
-                    ? basePath
-                    : `${basePath}?page-type=fyp&fyp-tab=request-status`
                   const progress =
                     project.milestones_total > 0
                       ? (project.milestones_completed /
@@ -370,13 +382,26 @@ export default function FacultyDashboardView({
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link
-                          href={href}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          {isAccepted ? "View Space" : "View Request"}
-                        </Link>
+                        {isAccepted ? (
+                          <Link
+                            href={spaceHref}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View Space
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleViewRequest(project.request_id)
+                            }
+                            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View Request
+                          </button>
+                        )}
                       </TableCell>
                     </TableRow>
                   )
@@ -399,6 +424,15 @@ export default function FacultyDashboardView({
           )}
         </CardContent>
       </Card>
+
+      <RequestDetailsDialog
+        request={selectedRequest}
+        canAccept={false}
+        canReject={false}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRequest(null)
+        }}
+      />
     </div>
   )
 }
