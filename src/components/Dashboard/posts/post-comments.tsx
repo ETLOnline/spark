@@ -58,7 +58,7 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
                 {formatRelativeTime(comment.created_at || "")}
               </p>
             </div>
-            <ExpandableText content={comment.content} lines={3} />
+            <ExpandableText content={comment.content} lines={3} isHtml />
           </div>
         </div>
 
