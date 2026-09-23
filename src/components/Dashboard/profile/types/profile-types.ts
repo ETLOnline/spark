@@ -28,6 +28,7 @@ export type ProfileData = {
   interests: number[]
   professional_title?: string
   company?: string
+  coc_acknowledged?: boolean
 }
 
 export type Profile = {

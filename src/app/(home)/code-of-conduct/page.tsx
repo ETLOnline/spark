@@ -25,12 +25,6 @@ export default async function CodeOfConductPage() {
         <div className="space-y-12">
           {/* Header */}
           <div className="text-center space-y-6">
-            <div className="inline-flex items-center space-x-2 bg-card/60 backdrop-blur-sm rounded-full px-4 py-2 border border-border">
-              <span className="text-primary">📋</span>
-              <span className="text-sm font-medium text-muted-foreground">
-                Community Standards
-              </span>
-            </div>
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-teal-400 via-cyan-500 to-emerald-600 bg-clip-text text-transparent">
               Code of Conduct
             </h1>
@@ -296,11 +290,7 @@ export default async function CodeOfConductPage() {
               <h3 className="text-lg font-semibold text-foreground">
                 Acknowledge &amp; Continue
               </h3>
-              <CocAcknowledgeForm
-                userId={userId}
-                submitLabel="I Agree & Continue to SPARK"
-                redirectTo="/profile"
-              />
+              <CocAcknowledgeForm userId={userId} />
             </div>
           )}
         </div>

@@ -12,7 +12,6 @@ import { StepOne } from "./StepOne"
 import { StepTwo } from "./StepTwo"
 import { StepThree } from "./StepThree"
 import { StepFour } from "./StepFour"
-import { StepFive } from "./StepFive"
 import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
@@ -28,7 +27,7 @@ export default function ProfileCompletionForm() {
 
   const { canAccess } = usePermissionChecker("global")
   const userIsMentor = canAccess("mentorship.add_availibility")
-  const totalSteps = 6
+  const totalSteps = 5
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -56,7 +55,6 @@ export default function ProfileCompletionForm() {
     { title: "Education", icon: "graduation-cap" },
     { title: "Social Links", icon: "link-2" },
     { title: "Verify Identity", icon: "shield-check" },
-    { title: "Code of Conduct", icon: "file-text" },
     { title: "Complete", icon: "check-circle" }
   ]
 
@@ -137,15 +135,6 @@ export default function ProfileCompletionForm() {
             setStep={setStep}
             user={user}
             setUser={setUser}
-            totalSteps={totalSteps}
-          />
-        )}
-
-        {step === 5 && user && (
-          <StepFive
-            step={step}
-            setStep={setStep}
-            user={user}
             totalSteps={totalSteps}
           />
         )}

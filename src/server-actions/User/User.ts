@@ -59,6 +59,8 @@ export const SaveUserProfileAction = CreateServerAction(
         profileUpdate.professional_title = profileData.professional_title
       if (profileData.company !== undefined)
         profileUpdate.company = profileData.company
+      if (profileData.coc_acknowledged !== undefined)
+        profileUpdate.coc_acknowledged = profileData.coc_acknowledged
 
       // Check if user profile already exists; update it otherwise create new profile
       if (userProfile) {

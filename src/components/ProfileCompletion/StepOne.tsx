@@ -30,6 +30,7 @@ import { useToast } from "@/src/hooks/use-toast"
 import { MultiSelectOption } from "../ui/multi-select"
 import TagSelect from "../TagsInput/tags"
 import { useUser } from "@clerk/nextjs"
+import { CocAcknowledgeForm } from "@/src/components/shared/CocAcknowledgeForm"
 
 interface StepOneProps {
   step: number
@@ -91,6 +92,9 @@ export function StepOne({
   >([])
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [cocAcknowledged, setCocAcknowledged] = useState(
+    !!user.profile?.coc_acknowledged
+  )
 
   const [
     updateProfileLoading,
@@ -201,7 +205,12 @@ export function StepOne({
         ...(isMentor && {
           professional_title: data.professional_title,
           company: data.company
-        })
+        }),
+        ...(step === 1 &&
+          cocAcknowledged &&
+          !user.profile?.coc_acknowledged && {
+            coc_acknowledged: true
+          })
       }
       const res = await updateProfile(payload)
       await clerkUser?.reload()
@@ -512,6 +521,15 @@ export function StepOne({
             </div>
           )}
 
+          {/* CoC acknowledgement — shown on step 1 only if not yet acknowledged */}
+          {step === 1 && !user.profile?.coc_acknowledged && (
+            <CocAcknowledgeForm
+              userId={user.unique_id}
+              showButton={false}
+              onCheckedChange={setCocAcknowledged}
+            />
+          )}
+
           {step < 4 && (
             <div className="flex justify-between pt-6 border-t mt-4">
               <Button
@@ -524,7 +542,12 @@ export function StepOne({
               <Button
                 type="submit"
                 loading={updateProfileLoading}
-                disabled={isTransitioning}
+                disabled={
+                  isTransitioning ||
+                  (step === 1 &&
+                    !cocAcknowledged &&
+                    !user.profile?.coc_acknowledged)
+                }
               >
                 Next
               </Button>
