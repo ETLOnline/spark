@@ -145,6 +145,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
               showToolbar={showRichEditorToolbar}
               minHeight={showRichEditorToolbar ? "100px" : "30px"}
               limit={2000}
+              editable={!createCommentLoading}
               onEnterPress={handleAddComment}
               showFooter={false}
               isScrollAble={true}
