@@ -135,7 +135,7 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
                 />
               </div>
             ) : (
-              <Carousel className="w-full">
+              <Carousel className="w-full" opts={{ loop: true }}>
                 <CarouselContent>
                   {images.map((file, idx) => (
                     <CarouselItem
