@@ -29,6 +29,7 @@ import {
   FeedbackRole
 } from "./constants"
 import { FEEDBACK_ROLES } from "@/src/utils/constants"
+import { getSpaceBasePath } from "@/src/utils/helpers"
 import { FeedbackFieldRow } from "./FeedbackFieldRow"
 import { FeedbackRightRail } from "./FeedbackRightRail"
 
@@ -270,6 +271,10 @@ function FYPFeedback() {
         <FeedbackRightRail
           totalMilestones={milestones.length}
           verifiedMilestones={verifiedMilestones}
+          milestonesHref={`${getSpaceBasePath(
+            currentSpace?.channel?.channel_slug,
+            currentSpace?.space_slug ?? ""
+          )}?page-type=fyp&fyp-tab=milestones`}
         />
       </div>
     </form>
