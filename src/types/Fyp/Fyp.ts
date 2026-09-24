@@ -1,7 +1,6 @@
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 
 export interface FypDashboardFilters {
-
   communityId?: string
   searchTerm?: string
   domainTagId?: number

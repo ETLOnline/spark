@@ -33,9 +33,9 @@ export function useMilestonePermissions() {
     )
   }
 
-  const canCreateMilestone = canFyp(permissions.fyp.milestoneCreate)
-  const canUpdateMilestone = canFyp(permissions.fyp.milestoneUpdate)
-  const canDeleteMilestone = canFyp(permissions.fyp.milestoneDelete)
+  const canCreateMilestone = canAdvisory(permissions.advisory.milestoneCreate)
+  const canUpdateMilestone = canAdvisory(permissions.advisory.milestoneUpdate)
+  const canDeleteMilestone = canAdvisory(permissions.advisory.milestoneDelete)
   const canVerifyMilestone = canAdvisory(permissions.advisory.milestoneVerify)
   const canRevertMilestone = canAdvisory(permissions.advisory.milestoneRevert)
 

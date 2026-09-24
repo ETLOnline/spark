@@ -17,7 +17,11 @@ import { useToast } from "@/src/hooks/use-toast"
 import { formatFileSize } from "@/src/utils/helpers"
 import { AcceptAdvisorRequestAction } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
 import type { AdvisorRequestListItem } from "@/src/server-actions/AdvisorRequest/AdvisorRequest"
-import { STATUS_BADGE, STATUS_LABEL, RequestStatus } from "./AdvisorRequestsScreen"
+import {
+  STATUS_BADGE,
+  STATUS_LABEL,
+  RequestStatus
+} from "./AdvisorRequestsScreen"
 import { RejectRequestDialog } from "./RejectRequestDialog"
 
 // A read-only viewer (e.g. a community admin on the Faculty Dashboard)
@@ -25,9 +29,11 @@ import { RejectRequestDialog } from "./RejectRequestDialog"
 // AdvisorViewerStatus — it's the request's actual outcome, which can also
 // be "pending" (not yet routed to any advisor). RequestStatus covers both.
 interface Props {
-  request: (Omit<AdvisorRequestListItem, "viewerStatus"> & {
-    viewerStatus: RequestStatus
-  }) | null
+  request:
+    | (Omit<AdvisorRequestListItem, "viewerStatus"> & {
+        viewerStatus: RequestStatus
+      })
+    | null
   canAccept: boolean
   canReject: boolean
   onOpenChange: (open: boolean) => void
