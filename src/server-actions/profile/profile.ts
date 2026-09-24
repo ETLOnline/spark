@@ -46,15 +46,9 @@ export const updateUserProfileAction = CreateServerAction(
   true,
   async (userId: string, profileData: Partial<SelectProfile>) => {
     try {
-      const existing = await SearchUserProfile(userId)
-      let result
-      if (existing) {
-        result = await updateUserProfile(userId, profileData)
-      } else {
-        result = await createUserProfile({ user_id: userId, ...profileData })
-      }
+      const updatedProfile = await updateUserProfile(userId, profileData)
 
-      return { success: true, data: result }
+      return { success: true, data: updatedProfile }
     } catch (error) {
       return { error: error }
     }

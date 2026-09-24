@@ -6,12 +6,17 @@ import { Button } from "@/src/components/ui/button"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import { Label } from "@/src/components/ui/label"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
+import {
+  createUserProfileAction,
+  updateUserProfileAction
+} from "@/src/server-actions/profile/profile"
 import { useToast } from "@/src/hooks/use-toast"
 import Link from "next/link"
 
 interface CocAcknowledgeFormProps {
   userId: string
+  /** True when the user already has a profile row (update); false when no row exists yet (insert). */
+  profileExists?: boolean
   /** When false, no button shown — parent handles submission */
   showButton?: boolean
   /** Called whenever checkbox state changes (used when showButton=false) */
@@ -20,11 +25,18 @@ interface CocAcknowledgeFormProps {
 
 export function CocAcknowledgeForm({
   userId,
+  profileExists = true,
   showButton = true,
   onCheckedChange
 }: CocAcknowledgeFormProps) {
   const [acknowledged, setAcknowledged] = useState(false)
-  const [loading, , , updateProfile] = useServerAction(updateUserProfileAction)
+  const [updateLoading, , , updateProfile] = useServerAction(
+    updateUserProfileAction
+  )
+  const [createLoading, , , createProfile] = useServerAction(
+    createUserProfileAction
+  )
+  const loading = updateLoading || createLoading
   const { toast } = useToast()
   const router = useRouter()
 
@@ -35,7 +47,9 @@ export function CocAcknowledgeForm({
 
   const handleSubmit = async () => {
     if (!acknowledged) return
-    const res = await updateProfile(userId, { coc_acknowledged: true })
+    const res = profileExists
+      ? await updateProfile(userId, { coc_acknowledged: true })
+      : await createProfile({ user_id: userId, coc_acknowledged: true })
     if (res?.success) {
       router.push("/profile")
     } else {

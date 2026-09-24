@@ -5,10 +5,12 @@ import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export default async function CodeOfConductPage() {
   let userId: string | null = null
+  let profileExists = false
   try {
     const user = await AuthUserAction()
     if (user && !user.profile?.coc_acknowledged) {
       userId = user.unique_id
+      profileExists = !!user.profile
     }
   } catch {
     // unauthenticated visitor — no form shown
@@ -290,7 +292,10 @@ export default async function CodeOfConductPage() {
               <h3 className="text-lg font-semibold text-foreground">
                 Acknowledge &amp; Continue
               </h3>
-              <CocAcknowledgeForm userId={userId} />
+              <CocAcknowledgeForm
+                userId={userId}
+                profileExists={profileExists}
+              />
             </div>
           )}
         </div>
