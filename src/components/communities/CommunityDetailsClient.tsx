@@ -71,9 +71,10 @@ import Image from "next/image"
 import clsx from "clsx"
 import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import { EntityUpdateBroadCast } from "@/src/utils/constants"
+import { EntityUpdateBroadCast, permissions } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import RankingCard from "./RankingCard"
+import FacultyDashboardCard from "./FacultyDashboardCard"
 import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
 import {
   GetCommunityLeaderboardAction,
@@ -315,6 +316,11 @@ export default function CommunityDetailsClient({
     : false
   const canManageCommunity = permissionChecker
     ? permissionChecker?.canAccess("community.update")
+    : false
+  const canViewFacultyDashboard = permissionChecker
+    ? permissionChecker?.canAccess(
+        `fyp.${permissions.fyp.facultyDashboardView}`
+      )
     : false
 
   const handleEnableFyp = async () => {
@@ -738,6 +744,9 @@ export default function CommunityDetailsClient({
                     </div>
                   </CardContent>
                 </Card>
+                {canViewFacultyDashboard && communityFypEnabled && (
+                  <FacultyDashboardCard communitySlug={encodedCommunitySlug} />
+                )}
                 {/* About */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -848,6 +857,9 @@ export default function CommunityDetailsClient({
                 </div>
               </CardContent>
             </Card>
+            {canViewFacultyDashboard && communityFypEnabled && (
+              <FacultyDashboardCard communitySlug={encodedCommunitySlug} />
+            )}
             {communityHasRanking === null ? (
               <Skeleton className="h-32 w-full" />
             ) : (

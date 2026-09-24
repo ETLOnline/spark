@@ -239,7 +239,10 @@ export const permissions = {
     milestoneArtifactDelete: "milestone.artifact.delete",
 
     // Program feedback — which version of the form a user submits
-    feedbackSubmitStudent: "feedback.submit_student"
+    feedbackSubmitStudent: "feedback.submit_student",
+
+    // Community-level faculty dashboard (advisor requests, progress, milestones)
+    facultyDashboardView: "faculty_dashboard.view"
   },
 
   advisory: {

@@ -144,7 +144,9 @@ const userRolePermissions = [
         actions: [
           permissions.advisory.milestoneCreate,
           permissions.advisory.milestoneUpdate,
-          permissions.advisory.milestoneDelete
+          permissions.advisory.milestoneDelete,
+          permissions.fyp.milestoneArtifactDelete,
+          permissions.fyp.facultyDashboardView
         ]
       }
     ]
