@@ -276,302 +276,312 @@ export function MilestoneView({
         )}
 
       <div className="rounded-xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40">
-            <tr>
-              <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
-                Milestone Name
-              </th>
-              <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
-                Status
-              </th>
-              <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
-                Start Date
-              </th>
-              <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
-                End Date
-              </th>
-              <th className="py-2.5 px-4 text-right text-xs text-muted-foreground font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {milestones.map((m) => {
-              const isLoading = actionLoading === m.id
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40">
+              <tr>
+                <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
+                  Milestone Name
+                </th>
+                <th className="py-2.5 px-4 text-left text-xs text-muted-foreground font-medium">
+                  Status
+                </th>
+                <th className="py-2.5 px-2 sm:px-4 text-left text-xs text-muted-foreground font-medium whitespace-nowrap">
+                  Start Date
+                </th>
+                <th className="py-2.5 px-2 sm:px-4 text-left text-xs text-muted-foreground font-medium whitespace-nowrap">
+                  End Date
+                </th>
+                <th className="py-2.5 px-4 text-right text-xs text-muted-foreground font-medium">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {milestones.map((m) => {
+                const isLoading = actionLoading === m.id
 
-              return (
-                <tr
-                  key={m.id}
-                  className="border-t hover:bg-muted/20 transition-colors"
-                >
-                  {/* Name */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <StatusIcon status={m.status} />
-                      {editingId === m.id ? (
-                        <div className="flex items-center gap-1">
-                          <Input
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            className="h-7 text-sm w-40"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveName(m.id)
-                              if (e.key === "Escape") setEditingId(null)
-                            }}
-                            autoFocus
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-emerald-500 hover:text-emerald-600 cursor-pointer"
-                            onClick={() => handleSaveName(m.id)}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
-                            onClick={() => setEditingId(null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-sm font-medium">{m.name}</span>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Status */}
-                  <td className="py-3 px-4">
-                    <MilestoneStatusBadge status={m.status} />
-                  </td>
-
-                  {/* Start Date */}
-                  <td className="py-3 px-4 text-sm text-muted-foreground">
-                    {formatDate(m.start_date)}
-                  </td>
-
-                  {/* End Date */}
-                  <td className="py-3 px-4 text-sm text-muted-foreground">
-                    {formatDate(m.end_date)}
-                  </td>
-
-                  {/* Actions */}
-                  {(() => {
-                    const arts = m.artifacts
-                    const canManageArtifact =
-                      canArtifactAdd &&
-                      !canManage &&
-                      (m.status === MilestoneStatus.IN_PROGRESS ||
-                        m.status ===
-                          MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
-                    const canViewArtifact =
-                      arts.length > 0 &&
-                      ((!canArtifactAdd && !canManage) ||
-                        (canArtifactAdd &&
-                          !canManage &&
-                          m.status === MilestoneStatus.VERIFIED) ||
-                        canManage)
-
-                    return (
-                      <td className="py-3 px-2 align-middle relative">
-                        <div className="flex items-center ">
-                          {canManageArtifact && (
+                return (
+                  <tr
+                    key={m.id}
+                    className="border-t hover:bg-muted/20 transition-colors"
+                  >
+                    {/* Name */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <StatusIcon status={m.status} />
+                        {editingId === m.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              className="h-7 text-sm w-40"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveName(m.id)
+                                if (e.key === "Escape") setEditingId(null)
+                              }}
+                              autoFocus
+                            />
                             <Button
-                              variant="outline"
-                              className="h-6 w-[118px] text-xs justify-center border-primary/40 text-primary hover:bg-primary/10 hover:text-primary cursor-pointer"
-                              onClick={() =>
-                                router.push(
-                                  `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
-                                )
-                              }
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-emerald-500 hover:text-emerald-600 cursor-pointer"
+                              onClick={() => handleSaveName(m.id)}
                             >
-                              Manage Artifact
+                              <Check className="h-4 w-4" />
                             </Button>
-                          )}
-                          {canViewArtifact && (
                             <Button
-                              variant="outline"
-                              className="h-6 w-[118px] text-xs justify-center border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground cursor-pointer"
-                              onClick={() =>
-                                router.push(
-                                  `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
-                                )
-                              }
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
+                              onClick={() => setEditingId(null)}
                             >
-                              View Artifacts
+                              <X className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                          </div>
+                        ) : (
+                          <span className="text-sm font-medium">{m.name}</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-3 px-4">
+                      <MilestoneStatusBadge status={m.status} />
+                    </td>
+
+                    {/* Start Date */}
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                      {formatDate(m.start_date)}
+                    </td>
+
+                    {/* End Date */}
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                      {formatDate(m.end_date)}
+                    </td>
+
+                    {/* Actions */}
+                    {(() => {
+                      const arts = m.artifacts
+                      const canManageArtifact =
+                        canArtifactAdd &&
+                        !canManage &&
+                        (m.status === MilestoneStatus.IN_PROGRESS ||
+                          m.status ===
+                            MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
+                      const canViewArtifact =
+                        arts.length > 0 &&
+                        ((!canArtifactAdd && !canManage) ||
+                          (canArtifactAdd &&
+                            !canManage &&
+                            m.status === MilestoneStatus.VERIFIED) ||
+                          canManage)
+
+                      return (
+                        <td className="py-3 px-2 align-middle relative">
+                          <div className="flex items-center ">
+                            {canManageArtifact && (
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground cursor-pointer"
-                                disabled={isLoading}
+                                variant="outline"
+                                className="h-6 w-[118px] text-xs justify-center border-primary/40 text-primary hover:bg-primary/10 hover:text-primary cursor-pointer"
+                                onClick={() =>
+                                  router.push(
+                                    `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                  )
+                                }
                               >
-                                {isLoading ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <MoreVertical className="h-4 w-4" />
-                                )}
+                                Manage Artifact
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-52">
-                              {/* Mark In Progress — student or manager only */}
-                              {(canArtifactAdd || canManage) &&
-                                m.status === MilestoneStatus.INCOMPLETE && (
-                                  <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() =>
-                                      handleStatusChange(
-                                        m.id,
-                                        MilestoneStatus.IN_PROGRESS
-                                      )
-                                    }
-                                  >
-                                    <Clock className="h-3.5 w-3.5 mr-2 text-blue-500" />
-                                    Mark In Progress
-                                  </DropdownMenuItem>
-                                )}
-
-                              {/* Student actions */}
-                              {canArtifactAdd &&
-                                !canManage &&
-                                (m.status === MilestoneStatus.IN_PROGRESS ? (
-                                  <>
+                            )}
+                            {canViewArtifact && (
+                              <Button
+                                variant="outline"
+                                className="h-6 w-[118px] text-xs justify-center border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground cursor-pointer"
+                                onClick={() =>
+                                  router.push(
+                                    `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                  )
+                                }
+                              >
+                                View Artifacts
+                              </Button>
+                            )}
+                          </div>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground cursor-pointer"
+                                  disabled={isLoading}
+                                >
+                                  {isLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <MoreVertical className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52">
+                                {/* Mark In Progress — student or manager only */}
+                                {(canArtifactAdd || canManage) &&
+                                  m.status === MilestoneStatus.INCOMPLETE && (
                                     <DropdownMenuItem
                                       className="cursor-pointer"
-                                      onClick={() => {
-                                        const arts = m.artifacts
-                                        if (arts.length === 0) {
-                                          // No artifacts yet — navigate to artifact page so student can add one first
-                                          router.push(
-                                            `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
-                                          )
-                                        } else {
-                                          handleStatusChange(
-                                            m.id,
-                                            MilestoneStatus.COMPLETED_PENDING_VERIFICATION
-                                          )
-                                        }
-                                      }}
+                                      onClick={() =>
+                                        handleStatusChange(
+                                          m.id,
+                                          MilestoneStatus.IN_PROGRESS
+                                        )
+                                      }
                                     >
-                                      <Clock className="h-3.5 w-3.5 mr-2 text-amber-600" />
-                                      Complete (Pending Verification)
+                                      <Clock className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                                      Mark In Progress
                                     </DropdownMenuItem>
-                                  </>
-                                ) : (
-                                  <>
-                                    {m.status !==
-                                      MilestoneStatus.INCOMPLETE && (
-                                      <div className="px-2 py-2 space-y-0.5">
-                                        <p className="text-xs font-medium text-muted-foreground/60">
-                                          {m.status === MilestoneStatus.VERIFIED
-                                            ? "Milestone Verified"
-                                            : "Complete (Pending Verification)"}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground/50 leading-snug">
-                                          {m.status === MilestoneStatus.VERIFIED
-                                            ? "Verified and approved by your advisor."
-                                            : "Already submitted for verification."}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </>
-                                ))}
+                                  )}
 
-                              {/* Advisor / University Admin actions */}
-                              {canManage && (
-                                <>
-                                  {canVerifyMilestone &&
-                                    m.status ===
-                                      MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
-                                      <DropdownMenuItem
-                                        className="cursor-pointer"
-                                        onClick={() =>
-                                          handleStatusChange(
-                                            m.id,
-                                            MilestoneStatus.VERIFIED
-                                          )
-                                        }
-                                      >
-                                        <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-emerald-500" />
-                                        Verify
-                                      </DropdownMenuItem>
-                                    )}
-
-                                  {canRevertMilestone &&
-                                    (m.status === MilestoneStatus.IN_PROGRESS ||
-                                      m.status ===
-                                        MilestoneStatus.COMPLETED_PENDING_VERIFICATION ||
-                                      m.status ===
-                                        MilestoneStatus.VERIFIED) && (
-                                      <DropdownMenuItem
-                                        className="cursor-pointer text-amber-600 focus:text-amber-600"
-                                        onClick={() =>
-                                          handleRevert(m.id, m.status)
-                                        }
-                                      >
-                                        <RotateCcw className="h-3.5 w-3.5 mr-2" />
-                                        Revert Status
-                                      </DropdownMenuItem>
-                                    )}
-
-                                  {canUpdateMilestone &&
-                                    m.status !== MilestoneStatus.VERIFIED && (
-                                      <DropdownMenuItem
-                                        className="cursor-pointer"
-                                        onClick={() => handleStartEdit(m)}
-                                      >
-                                        <Pencil className="h-3.5 w-3.5 mr-2" />
-                                        Rename
-                                      </DropdownMenuItem>
-                                    )}
-
-                                  {canDeleteMilestone && (
+                                {/* Student actions */}
+                                {canArtifactAdd &&
+                                  !canManage &&
+                                  (m.status === MilestoneStatus.IN_PROGRESS ? (
                                     <>
-                                      <DropdownMenuSeparator />
                                       <DropdownMenuItem
-                                        className="cursor-pointer text-destructive focus:text-destructive"
-                                        onClick={() => handleDeleteClick(m)}
+                                        className="cursor-pointer"
+                                        onClick={() => {
+                                          const arts = m.artifacts
+                                          if (arts.length === 0) {
+                                            // No artifacts yet — navigate to artifact page so student can add one first
+                                            router.push(
+                                              `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                            )
+                                          } else {
+                                            handleStatusChange(
+                                              m.id,
+                                              MilestoneStatus.COMPLETED_PENDING_VERIFICATION
+                                            )
+                                          }
+                                        }}
                                       >
-                                        <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                        Delete
+                                        <Clock className="h-3.5 w-3.5 mr-2 text-amber-600" />
+                                        Complete (Pending Verification)
                                       </DropdownMenuItem>
                                     </>
-                                  )}
-                                </>
-                              )}
-                              {!canArtifactAdd && !canManage && (
-                                <DropdownMenuItem
-                                  disabled
-                                  className="text-xs text-muted-foreground"
-                                >
-                                  You don&apos;t have permission to perform
-                                  actions.
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    )
-                  })()}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                                  ) : (
+                                    <>
+                                      {m.status !==
+                                        MilestoneStatus.INCOMPLETE && (
+                                        <div className="px-2 py-2 space-y-0.5">
+                                          <p className="text-xs font-medium text-muted-foreground/60">
+                                            {m.status ===
+                                            MilestoneStatus.VERIFIED
+                                              ? "Milestone Verified"
+                                              : "Complete (Pending Verification)"}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground/50 leading-snug">
+                                            {m.status ===
+                                            MilestoneStatus.VERIFIED
+                                              ? "Verified and approved by your advisor."
+                                              : "Already submitted for verification."}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </>
+                                  ))}
+
+                                {/* Advisor / University Admin actions */}
+                                {canManage && (
+                                  <>
+                                    {canVerifyMilestone &&
+                                      m.status ===
+                                        MilestoneStatus.COMPLETED_PENDING_VERIFICATION && (
+                                        <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          onClick={() =>
+                                            handleStatusChange(
+                                              m.id,
+                                              MilestoneStatus.VERIFIED
+                                            )
+                                          }
+                                        >
+                                          <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-emerald-500" />
+                                          Verify
+                                        </DropdownMenuItem>
+                                      )}
+
+                                    {canRevertMilestone &&
+                                      (m.status ===
+                                        MilestoneStatus.IN_PROGRESS ||
+                                        m.status ===
+                                          MilestoneStatus.COMPLETED_PENDING_VERIFICATION ||
+                                        m.status ===
+                                          MilestoneStatus.VERIFIED) && (
+                                        <DropdownMenuItem
+                                          className="cursor-pointer text-amber-600 focus:text-amber-600"
+                                          onClick={() =>
+                                            handleRevert(m.id, m.status)
+                                          }
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5 mr-2" />
+                                          Revert Status
+                                        </DropdownMenuItem>
+                                      )}
+
+                                    {canUpdateMilestone &&
+                                      m.status !== MilestoneStatus.VERIFIED && (
+                                        <DropdownMenuItem
+                                          className="cursor-pointer"
+                                          onClick={() => handleStartEdit(m)}
+                                        >
+                                          <Pencil className="h-3.5 w-3.5 mr-2" />
+                                          Rename
+                                        </DropdownMenuItem>
+                                      )}
+
+                                    {canDeleteMilestone && (
+                                      <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="cursor-pointer text-destructive focus:text-destructive"
+                                          onClick={() => handleDeleteClick(m)}
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
+                                  </>
+                                )}
+                                {!canArtifactAdd && !canManage && (
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    You don&apos;t have permission to perform
+                                    actions.
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      )
+                    })()}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-start gap-x-8 gap-y-3 pt-1">
+      {/* Legend — mobile: 2-col grid [1fr auto].
+          Items 1-3 span both columns (col-span-2) so they fill the full row.
+          Item 4 (Incomplete) spans only col 1 (col-span-1), leaving col 2
+          free → the info note auto-places into that same row's col 2.
+          sm–xl: column-first 2-row grid for pixel-aligned icon columns.
+          xl+: collapse to a single row (grid-rows-1) so all 5 items are inline. */}
+      <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-3 pt-1 sm:grid-cols-[auto_auto] sm:grid-flow-col sm:grid-rows-2 xl:grid-rows-1 xl:gap-x-8">
         {[
           {
             icon: <CheckCircle2 className="h-6 w-6 text-emerald-500" />,
@@ -579,23 +589,28 @@ export function MilestoneView({
             desc: "Verified by Advisor"
           },
           {
-            icon: <Clock className="h-6 w-6 text-amber-600" />,
-            title: "Completed (Pending Verification)",
-            desc: "Submitted by Student"
-          },
-          {
             icon: <Clock className="h-6 w-6 text-blue-500" />,
             title: "In Progress",
             desc: "Work in Progress"
+          },
+          {
+            icon: <Clock className="h-6 w-6 text-amber-600" />,
+            title: "Completed (Pending Verification)",
+            desc: "Submitted by Student"
           },
           {
             icon: <CircleDashed className="h-6 w-6 text-muted-foreground/50" />,
             title: "Incomplete",
             desc: "Not Started"
           }
-        ].map(({ icon, title, desc }) => (
-          <div key={title} className="flex items-center gap-2">
-            <div className="shrink-0 mt-0.5">{icon}</div>
+        ].map(({ icon, title, desc }, i, arr) => (
+          <div
+            key={title}
+            className={`${i < arr.length - 1 ? "col-span-2" : "col-span-1"} sm:col-span-1 sm:col-auto flex items-center gap-2`}
+          >
+            <div className="shrink-0 flex items-center justify-center w-6 h-6">
+              {icon}
+            </div>
             <div className="flex flex-col">
               <span className="text-xs font-semibold text-foreground leading-tight">
                 {title}
@@ -606,11 +621,14 @@ export function MilestoneView({
             </div>
           </div>
         ))}
-        <div className="flex items-start gap-2 ml-auto">
-          {/* Small screens: icon-only with popover (click-safe on touch) */}
+
+        {/* Info note — mobile: auto-places into col 2 of last row (beside Incomplete).
+            sm–xl: col 3 row 2. xl+: auto-placed as 5th inline item (grid-rows-1). */}
+        <div className="sm:col-start-3 sm:row-start-2 xl:col-auto xl:row-auto flex items-center gap-2">
+          {/* Below lg: icon-only with popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <span className="sm:hidden mt-0.5 cursor-pointer">
+              <span className="lg:hidden inline-flex items-center justify-center cursor-pointer">
                 <Info className="h-6 w-6 text-muted-foreground" />
               </span>
             </PopoverTrigger>
@@ -622,9 +640,9 @@ export function MilestoneView({
               milestones.
             </PopoverContent>
           </Popover>
-          {/* Larger screens: icon + full text */}
-          <Info className="hidden sm:block h-6 w-6 text-muted-foreground shrink-0 mt-0.5" />
-          <span className="hidden sm:block text-xs text-muted-foreground max-w-[200px] leading-snug">
+          {/* lg+: icon + full text */}
+          <Info className="hidden lg:block h-6 w-6 text-muted-foreground shrink-0" />
+          <span className="hidden lg:block text-xs text-muted-foreground max-w-[200px] leading-snug">
             Only Advisors and University Admins can verify or modify milestones.
           </span>
         </div>
