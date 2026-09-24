@@ -234,9 +234,6 @@ export const permissions = {
     canRequestAdvisor: "can_request_advisor",
 
     // Milestone permissions
-    milestoneCreate: "milestone.create",
-    milestoneUpdate: "milestone.update",
-    milestoneDelete: "milestone.delete",
     milestoneMarkDone: "milestone.mark_done",
     milestoneArtifactAdd: "milestone.artifact.add",
     milestoneArtifactDelete: "milestone.artifact.delete",
@@ -248,6 +245,9 @@ export const permissions = {
   advisory: {
     canReceiveAdvisorRequest: "can_receive_advisor_request",
 
+    milestoneCreate: "milestone.create",
+    milestoneUpdate: "milestone.update",
+    milestoneDelete: "milestone.delete",
     milestoneVerify: "milestone.verify",
     milestoneRevert: "milestone.revert",
 
