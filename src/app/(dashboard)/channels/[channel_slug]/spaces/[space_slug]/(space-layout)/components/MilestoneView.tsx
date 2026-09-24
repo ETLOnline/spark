@@ -576,7 +576,7 @@ export function MilestoneView({
       </div>
 
       {/* Legend — mobile: 2-col grid [1fr auto].
-          Items 1-3 span both columns (col-span-2) so they fill the full row.
+          Items 1-3 use max-sm:col-span-2 so they fill the full row on mobile only.
           Item 4 (Incomplete) spans only col 1 (col-span-1), leaving col 2
           free → the info note auto-places into that same row's col 2.
           sm–xl: column-first 2-row grid for pixel-aligned icon columns.
@@ -606,7 +606,7 @@ export function MilestoneView({
         ].map(({ icon, title, desc }, i, arr) => (
           <div
             key={title}
-            className={`${i < arr.length - 1 ? "col-span-2" : "col-span-1"} sm:col-span-1 sm:col-auto flex items-center gap-2`}
+            className={`${i < arr.length - 1 ? "max-sm:col-span-2" : ""} flex items-center gap-2`}
           >
             <div className="shrink-0 flex items-center justify-center w-6 h-6">
               {icon}
