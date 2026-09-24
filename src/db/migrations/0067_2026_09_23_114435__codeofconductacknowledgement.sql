@@ -1,0 +1,1 @@
+ALTER TABLE "profile" ADD COLUMN "coc_acknowledged" boolean DEFAULT false NOT NULL;
