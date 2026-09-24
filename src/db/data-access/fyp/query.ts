@@ -9,26 +9,12 @@ import {
   RawFypDashboardStats
 } from "@/src/types/Fyp/Fyp"
 
-// Statuses that count as "done" for the progress bar. `verified` still
-// counts — it's a completed milestone an advisor has since signed off on,
-// not a different state.
+
 const COMPLETED_MILESTONE_STATUSES = [
   MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
   MilestoneStatus.VERIFIED
 ]
 
-/**
- * Faculty Dashboard project list: one row per space that a student has
- * submitted an advisor request for (spaces with no request are skipped
- * entirely — there's nothing to monitor yet).
- *
- * There are no DB indexes on these tables, so the query is shaped to keep
- * every full scan on the smallest table involved (advisor_requests) and
- * away from the ones that grow per-project (fyp_milestones, space_users):
- * community/search/domain/status filters and pagination are all applied
- * before those two tables are ever touched, via a LATERAL join that only
- * runs once per row of the current page.
- */
 export async function GetFypDashboardProjects(
   filters: FypDashboardFilters = {},
   page: number = 1,
@@ -123,12 +109,6 @@ export async function GetFypDashboardProjects(
   return rows as unknown as RawFypDashboardRow[]
 }
 
-/**
- * Faculty Dashboard KPI row: totals over every FYP project in scope,
- * independent of the table's own search/domain/status filters — these are
- * the community's overall numbers, not a reflection of whatever's currently
- * typed into the search box.
- */
 export async function GetFypDashboardStats(
   filters: FypDashboardStatsFilters = {}
 ): Promise<RawFypDashboardStats> {

@@ -1,18 +1,13 @@
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 
 export interface FypDashboardFilters {
-  // Present for a community's own dashboard, absent for the super admin
-  // dashboard (which sees every community's FYP projects).
+
   communityId?: string
   searchTerm?: string
   domainTagId?: number
   status?: AdvisorRequestStatus
 }
 
-// Raw shape straight off the query — one row per project, untransformed.
-// Shaping this into what the UI wants (combining names, defaulting nulls,
-// building the pagination object) is business logic and belongs in the
-// server action, not the data-access layer.
 export interface RawFypDashboardRow {
   space_id: string
   space_slug: string
@@ -45,8 +40,6 @@ export interface FypDashboardProject {
 }
 
 export interface FypDashboardStatsFilters {
-  // Same meaning as FypDashboardFilters.communityId — present for a
-  // community's own dashboard, absent for the super admin dashboard.
   communityId?: string
 }
 

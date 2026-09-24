@@ -239,12 +239,7 @@ export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(
   }
 )
 
-// Read-only request details for viewers who aren't themselves an advisor on
-// this request (e.g. a community admin on the Faculty Dashboard) — status
-// is the request's actual outcome (getStudentRequestStatus), not an
-// advisor-relative "already_assigned" framing, and there's no accept/reject
-// capability tied to this: callers should pass canAccept=false,
-// canReject=false into RequestDetailsDialog.
+
 export const GetAdvisorRequestDetailsAction = CreateServerAction(
   true,
   async (requestId: string) => {
