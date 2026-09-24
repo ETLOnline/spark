@@ -143,7 +143,8 @@ const userRolePermissions = [
           permissions.fyp.milestoneCreate,
           permissions.fyp.milestoneUpdate,
           permissions.fyp.milestoneDelete,
-          permissions.fyp.milestoneArtifactDelete
+          permissions.fyp.milestoneArtifactDelete,
+          permissions.fyp.facultyDashboardView
         ]
       }
     ]

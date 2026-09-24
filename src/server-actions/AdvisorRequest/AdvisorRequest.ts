@@ -239,6 +239,26 @@ export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(
   }
 )
 
+
+export const GetAdvisorRequestDetailsAction = CreateServerAction(
+  true,
+  async (requestId: string) => {
+    try {
+      const request = await GetAdvisorRequestById(requestId)
+      if (!request) {
+        return { success: false, error: "Request not found." }
+      }
+
+      return {
+        success: true,
+        data: { ...request, viewerStatus: getStudentRequestStatus(request) }
+      }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
 export const AcceptAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string) => {
