@@ -1,6 +1,5 @@
 import { Button } from "@/src/components/ui/button"
-import { useRef, useEffect } from "react"
-import { Textarea } from "@/src/components/ui/textarea"
+import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { postStore } from "@/src/store/post/postStore"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -9,7 +8,8 @@ import { CreateCommentAction } from "@/src/server-actions/Post/Post"
 import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { SelectComment } from "@/src/db/schema"
-import { X } from "lucide-react"
+import { PencilLine, X } from "lucide-react"
+import RichTextEditor from "@/src/components/common/Tiptap/TiptapRichEditor"
 
 type PostCommentFormProps = {
   postId: string
@@ -28,8 +28,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
   onCancelEdit,
   onUpdateComment
 }) => {
-  const commentText = useRef<string>("")
-  const commentInput = useRef<HTMLTextAreaElement>(null)
+  const [commentContent, setCommentContent] = useState("")
+  const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
 
   const setPosts = useSetAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
@@ -48,17 +48,17 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
 
   // Populate input when editing
   useEffect(() => {
-    if (editingComment && commentInput.current) {
-      commentInput.current.value = editingComment.content
-      commentText.current = editingComment.content
-      commentInput.current.focus()
+    if (editingComment) {
+      setCommentContent(editingComment.content)
     }
   }, [editingComment])
 
-  const handleAddComment = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleRichEditor = () => {
+    setShowRichEditorToolbar((prev) => !prev)
+  }
 
-    if (!commentText.current.trim()) {
+  const handleAddComment = async () => {
+    if (!commentContent.trim()) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -70,12 +70,12 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
     try {
       if (isEditMode && onUpdateComment && editingComment) {
         // Edit mode
-        await onUpdateComment(editingComment.id, commentText.current)
+        await onUpdateComment(editingComment.id, commentContent)
       } else {
         // Create mode
         const response = await createComment(
           postId,
-          commentText.current,
+          commentContent,
           comments,
           spaceId
         )
@@ -109,10 +109,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
           })
         }
       }
-      commentText.current = ""
-      if (commentInput.current) {
-        commentInput.current.value = ""
-      }
+      setCommentContent("")
+      setShowRichEditorToolbar(false)
     } catch (error) {
       toast({
         variant: "destructive",
@@ -127,20 +125,52 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
   return (
     <form
       className="flex flex-col sm:flex-row sm:items-center w-full gap-2 mt-4"
-      onSubmit={handleAddComment}
+      onSubmit={(e) => {
+        e.preventDefault()
+        handleAddComment()
+      }}
     >
       <div className="flex items-center gap-2 w-full">
         <Avatar className="h-8 w-8 shrink-0">
           <AvatarImage src={user?.profile_url as string} alt="Current User" />
           <AvatarFallback>{name}</AvatarFallback>
         </Avatar>
-        <Textarea
-          placeholder={isEditMode ? "Edit your comment..." : "Add a comment..."}
-          onChange={(e) => (commentText.current = e.target.value)}
-          className="flex-1 min-h-[40px] "
-          rows={1}
-          ref={commentInput}
-        />
+        <div className="flex-1 flex items-end gap-1 min-w-0">
+          <div className="flex-1 min-w-0">
+            <RichTextEditor
+              value={commentContent}
+              onChange={setCommentContent}
+              image_uploading={false}
+              entity="comments"
+              showToolbar={showRichEditorToolbar}
+              minHeight={showRichEditorToolbar ? "100px" : "30px"}
+              limit={2000}
+              editable={!createCommentLoading}
+              onEnterPress={handleAddComment}
+              showFooter={false}
+              isScrollAble={true}
+              placeholder={
+                isEditMode ? "Edit your comment..." : "Add a comment..."
+              }
+            />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            title={
+              showRichEditorToolbar
+                ? "Hide Formatting Menu (Enter sends)"
+                : "Show Formatting Menu (Enter adds line)"
+            }
+            onClick={handleRichEditor}
+            className={`p-1 shrink-0 ${
+              showRichEditorToolbar ? "bg-secondary" : "hover:bg-secondary/50"
+            }`}
+          >
+            <PencilLine className="h-5 w-5" />
+          </Button>
+        </div>
         {isEditMode && onCancelEdit && (
           <Button
             size="sm"
@@ -148,10 +178,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
             type="button"
             onClick={() => {
               onCancelEdit()
-              commentText.current = ""
-              if (commentInput.current) {
-                commentInput.current.value = ""
-              }
+              setCommentContent("")
             }}
           >
             <X className="h-4 w-4" />
