@@ -133,9 +133,6 @@ const permissionSeedList = [
   { namespace: "fyp", action: permissions.fyp.canRequestAdvisor },
 
   // FYP — Milestones
-  { namespace: "fyp", action: permissions.fyp.milestoneCreate },
-  { namespace: "fyp", action: permissions.fyp.milestoneUpdate },
-  { namespace: "fyp", action: permissions.fyp.milestoneDelete },
   { namespace: "fyp", action: permissions.fyp.milestoneMarkDone },
   { namespace: "fyp", action: permissions.fyp.milestoneArtifactAdd },
   { namespace: "fyp", action: permissions.fyp.milestoneArtifactDelete },
@@ -143,11 +140,17 @@ const permissionSeedList = [
   // FYP — Program feedback
   { namespace: "fyp", action: permissions.fyp.feedbackSubmitStudent },
 
+  // FYP — Faculty dashboard
+  { namespace: "fyp", action: permissions.fyp.facultyDashboardView },
+
   // Advisory
   {
     namespace: "advisory",
     action: permissions.advisory.canReceiveAdvisorRequest
   },
+  { namespace: "advisory", action: permissions.advisory.milestoneCreate },
+  { namespace: "advisory", action: permissions.advisory.milestoneUpdate },
+  { namespace: "advisory", action: permissions.advisory.milestoneDelete },
   { namespace: "advisory", action: permissions.advisory.milestoneVerify },
   { namespace: "advisory", action: permissions.advisory.milestoneRevert },
   { namespace: "advisory", action: permissions.advisory.feedbackSubmitAdvisor },

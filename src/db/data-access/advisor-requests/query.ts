@@ -44,7 +44,12 @@ export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
 export const GetAdvisorRequestById = async (requestId: string) => {
   const request = await db.query.advisorRequestsTable.findFirst({
     where: eq(advisorRequestsTable.id, requestId),
-    with: { space: { with: { channel: true } } }
+    with: {
+      space: { with: { channel: true } },
+      requester: true,
+      domain: true,
+      proposalFile: true
+    }
   })
 
   return request ?? null

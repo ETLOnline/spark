@@ -1,9 +1,10 @@
 "use client"
 
 import { Award, Info, Lock, LayoutGrid, Send, Star } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/src/components/ui/button"
+import Link from "next/link"
+import { buttonVariants } from "@/src/components/ui/button"
 import { Progress } from "@/src/components/ui/progress"
+import { cn } from "@/src/lib/utils"
 
 const NEXT_STEPS = [
   {
@@ -25,12 +26,13 @@ const NEXT_STEPS = [
 
 export function FeedbackRightRail({
   totalMilestones,
-  verifiedMilestones
+  verifiedMilestones,
+  milestonesHref
 }: {
   totalMilestones: number
   verifiedMilestones: number
+  milestonesHref: string
 }) {
-  const router = useRouter()
   const progressPct = totalMilestones
     ? Math.round((verifiedMilestones / totalMilestones) * 100)
     : 0
@@ -61,15 +63,16 @@ export function FeedbackRightRail({
           </span>
         </div>
         <Progress value={progressPct} className="h-1.5" />
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full cursor-pointer"
-          onClick={() => router.push("?page-type=fyp")}
+        <Link
+          href={milestonesHref}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "w-full"
+          )}
         >
           <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
           View Milestones
-        </Button>
+        </Link>
       </div>
 
       <div className="rounded-xl border bg-card p-4 space-y-3.5">

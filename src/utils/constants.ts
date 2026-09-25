@@ -234,20 +234,23 @@ export const permissions = {
     canRequestAdvisor: "can_request_advisor",
 
     // Milestone permissions
-    milestoneCreate: "milestone.create",
-    milestoneUpdate: "milestone.update",
-    milestoneDelete: "milestone.delete",
     milestoneMarkDone: "milestone.mark_done",
     milestoneArtifactAdd: "milestone.artifact.add",
     milestoneArtifactDelete: "milestone.artifact.delete",
 
     // Program feedback — which version of the form a user submits
-    feedbackSubmitStudent: "feedback.submit_student"
+    feedbackSubmitStudent: "feedback.submit_student",
+
+    // Community-level faculty dashboard (advisor requests, progress, milestones)
+    facultyDashboardView: "faculty_dashboard.view"
   },
 
   advisory: {
     canReceiveAdvisorRequest: "can_receive_advisor_request",
 
+    milestoneCreate: "milestone.create",
+    milestoneUpdate: "milestone.update",
+    milestoneDelete: "milestone.delete",
     milestoneVerify: "milestone.verify",
     milestoneRevert: "milestone.revert",
 

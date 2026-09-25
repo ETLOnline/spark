@@ -196,6 +196,7 @@ export const profileTable = pgTable("profile", {
     .default(0),
   email: varchar("email"),
   verified: boolean("verified").notNull().default(false),
+  coc_acknowledged: boolean("coc_acknowledged").notNull().default(false),
   ...timestamps
 })
 

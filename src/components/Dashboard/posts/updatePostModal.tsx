@@ -278,7 +278,7 @@ function UpdatePostModal({
 
   return (
     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Post</DialogTitle>
           {isPoll && canEditPoll && (

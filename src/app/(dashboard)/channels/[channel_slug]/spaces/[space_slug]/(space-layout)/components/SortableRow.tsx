@@ -56,6 +56,7 @@ export function SortableRow({
         <Input
           type="date"
           value={item.start_date}
+          max={item.end_date || undefined}
           onChange={(e) => onChange(item.id, "start_date", e.target.value)}
           className={`h-8 text-sm ${errorFields.start_date ? "border-destructive focus-visible:ring-destructive/40" : ""}`}
         />
