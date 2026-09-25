@@ -9,7 +9,6 @@ import {
   RawFypDashboardStats
 } from "@/src/types/Fyp/Fyp"
 
-
 const COMPLETED_MILESTONE_STATUSES = [
   MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
   MilestoneStatus.VERIFIED
@@ -148,11 +147,8 @@ export async function GetFypDashboardStats(
         where scoped.request_status != ${AdvisorRequestStatus.ACCEPTED}
       ) as without_advisor,
       (
-        -- Projects with at least one milestone whose deadline has passed
-        -- without being marked done — counted separately from the CTE
-        -- above since it's a distinct space_id count over a different
-        -- table, not a filter over scoped itself.
-        select count(distinct fm.space_id)
+      
+        select count(*)
         from fyp_milestones fm
         inner join scoped on scoped.space_id = fm.space_id
         where fm.end_date is not null
