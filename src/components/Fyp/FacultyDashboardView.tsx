@@ -14,6 +14,7 @@ import {
   Search,
   Eye
 } from "lucide-react"
+import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import {
@@ -131,9 +132,8 @@ export default function FacultyDashboardView({
   const [domainTagId, setDomainTagId] = useState("all")
   const [status, setStatus] = useState("all")
 
-  const [selectedRequest, setSelectedRequest] = useState<
-    Parameters<typeof RequestDetailsDialog>[0]["request"]
-  >(null)
+  const [selectedRequest, setSelectedRequest] =
+    useState<Parameters<typeof RequestDetailsDialog>[0]["request"]>(null)
 
   const [statsLoading, , , fetchStats] = useServerAction(
     GetFypDashboardStatsAction
@@ -391,16 +391,17 @@ export default function FacultyDashboardView({
                             View Space
                           </Link>
                         ) : (
-                          <button
+                          <Button
                             type="button"
+                            variant="link"
                             onClick={() =>
                               handleViewRequest(project.request_id)
                             }
-                            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                            className="h-auto gap-1 p-0 font-medium no-underline hover:underline [&_svg]:size-3.5"
                           >
                             <Eye className="h-3.5 w-3.5" />
                             View Request
-                          </button>
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
