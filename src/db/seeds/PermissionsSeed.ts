@@ -143,6 +143,9 @@ const permissionSeedList = [
   // FYP — Program feedback
   { namespace: "fyp", action: permissions.fyp.feedbackSubmitStudent },
 
+  // FYP — Faculty dashboard
+  { namespace: "fyp", action: permissions.fyp.facultyDashboardView },
+
   // Advisory
   {
     namespace: "advisory",
