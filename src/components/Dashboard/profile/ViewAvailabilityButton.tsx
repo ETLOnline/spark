@@ -7,17 +7,24 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 type Props = {
   mentorId: string
   viewerRp: number
+  rpThresholdEnabled?: boolean
 }
 
-export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
+export default function ViewAvailabilityButton({
+  mentorId,
+  viewerRp,
+  rpThresholdEnabled = false
+}: Props) {
   const { canAccess } = usePermissionChecker("global")
   if (!canAccess("mentorship.session.request")) return null
 
   return (
     <>
-      <p className="text-xs text-muted-foreground mt-2">
-        Eligibility: {RP_THRESHOLD} RP required
-      </p>
+      {rpThresholdEnabled && (
+        <p className="text-xs text-muted-foreground mt-2">
+          Eligibility: {RP_THRESHOLD} RP required
+        </p>
+      )}
       <Link href={`/profile/${mentorId}/availability`} className="w-full">
         <Button
           variant="outline"

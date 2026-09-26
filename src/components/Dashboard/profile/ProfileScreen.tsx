@@ -115,6 +115,7 @@ export default function ProfileScreen({
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
   const [isFeatureEnable, setIsFeatureEnable] = useState(false)
+  const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =
@@ -344,6 +345,11 @@ export default function ProfileScreen({
       const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
       if (res?.success && res?.data?.is_enabled) {
         setIsFeatureEnable(true)
+      }
+
+      const rpRes = await GetFeatureFlag(["Mentorship_RP_Threshold_Enabled"])
+      if (rpRes?.success && rpRes?.data?.is_enabled) {
+        setRpThresholdEnabled(true)
       }
     }
     fetchFeatureFlag()
@@ -756,6 +762,7 @@ export default function ProfileScreen({
                       <ViewAvailabilityButton
                         mentorId={user.unique_id}
                         viewerRp={viewerRp}
+                        rpThresholdEnabled={rpThresholdEnabled}
                       />
                     )}
                   </CardContent>
