@@ -23,6 +23,7 @@ import {
 } from "@/src/server-actions/Mentor/MentorActions"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { GetUserRewardBalanceAction } from "@/src/server-actions/Reward/Reward"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { toast } from "@/src/hooks/use-toast"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import moment from "moment-timezone"
@@ -85,6 +86,10 @@ export function MentorCalendar({
   const [slotError, setSlotError] = useState("")
   const [saving, setSaving] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+
+  // RP threshold feature flag
+  const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
+  const [, , , GetFeatureFlag] = useServerAction(getFeatureFlagAction)
 
   // Request-a-session form state (viewer only)
   const [viewerRp, setViewerRp] = useState(0)
@@ -194,6 +199,13 @@ export function MentorCalendar({
       )
       if (balanceRes?.success) {
         setViewerRp(balanceRes.data?.current_balance ?? 0)
+      }
+
+      const rpFlagRes = await GetFeatureFlag([
+        "Mentorship_RP_Threshold_Enabled"
+      ])
+      if (rpFlagRes?.success && rpFlagRes?.data?.is_enabled) {
+        setRpThresholdEnabled(true)
       }
     }
     fetchViewerContext()
@@ -777,6 +789,7 @@ export function MentorCalendar({
                           mentorPendingRequests={mentorPendingRequests}
                           mentorAcceptedRequests={acceptedRequests}
                           viewerRp={viewerRp}
+                          rpThresholdEnabled={rpThresholdEnabled}
                           pendingDeleteId={pendingDeleteId}
                           onTogglePendingDelete={setPendingDeleteId}
                           onDeleteSeries={handleDeleteSeries}

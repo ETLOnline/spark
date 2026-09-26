@@ -56,6 +56,7 @@ import {
   SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
   SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
+import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
 import { sendPushNotification } from "@/src/services/notifications/PushNotification.utils"
@@ -312,13 +313,16 @@ export const CreateSessionRequestAction = CreateServerAction(
         return { error: "Cannot request a session in the past" }
       }
 
-      const balance = await GetUserRewardBalance(
-        authUser.unique_id,
-        REPUTATION_POINTS_REWARD_ID
-      )
-      const currentBalance = balance?.current_balance ?? 0
-      if (currentBalance < RP_THRESHOLD) {
-        return { error: "Not enough RP to request a session" }
+      const rpFlag = await getFeatureFlag(["Mentorship_RP_Threshold_Enabled"])
+      if (rpFlag?.is_enabled) {
+        const balance = await GetUserRewardBalance(
+          authUser.unique_id,
+          REPUTATION_POINTS_REWARD_ID
+        )
+        const currentBalance = balance?.current_balance ?? 0
+        if (currentBalance < RP_THRESHOLD) {
+          return { error: "Not enough RP to request a session" }
+        }
       }
 
       const slots = await GetMentorAvailability(payload.mentorId)

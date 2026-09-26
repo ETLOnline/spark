@@ -14,6 +14,13 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
     label: "Rewards",
     is_enabled: false,
     description: "Enable rewards and badge system for community engagement"
+  },
+  {
+    key: "Mentorship_RP_Threshold_Enabled",
+    label: "Mentorship RP Threshold",
+    is_enabled: false,
+    description:
+      "Require a minimum RP balance before a mentee can view or request a mentorship session. When OFF, all users can access mentorship regardless of RP."
   }
 ]
 
