@@ -46,6 +46,7 @@ interface SlotListItemProps {
   mentorAcceptedRequests: SelectSessionRequest[]
   viewerRp: number
   rpThresholdEnabled?: boolean
+  rpThresholdValue?: number
   pendingDeleteId: number | null
   onTogglePendingDelete: (slotId: number | null) => void
   onDeleteSeries: (slotId: number) => void
@@ -69,6 +70,7 @@ export function SlotListItem({
   mentorAcceptedRequests,
   viewerRp,
   rpThresholdEnabled = false,
+  rpThresholdValue = RP_THRESHOLD,
   pendingDeleteId,
   onTogglePendingDelete,
   onDeleteSeries,
@@ -258,7 +260,7 @@ export function SlotListItem({
             <Clock className="h-3 w-3" />
             This time has passed
           </div>
-        ) : rpThresholdEnabled && viewerRp < RP_THRESHOLD ? (
+        ) : rpThresholdEnabled && viewerRp < rpThresholdValue ? (
           <div className="px-3 py-2 border-t border-foreground/8">
             <TooltipProvider>
               <Tooltip>
@@ -277,7 +279,8 @@ export function SlotListItem({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    Earn {RP_THRESHOLD - viewerRp} more RP to request this slot
+                    Earn {rpThresholdValue - viewerRp} more RP to request this
+                    slot
                   </p>
                 </TooltipContent>
               </Tooltip>

@@ -1,6 +1,10 @@
 import { sql } from "drizzle-orm"
 import { db } from ".."
 import { featureFlagsTable, InsertFeatureFlag } from "../schema"
+import {
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
+  RP_THRESHOLD
+} from "@/src/utils/constants"
 
 const featureFlagsSeedList: InsertFeatureFlag[] = [
   {
@@ -16,11 +20,12 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
     description: "Enable rewards and badge system for community engagement"
   },
   {
-    key: "Mentorship_RP_Threshold_Enabled",
+    key: MENTORSHIP_RP_THRESHOLD_ENABLED,
     label: "Mentorship RP Threshold",
     is_enabled: false,
     description:
-      "Require a minimum RP balance before a mentee can view or request a mentorship session. When OFF, all users can access mentorship regardless of RP."
+      "Require a minimum RP balance before a mentee can view or request a mentorship session. When OFF, all users can access mentorship regardless of RP.",
+    MENTORSHIP_RP_THRESHOLD_VALUE: RP_THRESHOLD
   }
 ]
 

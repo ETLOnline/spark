@@ -8,12 +8,14 @@ type Props = {
   mentorId: string
   viewerRp: number
   rpThresholdEnabled?: boolean
+  rpThresholdValue?: number
 }
 
 export default function ViewAvailabilityButton({
   mentorId,
   viewerRp,
-  rpThresholdEnabled = false
+  rpThresholdEnabled = false,
+  rpThresholdValue = RP_THRESHOLD
 }: Props) {
   const { canAccess } = usePermissionChecker("global")
   if (!canAccess("mentorship.session.request")) return null
@@ -22,7 +24,7 @@ export default function ViewAvailabilityButton({
     <>
       {rpThresholdEnabled && (
         <p className="text-xs text-muted-foreground mt-2">
-          Eligibility: {RP_THRESHOLD} RP required
+          Eligibility: {rpThresholdValue} RP required
         </p>
       )}
       <Link href={`/profile/${mentorId}/availability`} className="w-full">

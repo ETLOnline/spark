@@ -51,6 +51,7 @@ import {
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import {
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
   REPUTATION_POINTS_REWARD_ID,
   RP_THRESHOLD,
   SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
@@ -313,15 +314,18 @@ export const CreateSessionRequestAction = CreateServerAction(
         return { error: "Cannot request a session in the past" }
       }
 
-      const rpFlag = await getFeatureFlag(["Mentorship_RP_Threshold_Enabled"])
+      const rpFlag = await getFeatureFlag([MENTORSHIP_RP_THRESHOLD_ENABLED])
       if (rpFlag?.is_enabled) {
+        const threshold = rpFlag.MENTORSHIP_RP_THRESHOLD_VALUE ?? RP_THRESHOLD
         const balance = await GetUserRewardBalance(
           authUser.unique_id,
           REPUTATION_POINTS_REWARD_ID
         )
         const currentBalance = balance?.current_balance ?? 0
-        if (currentBalance < RP_THRESHOLD) {
-          return { error: "Not enough RP to request a session" }
+        if (currentBalance < threshold) {
+          return {
+            error: `Not enough RP to request a session. You need at least ${threshold} RP.`
+          }
         }
       }
 

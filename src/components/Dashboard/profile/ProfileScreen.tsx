@@ -49,7 +49,11 @@ import {
   CardContent
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
-import { REPUTATION_POINTS_REWARD_ID } from "@/src/utils/constants"
+import {
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
+  REPUTATION_POINTS_REWARD_ID,
+  RP_THRESHOLD
+} from "@/src/utils/constants"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "@/src/server-actions/UserRoles/UserRole"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
@@ -116,6 +120,7 @@ export default function ProfileScreen({
   const [certificates, setCertificates] = useState(user.certificates)
   const [isFeatureEnable, setIsFeatureEnable] = useState(false)
   const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
+  const [rpThresholdValue, setRpThresholdValue] = useState(RP_THRESHOLD)
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =
@@ -347,9 +352,13 @@ export default function ProfileScreen({
         setIsFeatureEnable(true)
       }
 
-      const rpRes = await GetFeatureFlag(["Mentorship_RP_Threshold_Enabled"])
-      if (rpRes?.success && rpRes?.data?.is_enabled) {
-        setRpThresholdEnabled(true)
+      const rpData = (await GetFeatureFlag([MENTORSHIP_RP_THRESHOLD_ENABLED]))
+        ?.data
+      if (rpData) {
+        setRpThresholdEnabled(!!rpData.is_enabled)
+        setRpThresholdValue(
+          rpData.MENTORSHIP_RP_THRESHOLD_VALUE ?? RP_THRESHOLD
+        )
       }
     }
     fetchFeatureFlag()
@@ -763,6 +772,7 @@ export default function ProfileScreen({
                         mentorId={user.unique_id}
                         viewerRp={viewerRp}
                         rpThresholdEnabled={rpThresholdEnabled}
+                        rpThresholdValue={rpThresholdValue}
                       />
                     )}
                   </CardContent>

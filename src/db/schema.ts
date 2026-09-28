@@ -1815,6 +1815,7 @@ export const featureFlagsTable = pgTable("feature_flags", {
   label: varchar().notNull(),
   is_enabled: boolean().notNull().default(false),
   description: text(),
+  MENTORSHIP_RP_THRESHOLD_VALUE: integer("value"),
   ...timestamps
 })
 
