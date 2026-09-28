@@ -365,22 +365,17 @@ export function MilestoneView({
                       const arts = m.artifacts
                       const canManageArtifact =
                         canArtifactAdd &&
-                        !canManage &&
                         (m.status === MilestoneStatus.IN_PROGRESS ||
                           m.status ===
                             MilestoneStatus.COMPLETED_PENDING_VERIFICATION)
+
                       const canViewArtifact =
-                        arts.length > 0 &&
-                        ((!canArtifactAdd && !canManage) ||
-                          (canArtifactAdd &&
-                            !canManage &&
-                            m.status === MilestoneStatus.VERIFIED) ||
-                          canManage)
+                        arts.length > 0 && m.status === MilestoneStatus.VERIFIED
 
                       return (
                         <td className="py-3 px-2 align-middle relative">
                           <div className="flex items-center ">
-                            {canManageArtifact && (
+                            {canManageArtifact ? (
                               <Button
                                 variant="outline"
                                 className="h-6 w-[118px] text-xs justify-center border-primary/40 text-primary hover:bg-primary/10 hover:text-primary cursor-pointer"
@@ -392,19 +387,20 @@ export function MilestoneView({
                               >
                                 Manage Artifact
                               </Button>
-                            )}
-                            {canViewArtifact && (
-                              <Button
-                                variant="outline"
-                                className="h-6 w-[118px] text-xs justify-center border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground cursor-pointer"
-                                onClick={() =>
-                                  router.push(
-                                    `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
-                                  )
-                                }
-                              >
-                                View Artifacts
-                              </Button>
+                            ) : (
+                              canViewArtifact && (
+                                <Button
+                                  variant="outline"
+                                  className="h-6 w-[118px] text-xs justify-center border-muted-foreground/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground cursor-pointer"
+                                  onClick={() =>
+                                    router.push(
+                                      `/channels/${channelSlug}/spaces/${spaceSlug}/milestones/${m.id}/artifacts`
+                                    )
+                                  }
+                                >
+                                  View Artifacts
+                                </Button>
+                              )
                             )}
                           </div>
                           <div className="absolute right-2 top-1/2 -translate-y-1/2">
