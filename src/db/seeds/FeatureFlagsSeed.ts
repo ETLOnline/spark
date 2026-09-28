@@ -29,16 +29,19 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
 ]
 
 export const FeatureFlagsSeed = async () => {
-  try {
-    await db
-      .insert(featureFlagsTable)
-      .values(featureFlagsSeedList)
-      .onConflictDoNothing({ target: featureFlagsTable.key })
+  return await db.transaction(async (tx) => {
+    try {
+      await tx
+        .insert(featureFlagsTable)
+        .values(featureFlagsSeedList)
+        .onConflictDoNothing({ target: featureFlagsTable.key })
 
-    console.log("✅ Feature flags seeded successfully")
-  } catch (e) {
-    console.error(e)
-    console.log("❌ Error seeding feature flags")
-    process.exit(1)
-  }
+      console.log("✅ Feature flags seeded successfully")
+    } catch (e) {
+      console.error(e)
+      tx.rollback()
+      console.log("❌ Error seeding feature flags")
+      process.exit(1)
+    }
+  })
 }
