@@ -51,8 +51,7 @@ import {
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
 import {
   MENTORSHIP_RP_THRESHOLD_ENABLED,
-  REPUTATION_POINTS_REWARD_ID,
-  RP_THRESHOLD
+  REPUTATION_POINTS_REWARD_ID
 } from "@/src/utils/constants"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "@/src/server-actions/UserRoles/UserRole"
@@ -120,7 +119,7 @@ export default function ProfileScreen({
   const [certificates, setCertificates] = useState(user.certificates)
   const [isFeatureEnable, setIsFeatureEnable] = useState(false)
   const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
-  const [rpThresholdValue, setRpThresholdValue] = useState(RP_THRESHOLD)
+  const [rpThresholdValue, setRpThresholdValue] = useState("")
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =

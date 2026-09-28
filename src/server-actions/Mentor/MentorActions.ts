@@ -317,12 +317,13 @@ export const CreateSessionRequestAction = CreateServerAction(
       const rpFlag = await getFeatureFlag([MENTORSHIP_RP_THRESHOLD_ENABLED])
       if (rpFlag?.is_enabled) {
         const threshold = rpFlag.value ?? RP_THRESHOLD
+        const thresholdValue = parseInt(threshold, 10)
         const balance = await GetUserRewardBalance(
           authUser.unique_id,
           REPUTATION_POINTS_REWARD_ID
         )
         const currentBalance = balance?.current_balance ?? 0
-        if (currentBalance < parseInt(threshold, 10)) {
+        if (currentBalance < thresholdValue) {
           return {
             error: `Not enough RP to request a session. You need at least ${threshold} RP.`
           }

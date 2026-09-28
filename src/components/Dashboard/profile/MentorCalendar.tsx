@@ -31,8 +31,7 @@ import {
   DAY_HEADERS,
   DAYS,
   MENTORSHIP_RP_THRESHOLD_ENABLED,
-  REPUTATION_POINTS_REWARD_ID,
-  RP_THRESHOLD
+  REPUTATION_POINTS_REWARD_ID
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import {
@@ -91,7 +90,7 @@ export function MentorCalendar({
 
   // RP threshold feature flag
   const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
-  const [rpThresholdValue, setRpThresholdValue] = useState(RP_THRESHOLD)
+  const [rpThresholdValue, setRpThresholdValue] = useState("")
   const [, , , GetFeatureFlag] = useServerAction(getFeatureFlagAction)
 
   // Request-a-session form state (viewer only)
