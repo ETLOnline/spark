@@ -208,9 +208,7 @@ export function MentorCalendar({
         ?.data
       if (rpData) {
         setRpThresholdEnabled(!!rpData.is_enabled)
-        setRpThresholdValue(
-          rpData.MENTORSHIP_RP_THRESHOLD_VALUE ?? RP_THRESHOLD
-        )
+        if (rpData.value) setRpThresholdValue(rpData.value)
       }
     }
     fetchViewerContext()

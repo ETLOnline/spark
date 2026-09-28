@@ -25,7 +25,7 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
     is_enabled: false,
     description:
       "Require a minimum RP balance before a mentee can view or request a mentorship session. When OFF, all users can access mentorship regardless of RP.",
-    MENTORSHIP_RP_THRESHOLD_VALUE: RP_THRESHOLD
+    value: RP_THRESHOLD
   }
 ]
 

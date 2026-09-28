@@ -8,7 +8,7 @@ type Props = {
   mentorId: string
   viewerRp: number
   rpThresholdEnabled?: boolean
-  rpThresholdValue?: number
+  rpThresholdValue?: string
 }
 
 export default function ViewAvailabilityButton({

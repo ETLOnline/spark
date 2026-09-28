@@ -19,6 +19,7 @@ import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 import { ContactUsEmailTemplatesSeed } from "./ContactUsEmailTemplatesSeed"
 import { IdentityVerificationEmailSeed } from "./IdentityVerificationEmail"
 import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
+import { MentorshipRpThresholdFlagSeed } from "./MentorshipRpThresholdFlagSeed"
 import { RewardsSeed } from "./RewardsSeed"
 import { RewardLevelsSeed } from "./RewardLevelsSeed"
 import { BackfillLedgerCommunityIdSeed } from "./BackfillLedgerCommunityIdSeed"
@@ -46,6 +47,7 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   JoinInviteEmailSeed,
   ContactUsEmailTemplatesSeed,
   FeatureFlagsSeed,
+  MentorshipRpThresholdFlagSeed,
   RewardsSeed,
   RewardLevelsSeed,
   BackfillLedgerCommunityIdSeed,
