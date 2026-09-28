@@ -137,7 +137,10 @@ const userRolePermissions = [
         // University admins have the same FYP management rights as advisors
         // (all except canReceiveAdvisorRequest which is advisor-only)
         namespace: "fyp",
-        actions: [permissions.fyp.milestoneArtifactDelete]
+        actions: [
+          permissions.fyp.milestoneArtifactDelete,
+          permissions.fyp.facultyDashboardView
+        ]
       },
       {
         namespace: "advisory",
@@ -145,8 +148,7 @@ const userRolePermissions = [
           permissions.advisory.milestoneCreate,
           permissions.advisory.milestoneUpdate,
           permissions.advisory.milestoneDelete,
-          permissions.fyp.milestoneArtifactDelete,
-          permissions.fyp.facultyDashboardView
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
