@@ -343,7 +343,10 @@ export const EntityUpdateBroadCast = "broadcast-entity-update"
 export const REPUTATION_POINTS_REWARD_ID = 1
 
 /** Minimum RP a mentee needs to view a mentor's availability or request a session. */
-export const RP_THRESHOLD = 500
+export const RP_THRESHOLD = "500"
+
+/** Feature flag key — toggles the RP threshold requirement for mentorship access. */
+export const MENTORSHIP_RP_THRESHOLD_ENABLED = "Mentorship_RP_Threshold_Enabled"
 
 /** Max length for a session request's Topic field. */
 export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
