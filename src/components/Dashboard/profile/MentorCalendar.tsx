@@ -904,6 +904,8 @@ export function MentorCalendar({
                       mentorPendingRequests={mentorPendingRequests}
                       mentorAcceptedRequests={acceptedRequests}
                       viewerRp={viewerRp}
+                      rpThresholdEnabled={rpThresholdEnabled}
+                      rpThresholdValue={rpThresholdValue}
                       pendingDeleteId={pendingDeleteId}
                       onTogglePendingDelete={(id) => {
                         setPendingEditId(null)
