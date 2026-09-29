@@ -20,7 +20,6 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { RP_THRESHOLD } from "@/src/utils/constants"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import {
@@ -47,6 +46,8 @@ interface SlotListItemProps {
   mentorPendingRequests: SelectSessionRequest[]
   mentorAcceptedRequests: SelectSessionRequest[]
   viewerRp: number
+  rpThresholdEnabled?: boolean
+  rpThresholdValue?: string
   pendingDeleteId: number | null
   onTogglePendingDelete: (slotId: number | null) => void
   onDeleteSeries: (slotId: number) => void
@@ -73,6 +74,8 @@ export function SlotListItem({
   mentorPendingRequests,
   mentorAcceptedRequests,
   viewerRp,
+  rpThresholdEnabled = false,
+  rpThresholdValue = "",
   pendingDeleteId,
   onTogglePendingDelete,
   onDeleteSeries,
@@ -87,6 +90,7 @@ export function SlotListItem({
   onConfirmSuggestedSlot
 }: SlotListItemProps) {
   const { permissionChecker, canAccess } = usePermissionChecker("global")
+  const thresholdValue = parseInt(rpThresholdValue, 10)
   // Super admins can view slots but must never see the actual request action
   const canRequestSession =
     canAccess("mentorship.session.request") && !permissionChecker?.isSuperAdmin
@@ -282,7 +286,7 @@ export function SlotListItem({
             <Clock className="h-3 w-3" />
             This time has passed
           </div>
-        ) : viewerRp < RP_THRESHOLD ? (
+        ) : rpThresholdEnabled && viewerRp < thresholdValue ? (
           <div className="px-3 py-2 border-t border-foreground/8">
             <TooltipProvider>
               <Tooltip>
@@ -301,7 +305,8 @@ export function SlotListItem({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    Earn {RP_THRESHOLD - viewerRp} more RP to request this slot
+                    Earn {thresholdValue - viewerRp} more RP to request this
+                    slot
                   </p>
                 </TooltipContent>
               </Tooltip>

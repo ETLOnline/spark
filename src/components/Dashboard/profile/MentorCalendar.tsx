@@ -42,12 +42,14 @@ import {
 } from "@/src/server-actions/Mentor/MentorActions"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { GetUserRewardBalanceAction } from "@/src/server-actions/Reward/Reward"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { toast } from "@/src/hooks/use-toast"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import moment from "moment-timezone"
 import {
   DAY_HEADERS,
   DAYS,
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
   REPUTATION_POINTS_REWARD_ID
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
@@ -114,6 +116,11 @@ export function MentorCalendar({
   const [saving, setSaving] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const [pendingEditId, setPendingEditId] = useState<number | null>(null)
+
+  // RP threshold feature flag
+  const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
+  const [rpThresholdValue, setRpThresholdValue] = useState("")
+  const [, , , GetFeatureFlag] = useServerAction(getFeatureFlagAction)
 
   // Request-a-session form state (viewer only)
   const [viewerRp, setViewerRp] = useState(0)
@@ -233,6 +240,13 @@ export function MentorCalendar({
       )
       if (balanceRes?.success) {
         setViewerRp(balanceRes.data?.current_balance ?? 0)
+      }
+
+      const rpData = (await GetFeatureFlag([MENTORSHIP_RP_THRESHOLD_ENABLED]))
+        ?.data
+      if (rpData) {
+        setRpThresholdEnabled(!!rpData.is_enabled)
+        if (rpData.value) setRpThresholdValue(rpData.value)
       }
     }
     fetchViewerContext()
@@ -1010,8 +1024,8 @@ export function MentorCalendar({
                 ? "1 student has a pending request"
                 : `${timeChangeGate?.length ?? 0} students have pending requests`}{" "}
               on this slot. Changing the time will remove their request and
-              notify them so they can resubmit if they're still interested.
-              Do you want to continue?
+              notify them so they can resubmit if they're still interested. Do
+              you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
