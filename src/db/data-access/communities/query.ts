@@ -239,6 +239,16 @@ export async function UpdateCommunity(
   try {
     const { id, created_by, ...updatableData } = communityData
 
+    if (updatableData.is_FYP_enable === false) {
+      const existingCommunity = await db.query.communitiesTable.findFirst({
+        where: eq(communitiesTable.id, communityId),
+        columns: { is_FYP_enable: true }
+      })
+      if (existingCommunity?.is_FYP_enable) {
+        throw new Error("FYP cannot be disabled once enabled for a community.")
+      }
+    }
+
     const updatedCommunity = await db
       .update(communitiesTable)
       .set(updatableData)
@@ -298,6 +308,7 @@ export type CommunityDetailData = {
   category: string
   slug: string
   type: "public" | "private"
+  is_FYP_enable: boolean
   created_at: Date | null
   totalMembers: number
   onlineNow: number
@@ -364,6 +375,7 @@ export async function GetCommunityBySlug(
         communityDetails.type === "private"
           ? communityDetails.type
           : "public",
+      is_FYP_enable: !!communityDetails.is_FYP_enable,
       created_at: createdAtDate,
       totalMembers: totalCommunityMembers,
       onlineNow: 0, // Still hardcoded

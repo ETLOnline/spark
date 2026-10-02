@@ -1,0 +1,1 @@
+ALTER TABLE "advisor_requests" ADD COLUMN "project_ids" jsonb DEFAULT '[]'::jsonb;

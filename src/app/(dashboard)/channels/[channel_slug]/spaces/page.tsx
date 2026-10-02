@@ -99,12 +99,16 @@ export default function ChannelPage() {
       if (updatedSpace.channel_id === selectedChannel?.id) {
         setSpaces((prev) =>
           prev.map((space) =>
-            space.id === updatedSpace.id ? updatedSpace : space
+            space.id === updatedSpace.id
+              ? { ...updatedSpace, channel: space.channel }
+              : space
           )
         )
         setJoinedSpaces((prev) =>
           prev.map((space) =>
-            space.id === updatedSpace.id ? updatedSpace : space
+            space.id === updatedSpace.id
+              ? { ...updatedSpace, channel: space.channel }
+              : space
           )
         )
       }

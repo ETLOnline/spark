@@ -21,7 +21,6 @@ import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   mentorshipFeedbackTable,
-  permissionsTable,
   profileTable,
   sessionRequestsTable,
   spacesTable,
@@ -32,6 +31,7 @@ import {
   usersTable
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
+import { getRoleIdsWithPermission } from "../permissions/query"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -47,6 +47,22 @@ export async function GetMentorAvailability(mentorId: string) {
     .select()
     .from(mentorAvailabilityTable)
     .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
+}
+
+export async function RecalculateMentorActiveStatus(mentorId: string) {
+  await db
+    .update(profileTable)
+    .set({
+      is_mentor_active: sql`
+        (${profileTable.professional_title} is not null and trim(${profileTable.professional_title}) <> '')
+        and (${profileTable.company} is not null and trim(${profileTable.company}) <> '')
+        and exists (
+          select 1 from ${mentorAvailabilityTable}
+          where ${mentorAvailabilityTable.mentor_id} = ${profileTable.user_id}
+        )
+      `
+    })
+    .where(eq(profileTable.user_id, mentorId))
 }
 
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
@@ -184,26 +200,16 @@ const buildAvailabilityCondition = (
   )
 }
 
-const getRoleIdsWithMentorshipPermission = async () => {
-  const permission = await db.query.permissionsTable.findFirst({
-    where: and(
-      eq(permissionsTable.namespace, "mentorship"),
-      eq(permissionsTable.action, permissions.mentorship.addAvailability)
-    ),
-    with: {
-      roles: { columns: { role_id: true } }
-    }
-  })
-  return permission?.roles.map((row) => row.role_id) ?? []
-}
-
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
     const limit = filters?.limit ?? 12
     const offset = (page - 1) * limit
 
-    const roleIds = await getRoleIdsWithMentorshipPermission()
+    const roleIds = await getRoleIdsWithPermission(
+      "mentorship",
+      permissions.mentorship.addAvailability
+    )
 
     if (!roleIds.length) {
       return {
@@ -469,6 +475,22 @@ export async function GetSessionRequestById(requestId: number) {
   return await db.query.sessionRequestsTable.findFirst({
     where: eq(sessionRequestsTable.id, requestId)
   })
+}
+
+export async function GetSessionRequestsByIds(requestIds: number[]) {
+  if (requestIds.length === 0) return []
+  return await db.query.sessionRequestsTable.findMany({
+    where: inArray(sessionRequestsTable.id, requestIds),
+    with: { mentee: true, mentor: true }
+  })
+}
+
+export async function DeleteSessionRequestsByIds(requestIds: number[]) {
+  if (requestIds.length === 0) return []
+  return await db
+    .delete(sessionRequestsTable)
+    .where(inArray(sessionRequestsTable.id, requestIds))
+    .returning()
 }
 
 export async function UpdateSessionRequestStatus(

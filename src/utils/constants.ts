@@ -228,6 +228,38 @@ export const permissions = {
   mentorship: {
     sessionRequest: "session.request",
     addAvailability: "add_availibility"
+  },
+
+  fyp: {
+    canRequestAdvisor: "can_request_advisor",
+
+    // Milestone permissions
+    milestoneMarkDone: "milestone.mark_done",
+    milestoneArtifactAdd: "milestone.artifact.add",
+    milestoneArtifactDelete: "milestone.artifact.delete",
+
+    // Program feedback — which version of the form a user submits
+    feedbackSubmitStudent: "feedback.submit_student",
+
+    // Community-level faculty dashboard (advisor requests, progress, milestones)
+    facultyDashboardView: "faculty_dashboard.view"
+  },
+
+  advisory: {
+    canReceiveAdvisorRequest: "can_receive_advisor_request",
+
+    milestoneCreate: "milestone.create",
+    milestoneUpdate: "milestone.update",
+    milestoneDelete: "milestone.delete",
+    milestoneVerify: "milestone.verify",
+    milestoneRevert: "milestone.revert",
+
+    feedbackSubmitAdvisor: "feedback.submit_advisor",
+
+    advisorViewRequests: "advisor.view_requests",
+    advisorViewDetails: "advisor.view_details",
+    advisorAccept: "advisor.accept",
+    advisorReject: "advisor.reject"
   }
 }
 
@@ -354,6 +386,17 @@ export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
 /** Max length for a session request's Description field. */
 export const SESSION_REQUEST_DESCRIPTION_MAX_LENGTH = 500
 
+/** Max length for an advisor's rejection reason on an FYP advisor request. */
+export const ADVISOR_REJECTION_REASON_MAX_LENGTH = 1000
+
+/** Role a user submits FYP program feedback as. */
+export const FEEDBACK_ROLES = {
+  student: "student",
+  advisor: "advisor"
+} as const
+
+export type FeedbackRole = (typeof FEEDBACK_ROLES)[keyof typeof FEEDBACK_ROLES]
+
 export const MONTH_NAMES = [
   "January",
   "February",
@@ -380,3 +423,21 @@ export const DAYS = [
 ]
 
 export const DAY_HEADERS = DAYS.map((d) => d.slice(0, 3))
+
+/** Max size (in bytes) for an advisor request's proposal file. */
+export const ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE = 50 * 1024 * 1024
+
+/** Mime types accepted for an advisor request's proposal file. */
+export const ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+]
+
+/** `accept` attribute value for the proposal file upload input. */
+export const ADVISOR_REQUEST_PROPOSAL_ACCEPT = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ...ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES
+].join(",")
