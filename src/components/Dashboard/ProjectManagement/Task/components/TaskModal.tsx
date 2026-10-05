@@ -116,10 +116,25 @@ export const TaskModal = ({
   useEffect(() => {
     if (!isReady) return
 
-    if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl) return
+    // Skip only if this task is already open; a stale task from the store
+    // (e.g. after browser back) still needs to be fetched and reopened
+    if (
+      !taskIdFromUrl ||
+      (isTaskModelOpen && internalTask?.id === taskIdFromUrl)
+    )
+      return
 
     fetchTask(taskIdFromUrl)
   }, [taskIdFromUrl, isReady])
+
+  // Reset global task state when leaving the page (e.g. via breadcrumb) so it
+  // doesn't leak into the next mount
+  useEffect(() => {
+    return () => {
+      setSelectedTask(null)
+      setIsTaskModelOpen(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (selectedTask) {

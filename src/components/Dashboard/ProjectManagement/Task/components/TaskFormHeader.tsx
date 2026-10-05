@@ -16,6 +16,7 @@ import { Check, ChevronRight, Copy, Ticket } from "lucide-react"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Button } from "@/src/components/ui/button"
 
 interface Props {
   selectedTask?: SelectTask
@@ -122,15 +123,17 @@ function TaskFormHeader({ selectedTask, onClose }: Props) {
             </a>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
+                {/* Only open on hover, the modal auto-focuses this button on open */}
+                <TooltipTrigger asChild onFocus={(e) => e.preventDefault()}>
+                  <Button
                     type="button"
                     onClick={handleCopyLink}
                     aria-label="Copy link"
-                    className="ml-2 text-gray-500 hover:text-gray-300"
+                    variant="ghost"
+                    className="ml-2 text-gray-500"
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Copy link</p>
