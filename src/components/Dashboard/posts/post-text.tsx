@@ -87,7 +87,7 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
             {post.category}
           </Badge>
         )}
-        <ExpandableText content={content} lines={6} />
+        <ExpandableText content={content} lines={6} isHtml />
 
         <div className="mt-4 flex flex-wrap gap-2">
           {post.hashtags &&

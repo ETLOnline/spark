@@ -25,6 +25,8 @@ export default async function DashboardLayout({
       redirect("/personas")
     } else if (!isProfileCompleted) {
       redirect("/profile-complition")
+    } else if (!authUser.profile?.coc_acknowledged) {
+      redirect("/code-of-conduct")
     }
   }
   return (

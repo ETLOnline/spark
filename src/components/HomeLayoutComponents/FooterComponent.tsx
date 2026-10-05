@@ -46,10 +46,18 @@ function Footer() {
               </li>
               <li>
                 <Link
-                  href="terms"
+                  href="/terms"
                   className="hover:text-white transition-colors"
                 >
                   Terms
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/code-of-conduct"
+                  className="hover:text-white transition-colors"
+                >
+                  Code of Conduct
                 </Link>
               </li>
             </ul>

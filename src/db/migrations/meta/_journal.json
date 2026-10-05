@@ -418,8 +418,71 @@
     {
       "idx": 59,
       "version": "7",
-      "when": 1790597545114,
-      "tag": "0059_2026_09_28_171223__add_mentorship_rp_threshold_value",
+      "when": 1787223598554,
+      "tag": "0059_2026_08_20_143000__add_is_fyp_enable_to_communities_and_spaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1787319431482,
+      "tag": "0060_2026_08_21_183709__create_request_advisor_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1787573155601,
+      "tag": "0061_2026_08_24_170553__changing_default_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1788353259783,
+      "tag": "0062_2026_09_02_174737__create_milstone_table_and_drop_reject_reason_in_advisor_request",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1789456200434,
+      "tag": "0063_2026_09_15_150959__creagte_table_for_adding_file_from_milestones",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1789699433942,
+      "tag": "0064_2026_09_18_104353__create_MoM_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1789699612675,
+      "tag": "0065_2026_09_18_104652__add_project_ids_to_advisor_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1789744134085,
+      "tag": "0066_2026_09_18_200851__add_feedback_table_for_fyp",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1790145878600,
+      "tag": "0067_2026_09_23_114435__codeofconductacknowledgement",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1790669337217,
+      "tag": "0068_2026_09_29_130854__add_feature_flag_value",
       "breakpoints": true
     }
   ]

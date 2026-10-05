@@ -21,12 +21,15 @@ import {
   GetMentorAvailability,
   GetMentors,
   GetPendingSessionRequestsForMentor,
+  DeleteSessionRequestsByIds,
   GetSessionRequestById,
+  GetSessionRequestsByIds,
   GetSessionRequestsForMenteeAndMentor,
   GetSessionRequestsForMentorByStatus,
   GetSharedSpacesForSessions,
   HasAcceptedOverlap,
   HasPendingSessionRequest,
+  RecalculateMentorActiveStatus,
   ReplaceMentorAvailability,
   ResubmitSessionRequest,
   SubmitMentorshipFeedback,
@@ -41,13 +44,16 @@ import type {
   FeedbackItem
 } from "@/src/components/Dashboard/profile/engagements/types"
 import type { SpaceBasic } from "@/src/db/data-access/mentor/query"
-import { notifySessionSlotSuggested } from "@/src/services/notify/mentor/session"
-import { NotificationEvent } from "@/src/services/notify/types/events"
-import { SendMentorSlotSuggestionNotification } from "@/src/services/notifications/Mentor/utils"
 import {
-  updateUserProfile,
-  SearchUserProfile
-} from "@/src/db/data-access/profile/query"
+  notifySessionSlotSuggested,
+  notifySessionSlotTimeChanged
+} from "@/src/services/notify/mentor/session"
+import { NotificationEvent } from "@/src/services/notify/types/events"
+import {
+  SendMentorSlotSuggestionNotification,
+  SendSlotTimeChangedNotification
+} from "@/src/services/notifications/Mentor/utils"
+import { updateUserProfile } from "@/src/db/data-access/profile/query"
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import {
@@ -100,6 +106,7 @@ export const SaveMentorSetupAction = CreateServerAction(
         company: payload.company,
         engagement_type: payload.engagement_type || "both"
       })
+      await RecalculateMentorActiveStatus(payload.userId)
       return { success: true }
     } catch (error) {
       console.error("SaveMentorSetupAction error:", error)
@@ -216,20 +223,53 @@ export const UpdateAvailabilityAction = CreateServerAction(
       }
 
       await ReplaceMentorAvailability(mentorId, slots)
-
-      const profile = await SearchUserProfile(mentorId)
-      const hasTitle = !!profile?.professional_title?.trim()
-      const hasCompany = !!profile?.company?.trim()
-      const hasSlots = slots.length > 0
-
-      await updateUserProfile(mentorId, {
-        is_mentor_active: hasTitle && hasCompany && hasSlots
-      })
+      await RecalculateMentorActiveStatus(mentorId)
 
       return { success: true }
     } catch (error) {
       console.error("UpdateAvailabilityAction error:", error)
       return { error: "Failed to update availability" }
+    }
+  }
+)
+
+/** A slot's date/time changed while it had pending requests on it — rather
+ * than silently moving a request to a time the mentee never agreed to (they
+ * might not be free then), or leaving a stale request pointing at a time
+ * that no longer exists, those requests are removed and the mentee is told
+ * to resubmit if they're still interested. Called by the client after a
+ * slot edit succeeds, only once the mentor confirmed they want to proceed
+ * despite pending requests. */
+export const NotifySlotTimeChangedAction = CreateServerAction(
+  true,
+  async (payload: { requestIds: number[] }) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+      if (!payload.requestIds.length) return { success: true }
+
+      const requests = await GetSessionRequestsByIds(payload.requestIds)
+      const ownRequests = requests.filter(
+        (request) => request.mentor_id === authUser.unique_id
+      )
+      if (!ownRequests.length) return { success: true }
+
+      await DeleteSessionRequestsByIds(ownRequests.map((r) => r.id))
+
+      await Promise.all(
+        ownRequests.map(async (request) => {
+          await notifySessionSlotTimeChanged(
+            NotificationEvent.SESSION_SLOT_TIME_CHANGED,
+            request
+          )
+          await SendSlotTimeChangedNotification(request)
+        })
+      )
+
+      return { success: true }
+    } catch (error) {
+      console.error("NotifySlotTimeChangedAction error:", error)
+      return { error: "Failed to notify affected students" }
     }
   }
 )

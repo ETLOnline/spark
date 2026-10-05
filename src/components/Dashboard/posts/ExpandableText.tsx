@@ -33,7 +33,14 @@ const ExpandableText: React.FC<Props> = ({
   return (
     <>
       <div ref={contentRef} className={className} style={clampStyle}>
-        <MessageContent content={content} />
+        {isHtml ? (
+          <div
+            className="rich-editor text-sm"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
+        ) : (
+          <MessageContent content={content} />
+        )}
       </div>
 
       {showToggle && (

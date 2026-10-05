@@ -1,5 +1,5 @@
 {
-  "id": "700ac10f-f6bb-4e37-ad6d-5a124fe52af1",
+  "id": "3dbfc9ea-149c-4fc3-9e6b-28ea99326a87",
   "prevId": "b3d52beb-245f-43da-b662-3f44e3b77b09",
   "version": "7",
   "dialect": "postgresql",
@@ -974,6 +974,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "is_FYP_enable": {
+          "name": "is_FYP_enable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -1691,12 +1698,6 @@
         "description": {
           "name": "description",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "value": {
-          "name": "value",
-          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -4508,6 +4509,13 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_FYP_enable": {
+          "name": "is_FYP_enable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "updated_at": {
           "name": "updated_at",

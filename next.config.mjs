@@ -41,8 +41,9 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: "500mb"
-    }
+      bodySizeLimit: "50mb"
+    },
+    middlewareClientMaxBodySize: "50mb"
   },
   // --- UPDATED: 'experimental.serverComponentsExternalPackages' moved to 'serverExternalPackages' ---
   serverExternalPackages: [
