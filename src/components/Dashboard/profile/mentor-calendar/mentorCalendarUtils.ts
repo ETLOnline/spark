@@ -389,6 +389,37 @@ export function pendingOnlyRequestsFor<T extends SelectSessionRequest>(
   )
 }
 
+/** Pending requests overlapping ANY occurrence of this slot's own recurrence
+ * pattern — used to warn a mentor before editing the whole series, since that
+ * changes every occurrence, not just one date. Matched by time/recurrence
+ * overlap rather than availability_slot_id, same reasoning as elsewhere: an
+ * edit replaces every slot row with a fresh id. */
+export function pendingRequestsOverlappingSlot<T extends SelectSessionRequest>(
+  slot: SelectMentorAvailability,
+  requests: T[]
+): T[] {
+  const slotStart = toMins(slot.start_time)
+  const slotEnd = toMins(slot.end_time)
+  return requests.filter(
+    (r) =>
+      r.status === "pending" &&
+      toMins(r.start_time) < slotEnd &&
+      slotStart < toMins(r.end_time) &&
+      recurrencesOverlap(
+        {
+          date: r.session_date,
+          repeat_type: r.repeat_type,
+          repeat_end_date: r.repeat_end_date
+        },
+        {
+          date: slot.date,
+          repeat_type: slot.repeat_type,
+          repeat_end_date: slot.repeat_end_date
+        }
+      )
+  )
+}
+
 /** A slot only counts as "fully booked" once every hour in it is taken — a
  * single accepted hour inside a longer window shouldn't block the rest of it. */
 export function isSlotFullyBooked(

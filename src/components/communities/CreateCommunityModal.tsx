@@ -13,6 +13,18 @@ import { Button } from "@/src/components/ui/button"
 import { Label } from "@/src/components/ui/label"
 import { Input } from "@/src/components/ui/input"
 import { Textarea } from "@/src/components/ui/textarea"
+import { Switch } from "@/src/components/ui/switch"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
@@ -58,7 +70,8 @@ const communitySchema = z.object({
   category: z.string().min(1, "Category required"),
   slug: z.string().max(50, "Slug is too long"),
   type: z.string().min(1, "Community type required"),
-  cover_image: z.string().optional()
+  cover_image: z.string().optional(),
+  is_FYP_enable: z.boolean().optional()
 })
 
 type CommunityFormData = z.infer<typeof communitySchema>
@@ -79,6 +92,7 @@ export default function CreateCommunityModal({
     null
   )
   const [coverImgPreview, setCoverImgPreview] = useState<string | null>(null)
+  const [showFypConfirm, setShowFypConfirm] = useState<boolean>(false)
 
   const [communities, setCommunities] = useAtom(communityStore.communities)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -86,6 +100,11 @@ export default function CreateCommunityModal({
     useAtom(communityStore.communityFormModalVisibility)
   const [selectedCommunity, setSelectedCommunity] = useAtom(
     communityStore.selectedCommunity
+  )
+  const { canAccess } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    selectedCommunity?.id
   )
 
   const [addCommunityLoading, , addCommunityError, CreateCommunity] =
@@ -111,7 +130,8 @@ export default function CreateCommunityModal({
       description: "",
       category: "",
       slug: "",
-      type: undefined
+      type: undefined,
+      is_FYP_enable: false
     }
   })
 
@@ -125,7 +145,8 @@ export default function CreateCommunityModal({
         slug: "",
         description: "",
         category: "",
-        type: ""
+        type: "",
+        is_FYP_enable: false
       })
       setCommunityCoverImage(null)
       setCoverImgPreview(null)
@@ -212,6 +233,7 @@ export default function CreateCommunityModal({
         "type",
         selectedCommunity.type === "public" ? "public" : "private"
       )
+      form.setValue("is_FYP_enable", !!selectedCommunity.is_FYP_enable)
       setCoverImgPreview(selectedCommunity.cover_image)
       form.clearErrors("slug")
     } else {
@@ -221,7 +243,8 @@ export default function CreateCommunityModal({
         slug: "",
         description: "",
         category: "",
-        type: ""
+        type: "",
+        is_FYP_enable: false
       })
       form.clearErrors()
       setSlugAvailableMessage("")
@@ -288,7 +311,8 @@ export default function CreateCommunityModal({
         slug: data.slug,
         type: data.type,
         created_by: authUser?.unique_id as string,
-        cover_image: coverImageUrl
+        cover_image: coverImageUrl,
+        is_FYP_enable: data.is_FYP_enable ?? false
       }
 
       const createdCommunity = await CreateCommunity(payLoad)
@@ -363,7 +387,8 @@ export default function CreateCommunityModal({
         category_id: updatedData.category,
         slug: updatedData.slug,
         type: updatedData.type,
-        cover_image: coverImageUrl || updatedData?.cover_image
+        cover_image: coverImageUrl || updatedData?.cover_image,
+        is_FYP_enable: updatedData.is_FYP_enable ?? false
       }
 
       const updatedCommunity = await UpdateCommunity(
@@ -677,6 +702,40 @@ export default function CreateCommunityModal({
                     )}
                   </div>
                 </div>
+
+                {/* FYP Toggle */}
+                {(!editMode || canAccess("community.update")) && (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="is_FYP_enable">Enable FYP</Label>
+                      <Controller
+                        name="is_FYP_enable"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch
+                            id="is_FYP_enable"
+                            checked={!!field.value}
+                            disabled={
+                              editMode && !!selectedCommunity?.is_FYP_enable
+                            }
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setShowFypConfirm(true)
+                              } else {
+                                field.onChange(false)
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    </div>
+                    {editMode && selectedCommunity?.is_FYP_enable ? (
+                      <span className="text-xs text-muted-foreground">
+                        FYP is permanently enabled for this community.
+                      </span>
+                    ) : null}
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 {editMode === true ? (
@@ -717,6 +776,30 @@ export default function CreateCommunityModal({
         setShowConfirmation={setShowConfirmation}
         setIsActualDialogOpen={setCommunityFormModalVisibility}
       />
+
+      <AlertDialog open={showFypConfirm} onOpenChange={setShowFypConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable FYP</AlertDialogTitle>
+            <AlertDialogDescription>
+              Once the FYP feature is enabled it cannot be disabled again. You
+              can disable it in each space individually at the time of creating
+              a space or in space settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                form.setValue("is_FYP_enable", true, { shouldDirty: true })
+                setShowFypConfirm(false)
+              }}
+            >
+              Enable FYP
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

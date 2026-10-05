@@ -28,6 +28,8 @@ import {
   AttachSpaceUserAction,
   DetachSpaceUserAction
 } from "@/src/server-actions/Space/Space"
+import { GetMilestonesForSpaceAction } from "@/src/server-actions/Milestone/Milestone"
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import { useToast } from "@/src/hooks/use-toast"
 import "./../../../../../../style.css"
 import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
@@ -60,12 +62,26 @@ function SpaceSidebar({ space }: Props) {
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [joinLoading, , , joinSpace] = useServerAction(AttachSpaceUserAction)
   const [leaveLoading, , , leaveSpace] = useServerAction(DetachSpaceUserAction)
+  const [, , , fetchMilestones] = useServerAction(GetMilestonesForSpaceAction)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
+  const [allMilestonesVerified, setAllMilestonesVerified] = useState(false)
   const currentUserId = authUser?.unique_id
 
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    if (!space?.id) return
+    fetchMilestones(space.id).then((res) => {
+      if (res?.success && res.data) {
+        setAllMilestonesVerified(
+          res.data.length > 0 &&
+            res.data.every((m) => m.status === MilestoneStatus.VERIFIED)
+        )
+      }
+    })
+  }, [space?.id])
 
   useEffect(() => {
     if (currentUserId !== undefined) {
@@ -155,6 +171,7 @@ function SpaceSidebar({ space }: Props) {
     "SPACE",
     space?.id
   )
+  const { permissionChecker: globalChecker } = usePermissionChecker("global")
 
   const basePath = getSpaceBasePath(
     space.channel?.channel_slug,
@@ -171,6 +188,14 @@ function SpaceSidebar({ space }: Props) {
   const canViewSetting =
     permissionChecker?.canAccess("space.setting.update") ?? false
 
+  const canSubmitFeedback =
+    (globalChecker?.canAccess("advisory.feedback.submit_advisor") ?? false) ||
+    (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false)
+  const canViewFeedback =
+    (currentSpace ?? space).is_FYP_enable === true &&
+    allMilestonesVerified &&
+    canSubmitFeedback
+
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
       case "posts":
@@ -181,12 +206,36 @@ function SpaceSidebar({ space }: Props) {
         return canViewProject
       case "chat":
         return canViewChat
+      case "fyp":
+        return (
+          (currentSpace ?? space).is_FYP_enable === true &&
+          (isSpaceMember || isSuperAdmin)
+        )
       default:
         return false
     }
   }
 
-  const accessibleFeatures = spaceFeatures.filter(({ feature }) => {
+  type SidebarFeature = {
+    feature?: {
+      feature_slug: string
+      feature_name: string
+      feature_icon: string | null
+    }
+  }
+
+  const fypFeature: SidebarFeature = {
+    feature: {
+      feature_slug: "fyp",
+      feature_name: "FYP",
+      feature_icon: "graduation-cap"
+    }
+  }
+
+  const accessibleFeatures: SidebarFeature[] = [
+    fypFeature,
+    ...spaceFeatures
+  ].filter(({ feature }) => {
     if (!feature) return false
     return hasFeaturePermission(feature.feature_slug)
   })
@@ -333,6 +382,7 @@ function SpaceSidebar({ space }: Props) {
       <SidebarGroupLabel>Other</SidebarGroupLabel>
       {spaceStaticFeatures.map((feature) => {
         if (feature.name === "Settings" && !canViewSetting) return null
+        if (feature.name === "Feedback" && !canViewFeedback) return null
         return (
           <Link
             key={feature.slug}
@@ -342,7 +392,7 @@ function SpaceSidebar({ space }: Props) {
             <SidebarMenuItem
               className={`flex flex-row items-center gap-2 p-2 rounded
       ${
-        pathname.includes(`${feature.slug}`) ||
+        pathname.endsWith(`/${feature.slug}`) ||
         pageType.get("page-type") === feature.slug
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

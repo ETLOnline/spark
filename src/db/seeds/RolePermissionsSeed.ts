@@ -27,6 +27,16 @@ const userRolePermissions = [
       {
         namespace: "mentorship",
         actions: [permissions.mentorship.sessionRequest]
+      },
+      {
+        namespace: "fyp",
+        actions: [
+          permissions.fyp.canRequestAdvisor,
+          permissions.fyp.milestoneMarkDone,
+          permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.feedbackSubmitStudent,
+          permissions.fyp.milestoneArtifactDelete
+        ]
       }
     ]
   },
@@ -61,6 +71,26 @@ const userRolePermissions = [
       {
         namespace: "posting",
         actions: [permissions.posting.create, permissions.posting.view]
+      },
+      {
+        namespace: "fyp",
+        actions: [permissions.fyp.milestoneArtifactDelete]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.canReceiveAdvisorRequest,
+          permissions.advisory.milestoneCreate,
+          permissions.advisory.milestoneUpdate,
+          permissions.advisory.milestoneDelete,
+          permissions.advisory.milestoneVerify,
+          permissions.advisory.milestoneRevert,
+          permissions.advisory.feedbackSubmitAdvisor,
+          permissions.advisory.advisorViewRequests,
+          permissions.advisory.advisorViewDetails,
+          permissions.advisory.advisorAccept,
+          permissions.advisory.advisorReject
+        ]
       }
     ]
   },
@@ -101,6 +131,24 @@ const userRolePermissions = [
           permissions.community.userUpdate,
           permissions.community.userView,
           permissions.community.view
+        ]
+      },
+      {
+        // University admins have the same FYP management rights as advisors
+        // (all except canReceiveAdvisorRequest which is advisor-only)
+        namespace: "fyp",
+        actions: [
+          permissions.fyp.milestoneArtifactDelete,
+          permissions.fyp.facultyDashboardView
+        ]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.milestoneCreate,
+          permissions.advisory.milestoneUpdate,
+          permissions.advisory.milestoneDelete,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
@@ -210,6 +258,31 @@ const userRolePermissions = [
           permissions.space.userUpdate,
           permissions.space.userView,
           permissions.space.view
+        ]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.canReceiveAdvisorRequest,
+          permissions.advisory.milestoneCreate,
+          permissions.advisory.milestoneUpdate,
+          permissions.advisory.milestoneDelete,
+          permissions.advisory.milestoneVerify,
+          permissions.advisory.milestoneRevert,
+          permissions.advisory.advisorViewRequests,
+          permissions.advisory.advisorViewDetails,
+          permissions.advisory.advisorAccept,
+          permissions.advisory.advisorReject
+        ]
+      },
+      {
+        // Space admins get all FYP namespace permissions except feedbackSubmitStudent
+        namespace: "fyp",
+        actions: [
+          permissions.fyp.canRequestAdvisor,
+          permissions.fyp.milestoneMarkDone,
+          permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
