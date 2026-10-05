@@ -1,23 +1,31 @@
 import Link from "next/link"
 import { CalendarDays } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { RP_THRESHOLD } from "@/src/utils/constants"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type Props = {
   mentorId: string
   viewerRp: number
+  rpThresholdEnabled?: boolean
+  rpThresholdValue?: string
 }
 
-export default function ViewAvailabilityButton({ mentorId, viewerRp }: Props) {
+export default function ViewAvailabilityButton({
+  mentorId,
+  viewerRp,
+  rpThresholdEnabled = false,
+  rpThresholdValue = ""
+}: Props) {
   const { canAccess } = usePermissionChecker("global")
   if (!canAccess("mentorship.session.request")) return null
 
   return (
     <>
-      <p className="text-xs text-muted-foreground mt-2">
-        Eligibility: {RP_THRESHOLD} RP required
-      </p>
+      {rpThresholdEnabled && (
+        <p className="text-xs text-muted-foreground mt-2">
+          Eligibility: {rpThresholdValue} RP required
+        </p>
+      )}
       <Link href={`/profile/${mentorId}/availability`} className="w-full">
         <Button
           variant="outline"

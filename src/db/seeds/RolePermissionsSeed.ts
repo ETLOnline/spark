@@ -33,7 +33,9 @@ const userRolePermissions = [
         actions: [
           permissions.fyp.canRequestAdvisor,
           permissions.fyp.milestoneMarkDone,
-          permissions.fyp.milestoneArtifactAdd
+          permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.feedbackSubmitStudent,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
@@ -72,18 +74,22 @@ const userRolePermissions = [
       },
       {
         namespace: "fyp",
+        actions: [permissions.fyp.milestoneArtifactDelete]
+      },
+      {
+        namespace: "advisory",
         actions: [
-          permissions.fyp.canReceiveAdvisorRequest,
-          permissions.fyp.milestoneCreate,
-          permissions.fyp.milestoneUpdate,
-          permissions.fyp.milestoneDelete,
-          permissions.fyp.milestoneVerify,
-          permissions.fyp.milestoneRevert,
-          permissions.fyp.milestoneArtifactAdd,
-          permissions.fyp.advisorViewRequests,
-          permissions.fyp.advisorViewDetails,
-          permissions.fyp.advisorAccept,
-          permissions.fyp.advisorReject
+          permissions.advisory.canReceiveAdvisorRequest,
+          permissions.advisory.milestoneCreate,
+          permissions.advisory.milestoneUpdate,
+          permissions.advisory.milestoneDelete,
+          permissions.advisory.milestoneVerify,
+          permissions.advisory.milestoneRevert,
+          permissions.advisory.feedbackSubmitAdvisor,
+          permissions.advisory.advisorViewRequests,
+          permissions.advisory.advisorViewDetails,
+          permissions.advisory.advisorAccept,
+          permissions.advisory.advisorReject
         ]
       }
     ]
@@ -132,11 +138,17 @@ const userRolePermissions = [
         // (all except canReceiveAdvisorRequest which is advisor-only)
         namespace: "fyp",
         actions: [
-          permissions.fyp.milestoneCreate,
-          permissions.fyp.milestoneUpdate,
-          permissions.fyp.milestoneDelete,
-          permissions.fyp.milestoneVerify,
-          permissions.fyp.milestoneRevert
+          permissions.fyp.milestoneArtifactDelete,
+          permissions.fyp.facultyDashboardView
+        ]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.milestoneCreate,
+          permissions.advisory.milestoneUpdate,
+          permissions.advisory.milestoneDelete,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]
@@ -246,6 +258,31 @@ const userRolePermissions = [
           permissions.space.userUpdate,
           permissions.space.userView,
           permissions.space.view
+        ]
+      },
+      {
+        namespace: "advisory",
+        actions: [
+          permissions.advisory.canReceiveAdvisorRequest,
+          permissions.advisory.milestoneCreate,
+          permissions.advisory.milestoneUpdate,
+          permissions.advisory.milestoneDelete,
+          permissions.advisory.milestoneVerify,
+          permissions.advisory.milestoneRevert,
+          permissions.advisory.advisorViewRequests,
+          permissions.advisory.advisorViewDetails,
+          permissions.advisory.advisorAccept,
+          permissions.advisory.advisorReject
+        ]
+      },
+      {
+        // Space admins get all FYP namespace permissions except feedbackSubmitStudent
+        namespace: "fyp",
+        actions: [
+          permissions.fyp.canRequestAdvisor,
+          permissions.fyp.milestoneMarkDone,
+          permissions.fyp.milestoneArtifactAdd,
+          permissions.fyp.milestoneArtifactDelete
         ]
       }
     ]

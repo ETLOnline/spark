@@ -50,6 +50,7 @@ export const eventsList: Record<string, EventProcessor> = {
   contact_us_submitted: processContactUsSubmittedNotification,
   new_contact_us_admin: processNewContactUsAdminNotification,
   session_slot_suggested: processMentorSessionNotification,
+  session_slot_time_changed: processMentorSessionNotification,
   new_session_request: processSessionRequestEmailNotification,
   session_request_accepted: processSessionRequestEmailNotification,
   session_request_rejected: processSessionRequestEmailNotification,
@@ -58,5 +59,7 @@ export const eventsList: Record<string, EventProcessor> = {
   new_advisor_request: processAdvisorRequestNotification,
   milestone_completed_pending_verification: processMilestoneDoneNotification,
   advisor_request_accepted: processSessionRequestEmailNotification,
-  advisor_request_rejected: processSessionRequestEmailNotification
+  advisor_request_rejected: processSessionRequestEmailNotification,
+  advisor_request_expired: processSessionRequestEmailNotification,
+  advisor_request_advisor_declined: processSessionRequestEmailNotification
 }

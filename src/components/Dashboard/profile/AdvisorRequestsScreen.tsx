@@ -19,7 +19,7 @@ import type { StudentRequestStatus } from "@/src/utils/advisorRequest"
 
 type StatusTab = "all" | AdvisorViewerStatus
 
-type RequestStatus = AdvisorViewerStatus | StudentRequestStatus
+export type RequestStatus = AdvisorViewerStatus | StudentRequestStatus
 
 export const STATUS_BADGE: Record<RequestStatus, string> = {
   pending: "bg-amber-500/15 text-amber-600",

@@ -5,7 +5,17 @@ export enum MilestoneStatus {
   VERIFIED = "verified"
 }
 
-// Artifact entries stored as a JSON array on each milestone
+
 export type MilestoneArtifactEntry =
-  | { type: "file"; file_id: number; file_name: string; file_path: string }
-  | { type: "link"; url: string }
+  | {
+      id: number
+      type: "image" | "file"
+      file_id: number
+      file_name: string
+      file_path: string
+    }
+  | {
+      id: number
+      type: "link"
+      url: string
+    }

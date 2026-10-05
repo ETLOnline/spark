@@ -28,6 +28,8 @@ import {
   AttachSpaceUserAction,
   DetachSpaceUserAction
 } from "@/src/server-actions/Space/Space"
+import { GetMilestonesForSpaceAction } from "@/src/server-actions/Milestone/Milestone"
+import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import { useToast } from "@/src/hooks/use-toast"
 import "./../../../../../../style.css"
 import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
@@ -60,12 +62,26 @@ function SpaceSidebar({ space }: Props) {
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [joinLoading, , , joinSpace] = useServerAction(AttachSpaceUserAction)
   const [leaveLoading, , , leaveSpace] = useServerAction(DetachSpaceUserAction)
+  const [, , , fetchMilestones] = useServerAction(GetMilestonesForSpaceAction)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
+  const [allMilestonesVerified, setAllMilestonesVerified] = useState(false)
   const currentUserId = authUser?.unique_id
 
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    if (!space?.id) return
+    fetchMilestones(space.id).then((res) => {
+      if (res?.success && res.data) {
+        setAllMilestonesVerified(
+          res.data.length > 0 &&
+            res.data.every((m) => m.status === MilestoneStatus.VERIFIED)
+        )
+      }
+    })
+  }, [space?.id])
 
   useEffect(() => {
     if (currentUserId !== undefined) {
@@ -155,6 +171,7 @@ function SpaceSidebar({ space }: Props) {
     "SPACE",
     space?.id
   )
+  const { permissionChecker: globalChecker } = usePermissionChecker("global")
 
   const basePath = getSpaceBasePath(
     space.channel?.channel_slug,
@@ -170,6 +187,14 @@ function SpaceSidebar({ space }: Props) {
     permissionChecker?.canAccess("space.project.view") ?? false
   const canViewSetting =
     permissionChecker?.canAccess("space.setting.update") ?? false
+
+  const canSubmitFeedback =
+    (globalChecker?.canAccess("advisory.feedback.submit_advisor") ?? false) ||
+    (globalChecker?.canAccess("fyp.feedback.submit_student") ?? false)
+  const canViewFeedback =
+    (currentSpace ?? space).is_FYP_enable === true &&
+    allMilestonesVerified &&
+    canSubmitFeedback
 
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
@@ -357,6 +382,7 @@ function SpaceSidebar({ space }: Props) {
       <SidebarGroupLabel>Other</SidebarGroupLabel>
       {spaceStaticFeatures.map((feature) => {
         if (feature.name === "Settings" && !canViewSetting) return null
+        if (feature.name === "Feedback" && !canViewFeedback) return null
         return (
           <Link
             key={feature.slug}

@@ -94,23 +94,47 @@ export default function SpaceSettings({
       })
       .filter((id) => id !== undefined)
 
-    const updatedSpace = await attachSpaceFeatures(ssrSpace.id, featureIds)
-    if (!updatedSpace?.success || !updatedSpace.data) return
-
     const isFypEnabled = isCommunityFypEnabled && !!data.is_FYP_enable
-    let finalSpace = updatedSpace.data
+    const fypChanged = isFypEnabled !== !!ssrSpace.is_FYP_enable
 
-    if (isFypEnabled !== !!finalSpace.is_FYP_enable) {
-      const fypUpdatedSpace = await updateSpaceFyp(ssrSpace.id, {
-        is_FYP_enable: isFypEnabled
-      })
-      if (fypUpdatedSpace?.success && fypUpdatedSpace.data) {
-        finalSpace = { ...finalSpace, ...fypUpdatedSpace.data }
-      }
+    // Run the feature-list update and the FYP update independently so a
+    // failure in one doesn't prevent the other from being applied.
+    const [updatedSpace, fypUpdatedSpace] = await Promise.all([
+      attachSpaceFeatures(ssrSpace.id, featureIds),
+      fypChanged
+        ? updateSpaceFyp(ssrSpace.id, { is_FYP_enable: isFypEnabled })
+        : Promise.resolve(undefined)
+    ])
+
+    let finalSpace = ssrSpace
+    if (updatedSpace?.success && updatedSpace.data) {
+      finalSpace = { ...finalSpace, ...updatedSpace.data }
+    }
+    if (fypUpdatedSpace?.success && fypUpdatedSpace.data) {
+      finalSpace = { ...finalSpace, ...fypUpdatedSpace.data }
     }
 
     setSsrSpace(finalSpace)
     setCurrentSpace(finalSpace)
+
+    const featuresFailed = !updatedSpace?.success || !updatedSpace.data
+    const fypFailed =
+      fypChanged && (!fypUpdatedSpace?.success || !fypUpdatedSpace.data)
+
+    if (featuresFailed || fypFailed) {
+      toast({
+        title:
+          featuresFailed && fypFailed
+            ? "Failed to save space settings"
+            : featuresFailed
+              ? "FYP setting saved, but other settings failed to save"
+              : "Settings saved, but FYP setting failed to update",
+        variant: "destructive",
+        duration: 3000
+      })
+      return
+    }
+
     toast({
       title: "Space Setting Saved",
       duration: 3000

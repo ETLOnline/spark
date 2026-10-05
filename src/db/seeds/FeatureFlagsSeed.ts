@@ -1,6 +1,9 @@
-import { sql } from "drizzle-orm"
 import { db } from ".."
 import { featureFlagsTable, InsertFeatureFlag } from "../schema"
+import {
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
+  RP_THRESHOLD
+} from "@/src/utils/constants"
 
 const featureFlagsSeedList: InsertFeatureFlag[] = [
   {
@@ -14,25 +17,26 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
     label: "Rewards",
     is_enabled: false,
     description: "Enable rewards and badge system for community engagement"
+  },
+  {
+    key: MENTORSHIP_RP_THRESHOLD_ENABLED,
+    label: "Mentorship RP Threshold",
+    is_enabled: false,
+    description:
+      "Require a minimum RP balance before a mentee can view or request a mentorship session. When OFF, all users can access mentorship regardless of RP.",
+    value: RP_THRESHOLD
   }
 ]
 
 export const FeatureFlagsSeed = async () => {
   return await db.transaction(async (tx) => {
     try {
-      await tx.delete(featureFlagsTable)
-
-      await tx.execute(
-        sql`ALTER SEQUENCE feature_flags_id_seq RESTART; UPDATE feature_flags SET id = DEFAULT;`
-      )
-
-      const result = await tx
+      await tx
         .insert(featureFlagsTable)
         .values(featureFlagsSeedList)
+        .onConflictDoNothing({ target: featureFlagsTable.key })
 
-      if (result.count === featureFlagsSeedList.length) {
-        console.log("✅ Feature flags seeded successfully")
-      }
+      console.log("✅ Feature flags seeded successfully")
     } catch (e) {
       console.error(e)
       tx.rollback()

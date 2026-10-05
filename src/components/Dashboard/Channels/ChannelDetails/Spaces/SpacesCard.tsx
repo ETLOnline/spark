@@ -57,59 +57,55 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
       </div> */}
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl flex items-center gap-1">
-            {space.space_name}
-            {space.is_FYP_enable && (
-              <Badge variant="secondary" className="ml-1">
-                FYP
-              </Badge>
-            )}
-            {space.space_type === "private" && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Lock
-                      className="text-muted-foreground  self-start mt-2"
-                      height={14}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-sm">Private</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+          <CardTitle className="text-xl flex items-start gap-1">
+            <span className="break-words">{space.space_name}</span>
+            <span className="flex items-center gap-1 shrink-0 mt-0.5">
+              {space.is_FYP_enable && (
+                <Badge variant="secondary" className="ml-1">
+                  FYP
+                </Badge>
+              )}
+              {space.space_type === "private" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Lock className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-sm">Private</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
 
-            {canUpdateSpace &&
-              (space.publish_space ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Check
-                        className="text-muted-foreground self-start mt-2"
-                        height={14}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Published</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <PencilRuler
-                        className="text-muted-foreground self-start mt-2"
-                        height={14}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Draft</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
+              {canUpdateSpace &&
+                (space.publish_space ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Check className="text-muted-foreground" height={14} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Published</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <PencilRuler
+                          className="text-muted-foreground"
+                          height={14}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Draft</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+            </span>
           </CardTitle>
           {canSpaceAllowAction || space.space_type === "public" ? (
             <SpacesActionButtons

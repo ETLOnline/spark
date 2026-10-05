@@ -1,4 +1,5 @@
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { permissions } from "../utils/constants"
 
 /**
  * A user can submit/resubmit an advisor request for a space only when FYP is
@@ -14,12 +15,12 @@ export function useCanRequestAdvisor(
     usePermissionChecker("global")
 
   const canEditDetails = permissionChecker
-    ? permissionChecker.canAccess("space.update")
+    ? permissionChecker.canAccess("fyp.can_request_advisor")
     : false
 
   const canRequestAdvisor = globalPermissionChecker
     ? globalPermissionChecker.canAccess("fyp.can_request_advisor")
     : false
 
-  return isFypEnabled === true && canEditDetails && canRequestAdvisor
+  return (isFypEnabled === true && canEditDetails) || canRequestAdvisor
 }

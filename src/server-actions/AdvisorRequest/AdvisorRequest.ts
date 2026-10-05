@@ -6,6 +6,7 @@ import {
   AcceptAdvisorRequest,
   AddAdvisorsInRequest,
   CreateAdvisorRequest,
+  ExpireOverdueAdvisorRequests,
   GetActiveAdvisorRequestForSpace,
   GetAdvisorRequestById,
   GetAdvisorRequestsForAdvisor,
@@ -15,6 +16,10 @@ import {
   RejectAdvisorRequest,
   UpdateRequestStatus
 } from "@/src/db/data-access/advisor-requests/query"
+import {
+  createProjectUser,
+  getProjects
+} from "@/src/db/data-access/project-management/query"
 import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 import { permissions } from "@/src/utils/constants"
 import {
@@ -22,13 +27,18 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
-import { sendAdvisorRequestResponseNotification } from "@/src/services/notifications/AdvisorRequest/utils"
+import {
+  sendAdvisorRequestExpiredNotification,
+  sendAdvisorRequestResponseNotification,
+  sendAdvisorRequestSingleDeclineNotification
+} from "@/src/services/notifications/AdvisorRequest/utils"
 import { createAdvisorRequestResponseEmailNotification } from "@/src/services/notify/advisorRequest/advisorRequest"
 import { advisorRequestsTable } from "@/src/db/schema"
 import type { SelectFile, SelectTag, SelectUser } from "@/src/db/schema"
 import { notifyAdvisorsOfNewAdvisorRequest } from "@/src/services/notify/advisor-request/advisor-request"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import {
+  ADVISOR_REJECTION_REASON_MAX_LENGTH,
   ADVISOR_REQUEST_PROPOSAL_ALLOWED_MIME_TYPES,
   ADVISOR_REQUEST_PROPOSAL_MAX_FILE_SIZE
 } from "@/src/utils/constants"
@@ -44,6 +54,7 @@ export interface AdvisorRequestFormData {
   tech_stack: string
   domain_tag_id: number
   proposal_link?: string
+  project_ids?: string[]
 }
 
 export interface AdvisorRequestProposalFile {
@@ -102,10 +113,24 @@ export const CreateAdvisorRequestAction = CreateServerAction(
         }
       }
 
+      if (formData.project_ids?.length) {
+        const spaceProjects = await getProjects(spaceId)
+        const spaceProjectIds = new Set(spaceProjects.map((p) => p.id))
+        const hasInvalidProject = formData.project_ids.some(
+          (projectId) => !spaceProjectIds.has(projectId)
+        )
+        if (hasInvalidProject) {
+          return {
+            success: false,
+            error: "One or more selected projects do not belong to this space."
+          }
+        }
+      }
+
       const eligibleAdvisors = await GetEligibleAdvisorsForDomain(
         formData.domain_tag_id,
-        "fyp",
-        permissions.fyp.advisorViewRequests
+        "advisory",
+        permissions.advisory.advisorViewRequests
       )
       if (!eligibleAdvisors.length) {
         return {
@@ -214,6 +239,25 @@ export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(
   }
 )
 
+export const GetAdvisorRequestDetailsAction = CreateServerAction(
+  true,
+  async (requestId: string) => {
+    try {
+      const request = await GetAdvisorRequestById(requestId)
+      if (!request) {
+        return { success: false, error: "Request not found." }
+      }
+
+      return {
+        success: true,
+        data: { ...request, viewerStatus: getStudentRequestStatus(request) }
+      }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
 export const AcceptAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string) => {
@@ -239,6 +283,19 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
         )
       }
 
+      if (request.project_ids?.length) {
+        for (const projectId of request.project_ids) {
+          try {
+            await createProjectUser(projectId, user.unique_id, "project_editor")
+          } catch (attachProjectError) {
+            console.error(
+              `Failed to add accepted advisor to project ${projectId}:`,
+              attachProjectError
+            )
+          }
+        }
+      }
+
       try {
         const withSpace = await GetAdvisorRequestById(requestId)
         if (withSpace) {
@@ -253,8 +310,7 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
           await sendAdvisorRequestResponseNotification(
             notifyContext,
             "accepted",
-            { unique_id: user.unique_id, profile_url: user.profile_url },
-            advisorName
+            { unique_id: user.unique_id, profile_url: user.profile_url }
           )
           await createAdvisorRequestResponseEmailNotification(
             notifyContext,
@@ -280,6 +336,13 @@ export const RejectAdvisorRequestAction = CreateServerAction(
   true,
   async (requestId: string, reason: string) => {
     try {
+      if (reason.length > ADVISOR_REJECTION_REASON_MAX_LENGTH) {
+        return {
+          success: false,
+          error: `Reason must be ${ADVISOR_REJECTION_REASON_MAX_LENGTH} characters or fewer.`
+        }
+      }
+
       const user = await AuthUserAction()
 
       const before = await GetAdvisorRequestById(requestId)
@@ -297,11 +360,11 @@ export const RejectAdvisorRequestAction = CreateServerAction(
 
       try {
         const after = await GetAdvisorRequestById(requestId)
-        if (
-          after &&
-          !wasAlreadyRejected &&
+        const isNowFullyRejected =
+          !!after &&
           getStudentRequestStatus(after) === AdvisorRequestStatus.REJECTED
-        ) {
+
+        if (after && !wasAlreadyRejected) {
           const notifyContext = {
             requested_by: after.requested_by,
             fyp_title: after.fyp_title,
@@ -309,15 +372,27 @@ export const RejectAdvisorRequestAction = CreateServerAction(
             channel_slug: after.space.channel?.channel_slug
           }
 
-          await sendAdvisorRequestResponseNotification(
-            notifyContext,
-            "rejected",
-            { unique_id: user.unique_id, profile_url: null }
-          )
-          await createAdvisorRequestResponseEmailNotification(
-            notifyContext,
-            "rejected"
-          )
+          if (isNowFullyRejected) {
+            // Final resolution — every advisor has rejected, or the deadline
+            // passed with at least one rejection.
+            await sendAdvisorRequestResponseNotification(
+              notifyContext,
+              "rejected",
+              { unique_id: user.unique_id, profile_url: null }
+            )
+            await createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "rejected"
+            )
+          } else {
+            // Still alive — other advisors haven't all responded yet. Notify
+            // with a generic notice, never identifying which advisor declined.
+            await sendAdvisorRequestSingleDeclineNotification(notifyContext)
+            await createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "declined"
+            )
+          }
         }
       } catch (notifyError) {
         console.error(
@@ -345,8 +420,8 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       const proccessingRequest = recentRequests.map(async (request) => {
         const advisors = await GetEligibleAdvisorsForDomain(
           request.domain_tag_id,
-          "fyp",
-          permissions.fyp.canReceiveAdvisorRequest
+          "advisory",
+          permissions.advisory.canReceiveAdvisorRequest
         )
 
         await AddAdvisorsInRequest(
@@ -367,6 +442,46 @@ export const getEligibleRequestAdvisorsAction = CreateServerAction(
       await Promise.all(proccessingRequest)
 
       return { success: true }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const ExpireOverdueAdvisorRequestsAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const expired = await ExpireOverdueAdvisorRequests()
+
+      const results = await Promise.allSettled(
+        expired.map((request) => {
+          const notifyContext = {
+            requested_by: request.requested_by,
+            fyp_title: request.fyp_title,
+            space_slug: request.space.space_slug,
+            channel_slug: request.space.channel?.channel_slug
+          }
+          return Promise.all([
+            sendAdvisorRequestExpiredNotification(notifyContext),
+            createAdvisorRequestResponseEmailNotification(
+              notifyContext,
+              "expired"
+            )
+          ])
+        })
+      )
+
+      results.forEach((result, i) => {
+        if (result.status === "rejected") {
+          console.error(
+            `Failed to notify student for expired request ${expired[i].id}:`,
+            result.reason
+          )
+        }
+      })
+
+      return { success: true, data: { expiredCount: expired.length } }
     } catch (error) {
       return { success: false, error }
     }

@@ -21,7 +21,9 @@ import {
   GetMentorAvailability,
   GetMentors,
   GetPendingSessionRequestsForMentor,
+  DeleteSessionRequestsByIds,
   GetSessionRequestById,
+  GetSessionRequestsByIds,
   GetSessionRequestsForMenteeAndMentor,
   GetSessionRequestsForMentorByStatus,
   GetSharedSpacesForSessions,
@@ -42,18 +44,26 @@ import type {
   FeedbackItem
 } from "@/src/components/Dashboard/profile/engagements/types"
 import type { SpaceBasic } from "@/src/db/data-access/mentor/query"
-import { notifySessionSlotSuggested } from "@/src/services/notify/mentor/session"
+import {
+  notifySessionSlotSuggested,
+  notifySessionSlotTimeChanged
+} from "@/src/services/notify/mentor/session"
 import { NotificationEvent } from "@/src/services/notify/types/events"
-import { SendMentorSlotSuggestionNotification } from "@/src/services/notifications/Mentor/utils"
+import {
+  SendMentorSlotSuggestionNotification,
+  SendSlotTimeChangedNotification
+} from "@/src/services/notifications/Mentor/utils"
 import { updateUserProfile } from "@/src/db/data-access/profile/query"
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import {
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
   REPUTATION_POINTS_REWARD_ID,
   RP_THRESHOLD,
   SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
   SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
+import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
 import { sendPushNotification } from "@/src/services/notifications/PushNotification.utils"
@@ -223,6 +233,47 @@ export const UpdateAvailabilityAction = CreateServerAction(
   }
 )
 
+/** A slot's date/time changed while it had pending requests on it — rather
+ * than silently moving a request to a time the mentee never agreed to (they
+ * might not be free then), or leaving a stale request pointing at a time
+ * that no longer exists, those requests are removed and the mentee is told
+ * to resubmit if they're still interested. Called by the client after a
+ * slot edit succeeds, only once the mentor confirmed they want to proceed
+ * despite pending requests. */
+export const NotifySlotTimeChangedAction = CreateServerAction(
+  true,
+  async (payload: { requestIds: number[] }) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+      if (!payload.requestIds.length) return { success: true }
+
+      const requests = await GetSessionRequestsByIds(payload.requestIds)
+      const ownRequests = requests.filter(
+        (request) => request.mentor_id === authUser.unique_id
+      )
+      if (!ownRequests.length) return { success: true }
+
+      await DeleteSessionRequestsByIds(ownRequests.map((r) => r.id))
+
+      await Promise.all(
+        ownRequests.map(async (request) => {
+          await notifySessionSlotTimeChanged(
+            NotificationEvent.SESSION_SLOT_TIME_CHANGED,
+            request
+          )
+          await SendSlotTimeChangedNotification(request)
+        })
+      )
+
+      return { success: true }
+    } catch (error) {
+      console.error("NotifySlotTimeChangedAction error:", error)
+      return { error: "Failed to notify affected students" }
+    }
+  }
+)
+
 export const GetActiveMentorsAction = CreateServerAction(
   false,
   async (filters: GetMentorFilters = {}) => {
@@ -303,13 +354,20 @@ export const CreateSessionRequestAction = CreateServerAction(
         return { error: "Cannot request a session in the past" }
       }
 
-      const balance = await GetUserRewardBalance(
-        authUser.unique_id,
-        REPUTATION_POINTS_REWARD_ID
-      )
-      const currentBalance = balance?.current_balance ?? 0
-      if (currentBalance < RP_THRESHOLD) {
-        return { error: "Not enough RP to request a session" }
+      const rpFlag = await getFeatureFlag([MENTORSHIP_RP_THRESHOLD_ENABLED])
+      if (rpFlag?.is_enabled) {
+        const threshold = rpFlag.value ?? RP_THRESHOLD
+        const thresholdValue = parseInt(threshold, 10)
+        const balance = await GetUserRewardBalance(
+          authUser.unique_id,
+          REPUTATION_POINTS_REWARD_ID
+        )
+        const currentBalance = balance?.current_balance ?? 0
+        if (currentBalance < thresholdValue) {
+          return {
+            error: `Not enough RP to request a session. You need at least ${threshold} RP.`
+          }
+        }
       }
 
       const slots = await GetMentorAvailability(payload.mentorId)

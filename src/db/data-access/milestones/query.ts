@@ -1,19 +1,31 @@
-import { asc, eq } from "drizzle-orm"
+import { asc, count, eq } from "drizzle-orm"
 import { db } from "../.."
 import {
   InsertFypMilestone,
+  InsertFypArtifactFile,
   fypMilestonesTable,
-  SelectFypMilestone
+  fypArtifactFilesTable,
+  SelectFypMilestone,
+  SelectFypArtifactFile,
+  SelectFile
 } from "../../schema"
+
+
+export type RawMilestoneArtifact = SelectFypArtifactFile & {
+  file: SelectFile | null
+}
+export type RawMilestoneWithArtifacts = SelectFypMilestone & {
+  artifacts: RawMilestoneArtifact[]
+}
 
 export const GetMilestonesForSpace = async (
   spaceId: string
-): Promise<SelectFypMilestone[]> => {
-  return db
-    .select()
-    .from(fypMilestonesTable)
-    .where(eq(fypMilestonesTable.space_id, spaceId))
-    .orderBy(asc(fypMilestonesTable.order_index))
+): Promise<RawMilestoneWithArtifacts[]> => {
+  return db.query.fypMilestonesTable.findMany({
+    where: eq(fypMilestonesTable.space_id, spaceId),
+    orderBy: [asc(fypMilestonesTable.order_index)],
+    with: { artifacts: { with: { file: true } } }
+  })
 }
 
 export const BulkCreateMilestones = async (
@@ -24,18 +36,18 @@ export const BulkCreateMilestones = async (
 
 export const GetMilestoneById = async (
   id: string
-): Promise<SelectFypMilestone | null> => {
-  const [row] = await db
-    .select()
-    .from(fypMilestonesTable)
-    .where(eq(fypMilestonesTable.id, id))
+): Promise<RawMilestoneWithArtifacts | null> => {
+  const row = await db.query.fypMilestonesTable.findFirst({
+    where: eq(fypMilestonesTable.id, id),
+    with: { artifacts: { with: { file: true } } }
+  })
   return row ?? null
 }
 
 export const GetMilestoneWithSpace = async (
   id: string
 ): Promise<{
-  milestone: SelectFypMilestone
+  milestone: RawMilestoneWithArtifacts
   spaceSlug: string | null
   channelSlug: string | null
   spaceName: string
@@ -44,11 +56,8 @@ export const GetMilestoneWithSpace = async (
   const row = await db.query.fypMilestonesTable.findFirst({
     where: eq(fypMilestonesTable.id, id),
     with: {
-      space: {
-        with: {
-          channel: true
-        }
-      }
+      artifacts: { with: { file: true } },
+      space: { with: { channel: true } }
     }
   })
 
@@ -56,7 +65,7 @@ export const GetMilestoneWithSpace = async (
 
   const { space, ...milestone } = row
   return {
-    milestone: milestone as SelectFypMilestone,
+    milestone,
     spaceSlug: space?.space_slug ?? null,
     channelSlug: space?.channel?.channel_slug ?? null,
     spaceName: space?.space_name ?? "",
@@ -69,25 +78,47 @@ export const UpdateMilestone = async (
   data: Partial<
     Pick<
       InsertFypMilestone,
-      | "name"
-      | "status"
-      | "start_date"
-      | "end_date"
-      | "order_index"
-      | "artifacts"
+      "name" | "status" | "start_date" | "end_date" | "order_index"
     >
   >
-): Promise<SelectFypMilestone | null> => {
+): Promise<RawMilestoneWithArtifacts | null> => {
   const [row] = await db
     .update(fypMilestonesTable)
     .set(data)
     .where(eq(fypMilestonesTable.id, id))
     .returning()
-  return row ?? null
+  if (!row) return null
+  return GetMilestoneById(id)
 }
 
 export const DeleteMilestone = async (id: string): Promise<void> => {
   await db.delete(fypMilestonesTable).where(eq(fypMilestonesTable.id, id))
+}
+
+// ─── Artifacts ──────────────────────────────────────────────────────────────────
+
+export const AddMilestoneArtifact = async (
+  data: InsertFypArtifactFile
+): Promise<void> => {
+  await db.insert(fypArtifactFilesTable).values(data)
+}
+
+export const DeleteMilestoneArtifact = async (
+  artifactId: number
+): Promise<void> => {
+  await db
+    .delete(fypArtifactFilesTable)
+    .where(eq(fypArtifactFilesTable.id, artifactId))
+}
+
+export const CountMilestoneArtifacts = async (
+  milestoneId: string
+): Promise<number> => {
+  const [row] = await db
+    .select({ value: count() })
+    .from(fypArtifactFilesTable)
+    .where(eq(fypArtifactFilesTable.milestone_id, milestoneId))
+  return row?.value ?? 0
 }
 
 // ─── Reconfigure transaction ───────────────────────────────────────────────────
@@ -106,8 +137,8 @@ export const ApplyMilestoneDiff = async (diff: {
     >
   }[]
   toDelete: string[]
-}): Promise<SelectFypMilestone[]> => {
-  return db.transaction(async (tx) => {
+}): Promise<RawMilestoneWithArtifacts[]> => {
+  await db.transaction(async (tx) => {
     for (const id of diff.toDelete) {
       await tx.delete(fypMilestonesTable).where(eq(fypMilestonesTable.id, id))
     }
@@ -122,11 +153,7 @@ export const ApplyMilestoneDiff = async (diff: {
     if (diff.toCreate.length > 0) {
       await tx.insert(fypMilestonesTable).values(diff.toCreate)
     }
-
-    return tx
-      .select()
-      .from(fypMilestonesTable)
-      .where(eq(fypMilestonesTable.space_id, diff.spaceId))
-      .orderBy(asc(fypMilestonesTable.order_index))
   })
+
+  return GetMilestonesForSpace(diff.spaceId)
 }

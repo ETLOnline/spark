@@ -185,7 +185,12 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
             {post.category}
           </Badge>
         )}
-        <p className="font-semibold mb-4">{post.content}</p>
+        {post.content && (
+          <div
+            className="rich-editor font-semibold mb-4"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        )}
         {post.files && post.files.length > 0 && (
           <div
             onClick={(e) => {

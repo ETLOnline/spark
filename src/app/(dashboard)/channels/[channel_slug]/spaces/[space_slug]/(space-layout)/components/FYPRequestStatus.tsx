@@ -1,10 +1,33 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useAtomValue } from "jotai"
 import moment from "moment"
-import { CheckCircle2, Clock, GraduationCap, XCircle } from "lucide-react"
+import {
+  CheckCircle2,
+  Clock,
+  FileText,
+  GraduationCap,
+  Info,
+  MessageSquare,
+  XCircle
+} from "lucide-react"
 import { Separator } from "@/src/components/ui/separator"
+import { Button } from "@/src/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/src/components/ui/dialog"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/src/components/ui/accordion"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useCanRequestAdvisor } from "@/src/hooks/useCanRequestAdvisor"
@@ -14,6 +37,7 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
+import { getStudentRequestStatus } from "@/src/utils/advisorRequest"
 
 const STUDENT_STATUS_BADGE: Record<AdvisorRequestStatus, string> = {
   [AdvisorRequestStatus.PENDING]: "bg-slate-500/15 text-slate-500",
@@ -48,6 +72,24 @@ function normalizeStatus(status: string | undefined): AdvisorRequestStatus {
   return status && status in STUDENT_STATUS_LABEL
     ? (status as AdvisorRequestStatus)
     : AdvisorRequestStatus.PENDING
+}
+
+/** The stored `status` column can lag (e.g. a deadline passing with only
+ * some advisors having rejected doesn't get swept to a terminal state until
+ * the next cron run), so ACCEPTED/REJECTED/EXPIRED are always derived live
+ * from the request's own fields. Only the pre-resolution PENDING vs
+ * AWAITING_APPROVAL distinction (cosmetic — "submitted" vs "routed to an
+ * advisor") falls back to the raw column, since nothing else derives that. */
+function resolveDisplayStatus(advisorRequest: {
+  status: string
+  accepted_by: string | null
+  rejected_by: { advisor_id: string; reason: string }[] | null
+  advisor_ids: string[] | null
+  expiry_date: string
+}): AdvisorRequestStatus {
+  const computed = getStudentRequestStatus(advisorRequest)
+  if (computed !== AdvisorRequestStatus.PENDING) return computed
+  return normalizeStatus(advisorRequest.status)
 }
 
 function formatDate(value: string | null | undefined) {
@@ -168,6 +210,7 @@ function FYPRequestStatus() {
   const [loading, request, , fetchLatestRequest] = useServerAction(
     GetLatestAdvisorRequestForSpaceAction
   )
+  const [reasonsOpen, setReasonsOpen] = useState(false)
 
   const canSubmitRequest = useCanRequestAdvisor(space?.id, space?.is_FYP_enable)
 
@@ -211,10 +254,21 @@ function FYPRequestStatus() {
     )
   }
 
-  const status = normalizeStatus(advisorRequest.status)
+  const status = resolveDisplayStatus(advisorRequest)
   const showResubmit =
     status === AdvisorRequestStatus.REJECTED ||
     status === AdvisorRequestStatus.EXPIRED
+
+  const rejectedReasons = advisorRequest.rejected_by ?? []
+  const isFullyResolved = status === AdvisorRequestStatus.REJECTED
+  const showRejectionReasonsButton =
+    rejectedReasons.length > 0 &&
+    status !== AdvisorRequestStatus.ACCEPTED &&
+    status !== AdvisorRequestStatus.EXPIRED
+  const statusMessage =
+    showRejectionReasonsButton && !isFullyResolved
+      ? "Some advisors have shared rejection reasons for your request. Other advisors are still reviewing, and a final decision is pending."
+      : STUDENT_STATUS_MESSAGE[status]
 
   return (
     <div className="space-y-6">
@@ -249,25 +303,100 @@ function FYPRequestStatus() {
             />
           </div>
 
-          <p className="text-sm text-muted-foreground rounded-lg bg-muted/40 p-3">
-            {STUDENT_STATUS_MESSAGE[status]}
+          <p
+            className={`text-sm rounded-lg p-3 ${
+              showRejectionReasonsButton
+                ? "bg-red-500/10 text-red-600"
+                : "bg-muted/40 text-muted-foreground"
+            }`}
+          >
+            {statusMessage}
           </p>
 
-          {showResubmit && (
+          {(showRejectionReasonsButton || showResubmit) && (
             <div className="flex justify-end gap-2">
-              <RequestAdvisorButton
-                space={space}
-                label="Resubmit Request"
-                showIcon={false}
-                variant="default"
-                onSubmitted={() => fetchLatestRequest(space.id)}
-              />
+              {showRejectionReasonsButton && (
+                <Button
+                  variant="outline"
+                  className="border-red-500/40 text-red-600 hover:bg-red-500/10 hover:text-red-600"
+                  onClick={() => setReasonsOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  See Rejection Reasons
+                </Button>
+              )}
+              {showResubmit && (
+                <RequestAdvisorButton
+                  space={space}
+                  label="Resubmit Request"
+                  showIcon={false}
+                  variant="default"
+                  onSubmitted={() => fetchLatestRequest(space.id)}
+                />
+              )}
             </div>
           )}
         </div>
         <Separator />
         <RequestStatusLegend />
       </div>
+
+      <Dialog open={reasonsOpen} onOpenChange={setReasonsOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-red-500" />
+              Rejection Reasons
+            </DialogTitle>
+            <DialogDescription>
+              Below are the reasons shared by advisors for rejecting your
+              request. Please review them and update your proposal
+              accordingly.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {!isFullyResolved && (
+              <div className="flex items-start gap-2 rounded-lg bg-blue-500/10 text-blue-600 p-3 text-sm">
+                <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>
+                  Other advisors are still reviewing your request. You will be
+                  notified once a final decision is made.
+                </span>
+              </div>
+            )}
+
+            <Accordion
+              type="multiple"
+              className="max-h-[320px] overflow-y-auto space-y-2 pr-1"
+            >
+              {rejectedReasons.map((r, i) => (
+                <AccordionItem
+                  key={i}
+                  value={`reason-${i}`}
+                  className="rounded-lg bg-red-500/5 border-none px-3"
+                >
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <span className="flex items-center gap-2 text-sm font-semibold">
+                      <MessageSquare className="h-4 w-4 shrink-0 text-red-500" />
+                      Reason {i + 1}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground pl-6">
+                    {r.reason}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReasonsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

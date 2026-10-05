@@ -49,7 +49,10 @@ import {
   CardContent
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
-import { REPUTATION_POINTS_REWARD_ID } from "@/src/utils/constants"
+import {
+  MENTORSHIP_RP_THRESHOLD_ENABLED,
+  REPUTATION_POINTS_REWARD_ID
+} from "@/src/utils/constants"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "@/src/server-actions/UserRoles/UserRole"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
@@ -115,6 +118,8 @@ export default function ProfileScreen({
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
   const [isFeatureEnable, setIsFeatureEnable] = useState(false)
+  const [rpThresholdEnabled, setRpThresholdEnabled] = useState(false)
+  const [rpThresholdValue, setRpThresholdValue] = useState("")
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =
@@ -217,7 +222,7 @@ export default function ProfileScreen({
           permissionChecker.canAccess("mentorship.add_availibility")
         )
         setHasAdvisorRequestPermission(
-          permissionChecker.canAccess("fyp.advisor.view_requests")
+          permissionChecker.canAccess("advisory.advisor.view_requests")
         )
       }
     }
@@ -349,6 +354,13 @@ export default function ProfileScreen({
       const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
       if (res?.success && res?.data?.is_enabled) {
         setIsFeatureEnable(true)
+      }
+
+      const rpData = (await GetFeatureFlag([MENTORSHIP_RP_THRESHOLD_ENABLED]))
+        ?.data
+      if (rpData) {
+        setRpThresholdEnabled(!!rpData.is_enabled)
+        if (rpData.value) setRpThresholdValue(rpData.value)
       }
     }
     fetchFeatureFlag()
@@ -601,7 +613,7 @@ export default function ProfileScreen({
               <EmailVerificationCard userId={user.unique_id} />
             ) : null}
 
-            {/* Advisor Requests — shown to the owner only, gated by the "fyp.advisor.view_requests" permission */}
+            {/* Advisor Requests — shown to the owner only, gated by the "advisory.advisor.view_requests" permission */}
             {isMyProfile && hasAdvisorRequestPermission && (
               <Card>
                 <CardHeader>
@@ -785,6 +797,8 @@ export default function ProfileScreen({
                       <ViewAvailabilityButton
                         mentorId={user.unique_id}
                         viewerRp={viewerRp}
+                        rpThresholdEnabled={rpThresholdEnabled}
+                        rpThresholdValue={rpThresholdValue}
                       />
                     )}
                   </CardContent>

@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   advisorRequestsTable,
@@ -44,7 +44,12 @@ export const GetActiveAdvisorRequestForSpace = async (spaceId: string) => {
 export const GetAdvisorRequestById = async (requestId: string) => {
   const request = await db.query.advisorRequestsTable.findFirst({
     where: eq(advisorRequestsTable.id, requestId),
-    with: { space: { with: { channel: true } } }
+    with: {
+      space: { with: { channel: true } },
+      requester: true,
+      domain: true,
+      proposalFile: true
+    }
   })
 
   return request ?? null
@@ -168,6 +173,38 @@ export const AddAdvisorsInRequest = async (
     throw new Error(e.message)
   }
 }
+
+export const ExpireOverdueAdvisorRequests = async () => {
+  try {
+    const overdue = await db.query.advisorRequestsTable.findMany({
+      where: and(
+        inArray(advisorRequestsTable.status, [
+          AdvisorRequestStatus.PENDING,
+          AdvisorRequestStatus.AWAITING_APPROVAL
+        ]),
+        sql`${advisorRequestsTable.expiry_date}::timestamptz < now()`
+      ),
+      with: { space: { with: { channel: true } } }
+    })
+
+    if (overdue.length === 0) return []
+
+    await db
+      .update(advisorRequestsTable)
+      .set({ status: AdvisorRequestStatus.EXPIRED })
+      .where(
+        inArray(
+          advisorRequestsTable.id,
+          overdue.map((r) => r.id)
+        )
+      )
+
+    return overdue
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export const UpdateRequestStatus = async (
   requestId: string,
   status: AdvisorRequestStatus

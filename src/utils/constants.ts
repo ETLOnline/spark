@@ -232,16 +232,29 @@ export const permissions = {
 
   fyp: {
     canRequestAdvisor: "can_request_advisor",
-    canReceiveAdvisorRequest: "can_receive_advisor_request",
 
     // Milestone permissions
+    milestoneMarkDone: "milestone.mark_done",
+    milestoneArtifactAdd: "milestone.artifact.add",
+    milestoneArtifactDelete: "milestone.artifact.delete",
+
+    // Program feedback — which version of the form a user submits
+    feedbackSubmitStudent: "feedback.submit_student",
+
+    // Community-level faculty dashboard (advisor requests, progress, milestones)
+    facultyDashboardView: "faculty_dashboard.view"
+  },
+
+  advisory: {
+    canReceiveAdvisorRequest: "can_receive_advisor_request",
+
     milestoneCreate: "milestone.create",
     milestoneUpdate: "milestone.update",
     milestoneDelete: "milestone.delete",
-    milestoneVerify: "milestone.verify", // mark as Completed — advisor/admin only
-    milestoneRevert: "milestone.revert", // revert status — advisor/admin only
-    milestoneMarkDone: "milestone.mark_done", // student: submit for review
-    milestoneArtifactAdd: "milestone.artifact.add", // student: add artifact
+    milestoneVerify: "milestone.verify",
+    milestoneRevert: "milestone.revert",
+
+    feedbackSubmitAdvisor: "feedback.submit_advisor",
 
     advisorViewRequests: "advisor.view_requests",
     advisorViewDetails: "advisor.view_details",
@@ -362,13 +375,27 @@ export const EntityUpdateBroadCast = "broadcast-entity-update"
 export const REPUTATION_POINTS_REWARD_ID = 1
 
 /** Minimum RP a mentee needs to view a mentor's availability or request a session. */
-export const RP_THRESHOLD = 500
+export const RP_THRESHOLD = "500"
+
+/** Feature flag key — toggles the RP threshold requirement for mentorship access. */
+export const MENTORSHIP_RP_THRESHOLD_ENABLED = "Mentorship_RP_Threshold_Enabled"
 
 /** Max length for a session request's Topic field. */
 export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
 
 /** Max length for a session request's Description field. */
 export const SESSION_REQUEST_DESCRIPTION_MAX_LENGTH = 500
+
+/** Max length for an advisor's rejection reason on an FYP advisor request. */
+export const ADVISOR_REJECTION_REASON_MAX_LENGTH = 1000
+
+/** Role a user submits FYP program feedback as. */
+export const FEEDBACK_ROLES = {
+  student: "student",
+  advisor: "advisor"
+} as const
+
+export type FeedbackRole = (typeof FEEDBACK_ROLES)[keyof typeof FEEDBACK_ROLES]
 
 export const MONTH_NAMES = [
   "January",
