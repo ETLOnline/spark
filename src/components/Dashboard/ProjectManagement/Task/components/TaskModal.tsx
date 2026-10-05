@@ -164,7 +164,10 @@ export const TaskModal = ({
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <TaskFormHeader selectedTask={internalTask} />
+            <TaskFormHeader
+              selectedTask={internalTask}
+              onClose={() => handleClose(false)}
+            />
             <DialogTitle className="sr-only">
               {internalTask
                 ? `Edit Task: ${internalTask.task_title}`

@@ -1,24 +1,38 @@
 "use client"
-import { SelectProject, SelectSpace, SelectTask } from "@/src/db/schema"
+import { SelectTask } from "@/src/db/schema"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { GetSpaceByIdAction } from "@/src/server-actions/Space/Space"
 import { projectStore } from "@/src/store/project/projectStore"
+import { toast } from "@/src/hooks/use-toast"
+import { generateUrl } from "@/src/utils/helpers"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
+import { ProjectManagementPages } from "../../constants/projectManagment"
 import { useAtom } from "jotai"
-import { ChevronRight, Home, SlashIcon, Ticket } from "lucide-react"
+import { Check, ChevronRight, Copy, Ticket } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
 interface Props {
   selectedTask?: SelectTask
+  onClose?: () => void
 }
 
-function TaskFormHeader({ selectedTask }: Props) {
-  const [project, setProject] = useAtom(projectStore.currProject)
+const PROJECT_PAGES = [
+  ...ProjectManagementPages,
+  { key: "completed-sprints", title: "Completed Sprints" }
+]
 
-  const [space, setSpace] = useState<SelectSpace>()
+function TaskFormHeader({ selectedTask, onClose }: Props) {
+  const [project, setProject] = useAtom(projectStore.currProject)
+  const [copied, setCopied] = useState(false)
 
   const projectId = useParams().id as string
+  const pathName = usePathname()
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -30,50 +44,99 @@ function TaskFormHeader({ selectedTask }: Props) {
     fetchProject()
   }, [projectId])
 
-  useEffect(() => {
-    const fetchSpace = async () => {
-      const spaceData = await GetSpaceByIdAction(project?.space_id || "")
-      if (spaceData.success && spaceData.data) {
-        setSpace(spaceData.data)
-      }
+  const projectBasePath = `/project/${projectId}`
+  const overviewPath = `${projectBasePath}/overview`
+  const currentPageKey = pathName
+    .replace(projectBasePath, "")
+    .split("/")
+    .filter(Boolean)[0]
+  const currentPage = PROJECT_PAGES.find((page) => page.key === currentPageKey)
+  const currentPagePath = currentPage
+    ? `${projectBasePath}/${currentPage.key}`
+    : ""
+  const taskPath = selectedTask
+    ? `${projectBasePath}/task/${selectedTask.id}`
+    : ""
+
+  // When the header is rendered inside the task modal and the crumb points to
+  // the page we're already on, close the modal instead of navigating.
+  const handleCrumbClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    if (onClose && pathName === href) {
+      e.preventDefault()
+      onClose()
     }
-    fetchSpace()
-  }, [project])
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(generateUrl(taskPath))
+      setCopied(true)
+      toast({ title: "Ticket link copied to clipboard", duration: 3000 })
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to copy ticket link"
+      })
+    }
+  }
 
   return (
     <header className="border-b px-2 sm:px-4 py-2 sm:py-3 flex items-center pr-8 sm:pr-10 min-w-0 w-full">
       <nav className="flex flex-wrap items-center gap-y-1 text-[11px] sm:text-sm min-w-0 [overflow-wrap:anywhere]">
         <Link
-          href={
-            space
-              ? `/project?channel=${space?.channel?.channel_slug}&space=${space?.space_slug}`
-              : "./board?tab=backlog"
-          }
-          className="text-gray-500 hover:text-gray-300"
-        >
-          Projects
-        </Link>
-
-        <ChevronRight size={16} className="mx-2 text-gray-400" />
-
-        <Link
-          href={`/project/${project?.id}/board?tab=sprints`}
+          href={overviewPath}
+          onClick={(e) => handleCrumbClick(e, overviewPath)}
           className="text-gray-500 hover:text-gray-300"
         >
           {project?.project_name}
         </Link>
+
+        {currentPage && currentPage.key !== "overview" ? (
+          <>
+            <ChevronRight size={16} className="mx-2 text-gray-400" />
+            <Link
+              href={currentPagePath}
+              onClick={(e) => handleCrumbClick(e, currentPagePath)}
+              className="text-gray-500 hover:text-gray-300"
+            >
+              {currentPage.title}
+            </Link>
+          </>
+        ) : null}
 
         {selectedTask ? (
           <>
             <ChevronRight size={16} className="mx-2 text-gray-400" />
             <a
               target="_blank"
-              href={`/project/${project?.id}/task/${selectedTask.id}`}
+              rel="noopener noreferrer"
+              href={taskPath}
               className="flex items-center gap-2 text-blue-500 hover:text-blue-300"
             >
               <Ticket size={16} />
               {selectedTask.task_num}
             </a>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    aria-label="Copy link"
+                    className="ml-2 text-gray-500 hover:text-gray-300"
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy link</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </>
         ) : null}
       </nav>
