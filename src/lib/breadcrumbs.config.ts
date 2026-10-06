@@ -163,7 +163,7 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
                             return milestoneId
                           }
                         },
-                        children: [{ path: "/artifacts", label: "Artifacts" }]
+                        children: [{ path: "/artifacts" }]
                       }
                     ]
                   }
