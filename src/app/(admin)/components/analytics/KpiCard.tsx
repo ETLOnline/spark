@@ -9,7 +9,6 @@ export interface KpiItem {
   value: string | number
   sub?: string
   icon?: LucideIcon
-  iconBg?: string // e.g. "bg-amber-100 text-amber-600"
 }
 
 const COLUMN_CLASSES = {
@@ -18,6 +17,20 @@ const COLUMN_CLASSES = {
   2: "grid-cols-1 sm:grid-cols-2",
   4: "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
 } as const
+
+/**
+ * Icon background + foreground colour palette.
+ * Uses opacity-based classes so they render correctly in both light and dark mode
+ * without needing separate dark: overrides.
+ */
+const ICON_PALETTE = [
+  "bg-primary/10 text-primary", // teal  (brand)
+  "bg-blue-500/10 text-blue-500", // blue
+  "bg-violet-500/10 text-violet-500", // violet
+  "bg-amber-500/10 text-amber-500", // amber
+  "bg-orange-500/10 text-orange-500", // orange
+  "bg-pink-500/10 text-pink-500" // pink
+] as const
 
 interface KpiCardProps {
   items: KpiItem[]
@@ -43,7 +56,7 @@ export function KpiCard({
     <div
       className={cn("grid gap-3 sm:gap-4", COLUMN_CLASSES[columns], className)}
     >
-      {items.map(({ label, value, sub, icon: Icon, iconBg }) => (
+      {items.map(({ label, value, sub, icon: Icon }, idx) => (
         <Card
           key={label}
           className={
@@ -68,7 +81,7 @@ export function KpiCard({
                 className={cn(
                   "rounded-lg flex items-center justify-center flex-shrink-0",
                   compact ? "w-8 h-8" : "w-7 h-7",
-                  iconBg ?? "bg-primary/10 text-primary"
+                  ICON_PALETTE[idx % ICON_PALETTE.length]
                 )}
               >
                 <Icon className="w-4 h-4" />

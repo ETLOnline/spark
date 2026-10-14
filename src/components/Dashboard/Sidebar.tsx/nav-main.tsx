@@ -67,8 +67,12 @@ export default function NavMain({
                     : pathName === item.url ||
                       pathName.startsWith(item.url + "/") ||
                       pathName.startsWith(item.url + "?") ||
-                      (item.extraActivePaths?.some(
-                        (p) => pathName === p || pathName.startsWith(p + "/")
+                      (item.extraActivePaths?.some((p) =>
+                        // "/x" matches only /x; "/x/*" matches /x and everything under it
+                        p.endsWith("/*")
+                          ? pathName === p.slice(0, -2) ||
+                            pathName.startsWith(p.slice(0, -1))
+                          : pathName === p
                       ) ??
                         false)
               const itemKey = item.url + item.title
@@ -90,7 +94,35 @@ export default function NavMain({
                   }}
                 >
                   <SidebarMenuItem>
-                    {item.items && item.items.length ? (
+                    {item.items && item.items.length && item.href ? (
+                      // Parent with its own page: clicking navigates there and opens the sub-menu
+                      // (the chevron on the right still collapses/expands it)
+                      <SidebarMenuButton
+                        className={
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : ""
+                        }
+                        asChild
+                        tooltip={item.title}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={() => {
+                            if (sidebar?.state === "collapsed")
+                              sidebar.toggleSidebar()
+                            setOpenItems((prev) => new Set(prev).add(itemKey))
+                            closeMobileIfNeeded()
+                          }}
+                        >
+                          {item.icon ? <item.icon /> : null}
+                          <span>{item.title}</span>
+                          {item?.isPrivate ? (
+                            <Lock className="text-sm" height={10} />
+                          ) : null}
+                        </Link>
+                      </SidebarMenuButton>
+                    ) : item.items && item.items.length ? (
                       // If item has children, make the whole button a collapsible trigger
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton

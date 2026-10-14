@@ -660,36 +660,31 @@ export const OVERVIEW_KPIS = [
     label: "Total users",
     value: SNAPSHOT.users.total.toLocaleString(),
     sub: "Registered across all roles",
-    icon: Users,
-    iconBg: "bg-teal-50 text-teal-600"
+    icon: Users
   },
   {
     label: "Communities",
     value: SNAPSHOT.communities.total.toLocaleString(),
     sub: "Live on the platform",
-    icon: Network,
-    iconBg: "bg-teal-50 text-teal-600"
+    icon: Network
   },
   {
     label: "Active mentors",
     value: SNAPSHOT.mentorship.active.toLocaleString(),
     sub: "Available or engaged on the marketplace",
-    icon: GraduationCap,
-    iconBg: "bg-teal-50 text-teal-600"
+    icon: GraduationCap
   },
   {
     label: "Total RP issued",
     value: SNAPSHOT.rewards.types.rp_points.total.toLocaleString(),
     sub: "Reputation Points, cumulative",
-    icon: Medal,
-    iconBg: "bg-teal-50 text-teal-600"
+    icon: Medal
   },
   {
     label: "SC in circulation",
     value: SNAPSHOT.rewards.types.sc_points.total.toLocaleString(),
     sub: "Spark Credits held by users",
-    icon: Coins,
-    iconBg: "bg-violet-50 text-violet-600"
+    icon: Coins
   }
 ]
 

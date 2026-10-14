@@ -7,8 +7,9 @@ export const adminSiteRoutes: SiteRoutes = {
     {
       title: "Analytics",
       url: "/admin/analytics/users",
+      href: "/admin", // clicking "Analytics" opens the Analytics overview
       icon: BarChart2,
-      extraActivePaths: ["/admin"],
+      extraActivePaths: ["/admin", "/admin/analytics/*"],
       items: [
         { title: "Users", url: "/admin/analytics/users" },
         { title: "Communities", url: "/admin/analytics/communities" },
