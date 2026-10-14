@@ -14,6 +14,8 @@ export type NavItem = {
   isActive?: boolean
   items?: NavSubItem[]
   isPrivate?: boolean
+  /** Additional paths that should also mark this item as active */
+  extraActivePaths?: string[]
 }
 
 export type SiteRoutes = {

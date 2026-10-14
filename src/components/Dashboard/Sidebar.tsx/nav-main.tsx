@@ -66,7 +66,11 @@ export default function NavMain({
                     ? pathName === "/"
                     : pathName === item.url ||
                       pathName.startsWith(item.url + "/") ||
-                      pathName.startsWith(item.url + "?")
+                      pathName.startsWith(item.url + "?") ||
+                      (item.extraActivePaths?.some(
+                        (p) => pathName === p || pathName.startsWith(p + "/")
+                      ) ??
+                        false)
               const itemKey = item.url + item.title
               const isOpen = openItems.has(itemKey)
 
@@ -151,41 +155,53 @@ export default function NavMain({
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.items.map((subItem) => (
-                              <TooltipProvider
-                                key={subItem.url + subItem.title}
-                              >
-                                <Tooltip delayDuration={300}>
-                                  <SidebarMenuSubItem>
-                                    <TooltipTrigger asChild>
-                                      <SidebarMenuSubButton asChild>
-                                        <Link
-                                          href={subItem.url}
-                                          onClick={() => {
-                                            if (sidebar?.state === "collapsed")
-                                              sidebar.toggleSidebar()
-                                            closeMobileIfNeeded()
-                                          }}
+                            {item.items.map((subItem) => {
+                              const isSubActive =
+                                subItem.url === pathName ||
+                                (subItem.url !== item.url &&
+                                  pathName.startsWith(subItem.url + "/")) ||
+                                pathName.startsWith(subItem.url + "?")
+                              return (
+                                <TooltipProvider
+                                  key={subItem.url + subItem.title}
+                                >
+                                  <Tooltip delayDuration={300}>
+                                    <SidebarMenuSubItem>
+                                      <TooltipTrigger asChild>
+                                        <SidebarMenuSubButton
+                                          asChild
+                                          isActive={isSubActive}
                                         >
-                                          {subItem.icon ? (
-                                            <subItem.icon />
-                                          ) : null}
-                                          <span className="truncate">
-                                            {subItem.title}
-                                          </span>
-                                        </Link>
-                                      </SidebarMenuSubButton>
-                                    </TooltipTrigger>
-                                  </SidebarMenuSubItem>
-                                  <TooltipContent
-                                    side="right"
-                                    className="bg-popover text-popover-foreground border"
-                                  >
-                                    {subItem.title}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ))}
+                                          <Link
+                                            href={subItem.url}
+                                            onClick={() => {
+                                              if (
+                                                sidebar?.state === "collapsed"
+                                              )
+                                                sidebar.toggleSidebar()
+                                              closeMobileIfNeeded()
+                                            }}
+                                          >
+                                            {subItem.icon ? (
+                                              <subItem.icon />
+                                            ) : null}
+                                            <span className="truncate">
+                                              {subItem.title}
+                                            </span>
+                                          </Link>
+                                        </SidebarMenuSubButton>
+                                      </TooltipTrigger>
+                                    </SidebarMenuSubItem>
+                                    <TooltipContent
+                                      side="right"
+                                      className="bg-popover text-popover-foreground border"
+                                    >
+                                      {subItem.title}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )
+                            })}
                           </SidebarMenuSub>
                         </CollapsibleContent>
                       </>

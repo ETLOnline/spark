@@ -29,9 +29,17 @@ function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar collapsible="icon" isSuperAdmin={isSuperAdmin} />
-      <SidebarInset>
+      {/*
+        min-w-0: lets the content column shrink to the space beside the sidebar. Without it the column
+        grows to its widest child (the header's fixed-size search box), pushing cards past the right edge.
+        [&_header>div>*:nth-child(2)]:min-w-0: lets that search box (2nd item in the header row) shrink on
+        phones instead of forcing the header wider than the screen — done here so Header stays untouched.
+      */}
+      <SidebarInset className="min-w-0 w-full max-w-full [&_header>div>*:nth-child(2)]:min-w-0">
         <Header />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+        <div className="flex w-full min-w-0 flex-1 flex-col gap-4 px-2 pt-0 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
