@@ -2376,3 +2376,13 @@ export type SelectMom = typeof momsTable.$inferSelect & {
   space?: SelectSpace
   creator?: SelectUser
 }
+
+export const snapshotsTable = pgTable("snapshots", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  type: varchar("type").notNull().unique(),
+  snapshot: jsonb("snapshot").notNull().$type<Record<string, unknown>>(),
+  ...timestamps
+})
+
+export type InsertSnapshot = typeof snapshotsTable.$inferInsert
+export type SelectSnapshot = typeof snapshotsTable.$inferSelect
