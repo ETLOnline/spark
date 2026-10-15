@@ -30,6 +30,20 @@ export function PageHeader({ title, description, aside }: PageHeaderProps) {
   )
 }
 
+/** Shown when the snapshot row doesn't exist yet or a module failed during collection (stored as null). */
+export function SnapshotUnavailable({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground",
+        className
+      )}
+    >
+      This data isn&apos;t available in the latest report snapshot yet.
+    </div>
+  )
+}
+
 interface AnalyticsPageProps extends PageHeaderProps {
   children: ReactNode
   className?: string

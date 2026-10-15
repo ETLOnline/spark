@@ -17,64 +17,66 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
-import { AnalyticsPage } from "./AnalyticsPage"
+import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
 import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
-import {
-  ROLES,
-  KPI_BY_ROLE,
-  BREAKDOWN_ROWS
-} from "../../admin/analytics/_data/constants"
+import { UsersReport } from "@/src/types/Reporting/Reporting.schema"
+import { formatCount, formatPercent, humanizeKey, toPercent } from "./format"
 
-function AccountHealthCard({ kpi }: { kpi: (typeof KPI_BY_ROLE)["all"] }) {
-  const activePct = kpi.active / kpi.total
-  const inactivePct = kpi.inactive / kpi.total
+const ALL_ROLES = "all"
 
+/** One row of user stats — the whole user base or a single role. Roles carry no `inactive` count. */
+interface UserStats {
+  total: number
+  active: number | null
+  inactive: number | null
+  verified: number
+  completed_profiles: number
+  online: number | null
+}
+
+function AccountHealthCard({
+  stats,
+  label
+}: {
+  stats: UserStats
+  label: string
+}) {
   const metrics = [
     {
       label: "Active",
-      users: kpi.active,
-      pct: kpi.active / kpi.total,
-      color: "bg-emerald-500",
-      stroke: "text-emerald-500"
+      users: stats.active,
+      color: "bg-emerald-500"
     },
     {
       label: "Inactive",
-      users: kpi.inactive,
-      pct: kpi.inactive / kpi.total,
-      color: "bg-amber-400",
-      stroke: "text-amber-400"
+      users: stats.inactive,
+      color: "bg-amber-400"
     },
     {
       label: "Verified",
-      users: kpi.verified,
-      pct: kpi.verified / kpi.total,
-      color: "bg-blue-500",
-      stroke: "text-blue-500"
+      users: stats.verified,
+      color: "bg-blue-500"
     },
     {
       label: "Completed profiles",
-      users: kpi.completed,
-      pct: kpi.completed / kpi.total,
-      color: "bg-violet-500",
-      stroke: "text-violet-500"
+      users: stats.completed_profiles,
+      color: "bg-violet-500"
     },
     {
       label: "Online now",
-      users: kpi.online,
-      pct: kpi.online / kpi.total,
-      color: "bg-primary",
-      stroke: "text-primary"
+      users: stats.online,
+      color: "bg-primary"
     }
   ]
 
   return (
     <Card className="min-w-0">
       <CardHeader className="p-4 sm:p-5 pb-0">
-        <CardTitle className="text-sm">Account health · All roles</CardTitle>
+        <CardTitle className="text-sm">Account health · {label}</CardTitle>
         <CardDescription>
-          Share of {kpi.total.toLocaleString()} all users
+          Share of {stats.total.toLocaleString()} users
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4 sm:p-5 pt-4">
@@ -84,21 +86,22 @@ function AccountHealthCard({ kpi }: { kpi: (typeof KPI_BY_ROLE)["all"] }) {
               svgClassName="w-28 h-28 -rotate-90"
               radius={30}
               strokeWidth={14}
+              trackClassName="text-muted"
               segments={[
                 {
                   key: "active",
-                  value: activePct * 100,
+                  value: toPercent(stats.active, stats.total) ?? 0,
                   className: "text-emerald-500"
                 },
                 {
                   key: "inactive",
-                  value: inactivePct * 100,
+                  value: toPercent(stats.inactive, stats.total) ?? 0,
                   className: "text-amber-400"
                 }
               ]}
             >
               <span className="text-base font-bold">
-                {(activePct * 100).toFixed(1)}%
+                {formatPercent(stats.active, stats.total)}
               </span>
               <span className="text-[10px] text-muted-foreground">active</span>
             </DonutChart>
@@ -136,14 +139,14 @@ function AccountHealthCard({ kpi }: { kpi: (typeof KPI_BY_ROLE)["all"] }) {
                       </div>
                     </td>
                     <td className="py-2.5 text-right font-semibold w-20">
-                      {m.users.toLocaleString()}
+                      {formatCount(m.users)}
                     </td>
                     <td className="py-2.5 text-right text-muted-foreground w-16">
-                      {(m.pct * 100).toFixed(1)}%
+                      {formatPercent(m.users, stats.total)}
                     </td>
                     <td className="py-2.5 pl-3 w-20 sm:w-36">
                       <Progress
-                        value={m.pct * 100}
+                        value={toPercent(m.users, stats.total) ?? 0}
                         className="bg-muted"
                         indicatorClassName={`${m.color} rounded-full transition-none`}
                       />
@@ -159,50 +162,90 @@ function AccountHealthCard({ kpi }: { kpi: (typeof KPI_BY_ROLE)["all"] }) {
   )
 }
 
-export default function UsersAnalyticsView() {
-  const [selectedRole, setSelectedRole] = useState("all")
-  const kpi = KPI_BY_ROLE[selectedRole]
+function StatCell({ value, total }: { value: number | null; total: number }) {
+  return (
+    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
+      <div>{formatCount(value)}</div>
+      <div className="text-xs text-muted-foreground font-normal">
+        {formatPercent(value, total)}
+      </div>
+    </td>
+  )
+}
 
-  const pct = (n: number) =>
-    `${((n / kpi.total) * 100).toFixed(1)}% of all users`
+export default function UsersAnalyticsView({
+  users
+}: {
+  users: UsersReport | null
+}) {
+  const [selectedRole, setSelectedRole] = useState(ALL_ROLES)
+
+  if (!users) {
+    return (
+      <AnalyticsPage title="User reporting">
+        <SnapshotUnavailable />
+      </AnalyticsPage>
+    )
+  }
+
+  const roles = Object.entries(users.roles).map(([name, stats]) => ({
+    name,
+    label: humanizeKey(name),
+    stats: { ...stats, inactive: null } as UserStats
+  }))
+  const selected = roles.find((r) => r.name === selectedRole)
+  const stats: UserStats = selected?.stats ?? users
+  const selectedLabel = selected?.label ?? "All roles"
+
+  const shareOf = (n: number | null) =>
+    `${formatPercent(n, stats.total)} of ${selected ? "role" : "all users"}`
 
   const statCards = [
     {
       label: "Total users",
-      value: kpi.total.toLocaleString(),
-      sub: "All registered accounts",
+      value: formatCount(stats.total),
+      sub: selected ? `${selectedLabel} accounts` : "All registered accounts",
       icon: Users
     },
     {
       label: "Active",
-      value: kpi.active.toLocaleString(),
-      sub: pct(kpi.active),
+      value: formatCount(stats.active),
+      sub: shareOf(stats.active),
       icon: UserCheck
     },
     {
       label: "Inactive",
-      value: kpi.inactive.toLocaleString(),
-      sub: pct(kpi.inactive),
+      value: formatCount(stats.inactive),
+      sub: shareOf(stats.inactive),
       icon: UserX
     },
     {
       label: "Verified",
-      value: kpi.verified.toLocaleString(),
-      sub: pct(kpi.verified),
+      value: formatCount(stats.verified),
+      sub: shareOf(stats.verified),
       icon: ShieldCheck
     },
     {
       label: "Completed profiles",
-      value: kpi.completed.toLocaleString(),
-      sub: pct(kpi.completed),
+      value: formatCount(stats.completed_profiles),
+      sub: shareOf(stats.completed_profiles),
       icon: UserCog
     },
     {
       label: "Online now",
-      value: kpi.online.toLocaleString(),
+      value: formatCount(stats.online),
       sub: "At snapshot time",
       icon: CircleDot
     }
+  ]
+
+  const roleChips = [
+    { name: ALL_ROLES, label: "All roles", total: users.total },
+    ...roles.map((r) => ({
+      name: r.name,
+      label: r.label,
+      total: r.stats.total
+    }))
   ]
 
   return (
@@ -214,21 +257,21 @@ export default function UsersAnalyticsView() {
         <span className="text-sm font-medium text-muted-foreground mr-1">
           Role
         </span>
-        {ROLES.map((r) => (
+        {roleChips.map((r) => (
           <Button
-            key={r.key}
+            key={r.name}
             type="button"
             variant="outline"
-            onClick={() => setSelectedRole(r.key)}
+            onClick={() => setSelectedRole(r.name)}
             className={`h-auto gap-1 px-3 py-1.5 rounded-full text-sm font-normal shadow-none transition-colors ${
-              selectedRole === r.key
+              selectedRole === r.name
                 ? "bg-foreground text-background border-foreground font-medium hover:bg-foreground hover:text-background"
                 : "border-border bg-card hover:bg-muted text-foreground hover:text-foreground"
             }`}
           >
             {r.label}{" "}
             <span
-              className={`ml-1 ${selectedRole === r.key ? "font-semibold" : "text-muted-foreground"}`}
+              className={`ml-1 ${selectedRole === r.name ? "font-semibold" : "text-muted-foreground"}`}
             >
               {r.total.toLocaleString()}
             </span>
@@ -238,7 +281,7 @@ export default function UsersAnalyticsView() {
 
       <KpiCard items={statCards} variant="compact" />
 
-      <AccountHealthCard kpi={kpi} />
+      <AccountHealthCard stats={stats} label={selectedLabel} />
 
       <Card className="min-w-0">
         <CardHeader className="p-4 sm:p-5 border-b">
@@ -256,85 +299,70 @@ export default function UsersAnalyticsView() {
                   <th className="text-left px-3 sm:px-5 py-3 font-medium">
                     Role
                   </th>
-                  <th className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium">
-                    Total
-                  </th>
-                  <th className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium">
-                    Active
-                  </th>
-                  <th className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium">
-                    Inactive
-                  </th>
-                  <th className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium">
-                    Verified
-                  </th>
-                  <th className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium">
-                    Completed
-                  </th>
-                  <th className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium">
-                    Online
-                  </th>
+                  {[
+                    "Total",
+                    "Active",
+                    "Inactive",
+                    "Verified",
+                    "Completed",
+                    "Online"
+                  ].map((col) => (
+                    <th
+                      key={col}
+                      className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium"
+                    >
+                      {col}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {BREAKDOWN_ROWS.map((r, i) => (
-                  <tr
-                    key={r.role}
-                    onClick={() => {
-                      const match = ROLES.find(
-                        (ro) =>
-                          ro.label === r.role ||
-                          (r.role === "All users" && ro.key === "all")
-                      )
-                      if (match) setSelectedRole(match.key)
-                    }}
-                    className={`cursor-pointer hover:bg-muted/30 transition-colors ${i === BREAKDOWN_ROWS.length - 1 ? "font-semibold bg-muted/20" : ""}`}
-                  >
-                    <td className="px-3 sm:px-5 py-3">
-                      <div className="w-[8.5rem] sm:w-auto sm:min-w-[9rem]">
-                        <p className="break-words">{r.role}</p>
-                        {r.share && (
-                          <p className="text-xs text-muted-foreground font-normal">
-                            {r.share}
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
-                      {r.total.toLocaleString()}
-                    </td>
-                    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
-                      <div>{r.active.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground font-normal">
-                        {r.activePct}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
-                      <div>{r.inactive.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground font-normal">
-                        {r.inactivePct}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
-                      <div>{r.verified.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground font-normal">
-                        {r.verifiedPct}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
-                      <div>{r.completed.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground font-normal">
-                        {r.completedPct}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
-                      <div>{r.online.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground font-normal">
-                        {r.onlinePct}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {[
+                  ...roles,
+                  {
+                    name: ALL_ROLES,
+                    label: "All users",
+                    stats: users as UserStats
+                  }
+                ].map((r) => {
+                  const isAll = r.name === ALL_ROLES
+                  return (
+                    <tr
+                      key={r.name}
+                      onClick={() => setSelectedRole(r.name)}
+                      className={`cursor-pointer hover:bg-muted/30 transition-colors ${isAll ? "font-semibold bg-muted/20" : ""}`}
+                    >
+                      <td className="px-3 sm:px-5 py-3">
+                        <div className="w-[8.5rem] sm:w-auto sm:min-w-[9rem]">
+                          <p className="break-words">{r.label}</p>
+                          {!isAll && (
+                            <p className="text-xs text-muted-foreground font-normal">
+                              {formatPercent(r.stats.total, users.total)} of
+                              users
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
+                        {r.stats.total.toLocaleString()}
+                      </td>
+                      <StatCell value={r.stats.active} total={r.stats.total} />
+                      <StatCell
+                        value={r.stats.inactive}
+                        total={r.stats.total}
+                      />
+                      <StatCell
+                        value={r.stats.verified}
+                        total={r.stats.total}
+                      />
+                      <StatCell
+                        value={r.stats.completed_profiles}
+                        total={r.stats.total}
+                      />
+                      <StatCell value={r.stats.online} total={r.stats.total} />
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

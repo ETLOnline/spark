@@ -5,29 +5,40 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { Progress } from "@/src/components/ui/progress"
-
-export interface CommunityRow {
-  name: string
-  members: number
-  posts: number
-}
+import { CommunitiesReport } from "@/src/types/Reporting/Reporting.schema"
+import { toPercent } from "./format"
 
 interface TopCommunitiesCardProps {
-  communities: CommunityRow[]
+  /** Already ranked (desc) lists from the snapshot */
+  ranking: CommunitiesReport["ranking"]
+  /** How many rows to show from the top of each list */
+  limit?: number
   showLink?: boolean
   title?: string
 }
 
 export function TopCommunitiesCard({
-  communities,
+  ranking,
+  limit = 5,
   showLink = true,
   title = "Top communities"
 }: TopCommunitiesCardProps) {
   const [mode, setMode] = useState<"members" | "posts">("members")
 
-  const getValue = (c: CommunityRow) =>
-    mode === "members" ? c.members : c.posts
-  const maxVal = Math.max(...communities.map(getValue))
+  const rows = (
+    mode === "members"
+      ? ranking.by_members.map((c) => ({
+          id: c.community_id,
+          title: c.title,
+          value: c.total_members
+        }))
+      : ranking.by_posts.map((c) => ({
+          id: c.community_id,
+          title: c.title,
+          value: c.total_posts
+        }))
+  ).slice(0, limit)
+  const topValue = rows[0]?.value ?? 0
   const subtitle =
     mode === "members" ? "Ranked by total members" : "Ranked by total posts"
 
@@ -52,23 +63,23 @@ export function TopCommunitiesCard({
       </div>
 
       <div className="flex flex-col gap-3">
-        {communities.map((c, i) => (
-          <div key={c.name} className="flex flex-col gap-1">
+        {rows.map((c, i) => (
+          <div key={c.id} className="flex flex-col gap-1">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="text-sm text-muted-foreground w-4 flex-shrink-0">
                   {i + 1}
                 </span>
-                <span className="text-sm font-medium truncate" title={c.name}>
-                  {c.name}
+                <span className="text-sm font-medium truncate" title={c.title}>
+                  {c.title}
                 </span>
               </div>
               <span className="text-sm font-semibold flex-shrink-0 tabular-nums">
-                {getValue(c).toLocaleString()}
+                {c.value.toLocaleString()}
               </span>
             </div>
             <Progress
-              value={(getValue(c) / maxVal) * 100}
+              value={toPercent(c.value, topValue) ?? 0}
               className="h-1.5 bg-muted"
               indicatorClassName="rounded-full duration-500"
             />
