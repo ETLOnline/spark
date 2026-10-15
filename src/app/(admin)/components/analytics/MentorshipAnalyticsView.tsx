@@ -141,7 +141,7 @@ export default function MentorshipAnalyticsView({
                 }))}
               >
                 <span className="text-lg font-bold leading-none">
-                  {sesFsions.total.toLocaleString()}
+                  {sessions.total.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-muted-foreground">
                   sessions
