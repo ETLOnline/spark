@@ -32,6 +32,7 @@ export async function GetUsersReportModule(): Promise<UsersReport> {
       from user_roles ur
       inner join roles r on r.id = ur.role_id
       left join profile p on p.user_id = ur.user_id
+      where r.role_type in ('GLOBAL')
       group by r.name
     `)
   ])
