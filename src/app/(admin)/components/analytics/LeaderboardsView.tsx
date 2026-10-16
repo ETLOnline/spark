@@ -2,11 +2,16 @@
 
 import { useState } from "react"
 import { Medal, Coins, Activity } from "lucide-react"
-import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
+import { useAtomValue } from "jotai"
+import {
+  AnalyticsPage,
+  SnapshotLoading,
+  SnapshotUnavailable
+} from "./AnalyticsPage"
+import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { KpiCard } from "./KpiCard"
 import { RewardTypePanel } from "./RewardTypePanel"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { RewardsReport } from "@/src/types/Reporting/Reporting.schema"
 
 type TabMode = "rp" | "sc"
 
@@ -20,12 +25,13 @@ const TABS = {
   sc: { key: "sc_points", label: "Spark Credits", short: "SC", icon: Coins }
 } as const
 
-export default function LeaderboardsView({
-  rewards
-}: {
-  rewards: RewardsReport | null
-}) {
+export default function LeaderboardsView() {
+  const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
+  const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
+  const rewards = snapshot?.rewards ?? null
   const [tab, setTab] = useState<TabMode>("rp")
+
+  if (isLoading) return <SnapshotLoading />
 
   if (!rewards) {
     return (

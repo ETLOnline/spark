@@ -9,7 +9,13 @@ import {
   Award,
   MessageSquareText
 } from "lucide-react"
-import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
+import { useAtomValue } from "jotai"
+import {
+  AnalyticsPage,
+  SnapshotLoading,
+  SnapshotUnavailable
+} from "./AnalyticsPage"
+import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
@@ -23,7 +29,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import { MentorshipReport } from "@/src/types/Reporting/Reporting.schema"
 import {
   AVATAR_CLASSES,
   RANK_BADGE_CLASSES
@@ -32,12 +37,13 @@ import { formatPercent, getInitials, toPercent } from "./format"
 
 const PAGE_SIZE = 8
 
-export default function MentorshipAnalyticsView({
-  mentorship
-}: {
-  mentorship: MentorshipReport | null
-}) {
+export default function MentorshipAnalyticsView() {
+  const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
+  const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
+  const mentorship = snapshot?.mentorship ?? null
   const [page, setPage] = useState(1)
+
+  if (isLoading) return <SnapshotLoading />
 
   if (!mentorship) {
     return (

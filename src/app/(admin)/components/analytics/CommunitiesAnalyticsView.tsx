@@ -2,7 +2,13 @@
 
 import { useState } from "react"
 import { Network, MessageSquare } from "lucide-react"
-import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
+import { useAtomValue } from "jotai"
+import {
+  AnalyticsPage,
+  SnapshotLoading,
+  SnapshotUnavailable
+} from "./AnalyticsPage"
+import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
 import { Badge } from "@/src/components/ui/badge"
@@ -16,20 +22,20 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import { CommunitiesReport } from "@/src/types/Reporting/Reporting.schema"
 import { RANK_BADGE_CLASSES } from "../../admin/analytics/_data/constants"
 import { getInitials, toPercent } from "./format"
 
 const PAGE_SIZE = 8
 type RankMode = "members" | "posts"
 
-export default function CommunitiesAnalyticsView({
-  communities
-}: {
-  communities: CommunitiesReport | null
-}) {
+export default function CommunitiesAnalyticsView() {
+  const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
+  const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
+  const communities = snapshot?.communities ?? null
   const [mode, setMode] = useState<RankMode>("members")
   const [page, setPage] = useState(1)
+
+  if (isLoading) return <SnapshotLoading />
 
   if (!communities) {
     return (

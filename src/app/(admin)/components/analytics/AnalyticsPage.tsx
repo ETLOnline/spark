@@ -2,6 +2,8 @@
 
 import { ReactNode } from "react"
 import { cn } from "@/src/lib/utils"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 interface PageHeaderProps {
   title: string
@@ -40,6 +42,15 @@ export function SnapshotUnavailable({ className }: { className?: string }) {
       )}
     >
       This data isn&apos;t available in the latest report snapshot yet.
+    </div>
+  )
+}
+
+/** Shown while the (admin) layout is still fetching the report snapshot. */
+export function SnapshotLoading() {
+  return (
+    <div className="flex justify-center h-full w-full py-10">
+      <Loader size={LoaderSizes.xl} />
     </div>
   )
 }

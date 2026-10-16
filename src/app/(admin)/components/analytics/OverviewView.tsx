@@ -1,7 +1,13 @@
 "use client"
 
 import { Users, Network, GraduationCap, Medal, Coins } from "lucide-react"
-import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
+import { useAtomValue } from "jotai"
+import {
+  AnalyticsPage,
+  SnapshotLoading,
+  SnapshotUnavailable
+} from "./AnalyticsPage"
+import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
 import { RankList } from "./RankList"
@@ -15,7 +21,6 @@ import {
 } from "@/src/components/ui/card"
 import {
   CommunitiesReport,
-  PersistedReportSnapshot,
   UsersReport
 } from "@/src/types/Reporting/Reporting.schema"
 import {
@@ -148,16 +153,16 @@ function CommunityPerformanceCard({
   )
 }
 
-export default function OverviewView({
-  snapshot
-}: {
-  snapshot: PersistedReportSnapshot | null
-}) {
+export default function OverviewView() {
+  const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
+  const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
   const header = {
     title: "Analytics overview",
     description:
       "Platform-wide KPIs across users, communities, mentorship and rewards."
   }
+
+  if (isLoading) return <SnapshotLoading />
 
   if (!snapshot) {
     return (

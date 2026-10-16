@@ -17,11 +17,16 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
-import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
+import { useAtomValue } from "jotai"
+import {
+  AnalyticsPage,
+  SnapshotLoading,
+  SnapshotUnavailable
+} from "./AnalyticsPage"
+import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
-import { UsersReport } from "@/src/types/Reporting/Reporting.schema"
 import { formatCount, formatPercent, humanizeKey, toPercent } from "./format"
 
 const ALL_ROLES = "all"
@@ -173,12 +178,13 @@ function StatCell({ value, total }: { value: number | null; total: number }) {
   )
 }
 
-export default function UsersAnalyticsView({
-  users
-}: {
-  users: UsersReport | null
-}) {
+export default function UsersAnalyticsView() {
+  const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
+  const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
+  const users = snapshot?.users ?? null
   const [selectedRole, setSelectedRole] = useState(ALL_ROLES)
+
+  if (isLoading) return <SnapshotLoading />
 
   if (!users) {
     return (
