@@ -292,7 +292,7 @@ export const GetMentorshipReportModuleAction = CreateServerAction(
             info: {
               user_name: FormatUserName(row.first_name, row.last_name),
               email: row.email,
-              total: Number(row.sessions_total)
+              total: Number(row.sessions_completed)
             },
             sessions: {
               total: Number(row.sessions_total),

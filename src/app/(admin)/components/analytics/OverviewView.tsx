@@ -215,7 +215,7 @@ export default function OverviewView() {
     .map((u) => ({
       initials: getInitials(u.info.user_name),
       name: u.info.user_name,
-      value: u.sessions.total,
+      value: u.sessions.completed,
       avatarColor: "bg-violet-100 text-violet-700"
     }))
 
@@ -248,9 +248,9 @@ export default function OverviewView() {
         <CommunityPerformanceCard communities={communities} />
         <RankList
           title="Top mentors"
-          subtitle="Total session requests"
+          subtitle="Completed sessions"
           items={topMentors}
-          valueLabel="Sessions"
+          valueLabel="Completed"
           linkHref="/admin/analytics/mentorship"
           linkLabel="View mentor leaderboard →"
         />
