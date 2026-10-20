@@ -44,3 +44,20 @@ export async function GetUserRoleBreakdownRaw(): Promise<RawUserRoleRow[]> {
   `)
   return rows as unknown as RawUserRoleRow[]
 }
+
+/**
+ * Raw signup timestamps for the new-user trend, one per profile.
+ * profile.created_at is a varchar, not a real date column, so it can hold
+ * anything (including hand-edited garbage like "2026-20-10" — shaped like a
+ * date, invalid month). No date parsing/casting happens here on purpose: a
+ * SQL-side cast (`::date`) throws on an invalid value and takes down the
+ * whole query with it. Parsing happens in JS instead (see
+ * GetUsersReportModuleAction), where `new Date(x)` never throws — an
+ * unparseable value just becomes an `Invalid Date` that's filtered out.
+ */
+export async function GetProfileSignupTimestampsRaw(): Promise<
+  { created_at: string | null }[]
+> {
+  const rows = await db.execute(sql`select created_at from profile`)
+  return rows as unknown as { created_at: string | null }[]
+}

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm"
+import { desc, eq } from "drizzle-orm"
 import { db } from "../../.."
 import { SelectSnapshot, snapshotsTable } from "../../../schema"
 import { PersistedReportSnapshot } from "@/src/types/Reporting/Reporting.schema"
@@ -12,9 +12,9 @@ export type SelectAdminReportSnapshot = Omit<SelectSnapshot, "snapshot"> & {
 }
 
 /**
- * One row for the whole app ("admin_report"), overwritten in place each time
- * the cron regenerates it — not a new row per run. `onConflictDoUpdate`
- * relies on `snapshots.type` being unique (see schema.ts).
+ * Every cron run inserts a new "admin_report" row — a history of snapshots,
+ * not one row overwritten in place. GetReportSnapshot always reads the most
+ * recent one.
  */
 export async function SaveReportSnapshot(
   snapshot: PersistedReportSnapshot
@@ -23,10 +23,6 @@ export async function SaveReportSnapshot(
     const [row] = await db
       .insert(snapshotsTable)
       .values({ type: ADMIN_REPORT_SNAPSHOT_TYPE, snapshot })
-      .onConflictDoUpdate({
-        target: snapshotsTable.type,
-        set: { snapshot, updated_at: sql`CURRENT_TIMESTAMP` }
-      })
       .returning()
     return row as unknown as SelectAdminReportSnapshot
   } catch (error: any) {
@@ -39,7 +35,8 @@ export async function GetReportSnapshot(): Promise<
 > {
   try {
     const row = await db.query.snapshotsTable.findFirst({
-      where: eq(snapshotsTable.type, ADMIN_REPORT_SNAPSHOT_TYPE)
+      where: eq(snapshotsTable.type, ADMIN_REPORT_SNAPSHOT_TYPE),
+      orderBy: desc(snapshotsTable.created_at)
     })
     return row as unknown as SelectAdminReportSnapshot | undefined
   } catch (error: any) {

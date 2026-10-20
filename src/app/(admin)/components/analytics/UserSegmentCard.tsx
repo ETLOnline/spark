@@ -47,15 +47,8 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
       </CardHeader>
       <CardContent className="p-4 sm:p-5 pt-4">
         {error ? (
-          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-            <span>Couldn&apos;t load user segmentation.</span>
-            {/* Not implemented: no refetch action exists yet, so Retry is a visual placeholder per the ticket's message spec. */}
-            <button
-              type="button"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Retry
-            </button>
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+            No data found
           </div>
         ) : total === 0 ? (
           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">

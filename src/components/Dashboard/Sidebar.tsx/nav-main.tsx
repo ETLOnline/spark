@@ -39,7 +39,23 @@ export default function NavMain({
 }) {
   const pathName = usePathname()
   const sidebar = useSidebar()
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set())
+  // Pre-open any group whose child matches the current route, so a hard
+  // refresh (or opening a deep link) doesn't land on a collapsed group with
+  // its active item hidden inside — same match rule as isSubActive below.
+  const [openItems, setOpenItems] = useState<Set<string>>(() => {
+    const initial = new Set<string>()
+    for (const item of items ?? []) {
+      const hasActiveChild = item.items?.some(
+        (subItem) =>
+          subItem.url === pathName ||
+          (subItem.url !== item.url &&
+            pathName.startsWith(subItem.url + "/")) ||
+          pathName.startsWith(subItem.url + "?")
+      )
+      if (hasActiveChild) initial.add(item.url + item.title)
+    }
+    return initial
+  })
 
   const closeMobileIfNeeded = () => {
     if (sidebar?.isMobile) {

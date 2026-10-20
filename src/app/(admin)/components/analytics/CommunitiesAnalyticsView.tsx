@@ -77,15 +77,8 @@ export default function CommunitiesAnalyticsView() {
       <section className="flex flex-col gap-3 sm:gap-4">
         <h2 className="text-sm font-semibold">Community performance</h2>
         {communities === null ? (
-          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-            <span>Couldn&apos;t load community performance.</span>
-            {/* Not implemented: no refetch action exists yet, so Retry is a visual placeholder per the ticket's message spec. */}
-            <button
-              type="button"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Retry
-            </button>
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+            No data found
           </div>
         ) : (
           <KpiCard
@@ -128,15 +121,8 @@ export default function CommunitiesAnalyticsView() {
 
         <CardContent className="p-0 flex flex-1 flex-col">
           {communities === null ? (
-            <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-              <span>Couldn&apos;t load the community leaderboard.</span>
-              {/* Not implemented: no refetch action exists yet, so Retry is a visual placeholder per the ticket's message spec. */}
-              <button
-                type="button"
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Retry
-              </button>
+            <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No data found
             </div>
           ) : total === 0 ? (
             <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">

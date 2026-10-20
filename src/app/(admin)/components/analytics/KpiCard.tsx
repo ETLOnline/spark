@@ -19,9 +19,8 @@ export interface KpiItem {
   description?: string
   /** Full, uncompacted number shown in a hover tooltip over a compacted value (e.g. 12.4K → 12,412). */
   fullValue?: string
-  /** True when the underlying data failed to load — renders the error message + Retry instead of the value. */
+  /** True when the underlying data failed to load — renders "No data found" instead of the value. */
   error?: boolean
-  onRetry?: () => void
 }
 
 const COLUMN_CLASSES = {
@@ -71,16 +70,7 @@ export function KpiCard({
     >
       {items.map(
         (
-          {
-            label,
-            value,
-            sub,
-            icon: Icon,
-            description,
-            fullValue,
-            error,
-            onRetry
-          },
+          { label, value, sub, icon: Icon, description, fullValue, error },
           idx
         ) => (
           <Card
@@ -127,19 +117,9 @@ export function KpiCard({
               )}
             </div>
             {error ? (
-              <div className="flex flex-col gap-1">
-                <span className="text-sm text-muted-foreground">
-                  Couldn&apos;t load this metric.
-                </span>
-                {/* Not implemented: no refetch action exists yet, so Retry is a visual placeholder per the ticket's message spec. */}
-                <button
-                  type="button"
-                  onClick={onRetry}
-                  className="self-start text-xs font-medium text-primary hover:underline"
-                >
-                  Retry
-                </button>
-              </div>
+              <span className="text-sm text-muted-foreground">
+                No data found
+              </span>
             ) : (
               <span
                 title={fullValue}

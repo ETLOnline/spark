@@ -6,12 +6,20 @@ export async function POST(req: Request) {
 
     if (!result?.success) {
       return Response.json(
-        { success: false, error: "Report snapshot generation failed" },
+        {
+          success: false,
+          error: "Report snapshot generation failed",
+          moduleErrors: result?.moduleErrors ?? null
+        },
         { status: 500 }
       )
     }
 
-    return Response.json({ success: true, data: result.data })
+    return Response.json({
+      success: true,
+      data: result.data,
+      moduleErrors: result.moduleErrors
+    })
   } catch (error) {
     console.error("Report snapshot cron failed:", error)
     return Response.json(

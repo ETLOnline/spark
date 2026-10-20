@@ -4,6 +4,5 @@ CREATE TABLE IF NOT EXISTS "snapshots" (
 	"snapshot" jsonb NOT NULL,
 	"updated_at" varchar,
 	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
-	"deleted_at" varchar,
-	CONSTRAINT "snapshots_type_unique" UNIQUE("type")
+	"deleted_at" varchar
 );

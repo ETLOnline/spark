@@ -25,9 +25,10 @@ export const MentorshipReportSchema = z.object({
   }),
   sessions: z.object({
     total: z.number(),
-    // "completed" = mentor confirmed attendance AND submitted feedback (not a
-    // status value). "pending" is every other non-rejected row, so that
-    // total == pending + completed + rejected always holds.
+    // "completed" comes from profile.total_completed_sessions (same counter
+    // the public /mentors listing shows), not a session_requests.status
+    // value. "pending" is derived (total - rejected - completed), so this is
+    // an approximation, not an exact row-level breakdown.
     pending: z.number(),
     completed: z.number(),
     rejected: z.number()

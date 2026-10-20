@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Medal, Coins, Activity } from "lucide-react"
+import { Medal, Coins, Activity, Trophy } from "lucide-react"
 import { useAtomValue } from "jotai"
 import {
   AnalyticsPage,
@@ -46,22 +46,28 @@ export default function LeaderboardsView() {
 
   const kpis = [
     {
-      label: "Rewarded actions",
-      value: rewards.total.toLocaleString(),
-      sub: "RP + SC ledger transactions",
-      icon: Activity
+      label: "Total rewards issued",
+      value: (rp_points.total + sc_points.total).toLocaleString(),
+      sub: "RP + SC combined",
+      icon: Trophy
     },
     {
       label: "Reputation Points",
       value: rp_points.total.toLocaleString(),
-      sub: `RP held · ${rp_points.actions.total.toLocaleString()} actions`,
+      sub: `RP issued · ${rp_points.actions.total.toLocaleString()} actions`,
       icon: Medal
     },
     {
       label: "Spark Credits",
       value: sc_points.total.toLocaleString(),
-      sub: `SC held · ${sc_points.actions.total.toLocaleString()} actions`,
+      sub: `SC issued · ${sc_points.actions.total.toLocaleString()} actions`,
       icon: Coins
+    },
+    {
+      label: "Rewarded actions",
+      value: rewards.total.toLocaleString(),
+      sub: "RP + SC actions",
+      icon: Activity
     }
   ]
 

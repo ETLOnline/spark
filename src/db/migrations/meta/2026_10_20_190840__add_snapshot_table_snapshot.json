@@ -1,5 +1,5 @@
 {
-  "id": "de01c7c2-24ae-4186-aed9-b88a5a1bc536",
+  "id": "22b33bd5-20f4-4635-b5d3-4a791ce7a10e",
   "prevId": "5ff1235e-92c9-40ca-8a73-8112fe04ac7d",
   "version": "7",
   "dialect": "postgresql",
@@ -4915,13 +4915,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "snapshots_type_unique": {
-          "name": "snapshots_type_unique",
-          "nullsNotDistinct": false,
-          "columns": ["type"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

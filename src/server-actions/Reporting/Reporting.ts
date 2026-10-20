@@ -31,12 +31,19 @@ export const GenerateReportSnapshotAction = CreateServerAction(
       }
 
       if (result.status === "failed") {
-        return { success: false, error: "All report modules failed" }
+        return {
+          success: false,
+          error: "All report modules failed",
+          moduleErrors: result.moduleErrors
+        }
       }
 
       const saved = await SaveReportSnapshot(result.snapshot)
 
-      return { success: true, data: saved }
+      // Surfaced on a successful ("partial") response too — a module can
+      // fail while the rest of the snapshot still saves, and that failure
+      // was previously only visible in server logs, not to the caller.
+      return { success: true, data: saved, moduleErrors: result.moduleErrors }
     } catch (error) {
       console.error("Error generating admin report snapshot:", error)
       return { success: false, error }

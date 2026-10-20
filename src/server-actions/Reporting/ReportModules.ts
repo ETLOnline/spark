@@ -3,7 +3,8 @@
 import { CreateServerAction } from ".."
 import {
   GetUserTotalsRaw,
-  GetUserRoleBreakdownRaw
+  GetUserRoleBreakdownRaw,
+  GetProfileSignupTimestampsRaw
 } from "@/src/db/data-access/reporting/users/query"
 import {
   GetCommunityTotalsRaw,
@@ -84,13 +85,104 @@ import { FormatUserName } from "@/src/utils/helpers"
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 
+type TrendGranularity = "day" | "month" | "year"
+
+/** UTC-based so this doesn't shift depending on the server's local timezone. */
+function trendBucketKey(d: Date, granularity: TrendGranularity): string {
+  const year = d.getUTCFullYear()
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(d.getUTCDate()).padStart(2, "0")
+  if (granularity === "day") return `${year}-${month}-${day}`
+  if (granularity === "month") return `${year}-${month}-01`
+  return `${year}-01-01`
+}
+
+function startOfUTCDay(d: Date): Date {
+  const copy = new Date(d)
+  copy.setUTCHours(0, 0, 0, 0)
+  return copy
+}
+
+/** Monday-start, matching the ISO week convention. */
+function startOfUTCWeek(d: Date): Date {
+  const day = startOfUTCDay(d)
+  const offset = day.getUTCDay() === 0 ? 6 : day.getUTCDay() - 1
+  day.setUTCDate(day.getUTCDate() - offset)
+  return day
+}
+
+/**
+ * Parses every profile.created_at into a Date, in JS rather than SQL — a
+ * malformed value (e.g. "2026-20-10", shaped like a date but an invalid
+ * month) makes `new Date(x)` return an Invalid Date instead of throwing, so
+ * one bad row can't fail the whole query the way a `::date` cast would.
+ */
+function parseSignupDates(rows: { created_at: string | null }[]): Date[] {
+  const dates: Date[] = []
+  for (const row of rows) {
+    if (!row.created_at) continue
+    const parsed = new Date(row.created_at)
+    if (!isNaN(parsed.getTime())) dates.push(parsed)
+  }
+  return dates
+}
+
+function buildTrend(
+  bucketDates: Date[],
+  granularity: TrendGranularity,
+  signupDates: Date[]
+): UsersReport["trends"]["new_users"]["daily"] {
+  const counts = new Map<string, number>()
+  for (const d of signupDates) {
+    const key = trendBucketKey(d, granularity)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  return bucketDates.map((d) => {
+    const key = trendBucketKey(d, granularity)
+    return { date: key, count: counts.get(key) ?? 0 }
+  })
+}
+
+function buildNewUserTrends(
+  signupDates: Date[]
+): UsersReport["trends"]["new_users"] {
+  const today = startOfUTCDay(new Date())
+  const yesterday = new Date(today)
+  yesterday.setUTCDate(today.getUTCDate() - 1)
+
+  const weekStart = startOfUTCWeek(today)
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart)
+    d.setUTCDate(weekStart.getUTCDate() + i)
+    return d
+  })
+
+  const currentYear = today.getUTCFullYear()
+  const months = Array.from(
+    { length: 12 },
+    (_, i) => new Date(Date.UTC(currentYear, i, 1))
+  )
+  const years = Array.from(
+    { length: 5 },
+    (_, i) => new Date(Date.UTC(currentYear - 4 + i, 0, 1))
+  )
+
+  return {
+    daily: buildTrend([yesterday, today], "day", signupDates),
+    weekly: buildTrend(weekDays, "day", signupDates),
+    monthly: buildTrend(months, "month", signupDates),
+    yearly: buildTrend(years, "year", signupDates)
+  }
+}
+
 export const GetUsersReportModuleAction = CreateServerAction(
   false,
   async () => {
     try {
-      const [totals, roleRows] = await Promise.all([
+      const [totals, roleRows, signupRows] = await Promise.all([
         GetUserTotalsRaw(),
-        GetUserRoleBreakdownRaw()
+        GetUserRoleBreakdownRaw(),
+        GetProfileSignupTimestampsRaw()
       ])
 
       // users.active/inactive/online (and the per-role equivalents) are
@@ -113,7 +205,10 @@ export const GetUsersReportModuleAction = CreateServerAction(
         verified: Number(totals.verified),
         completed_profiles: Number(totals.completed_profiles),
         online: null,
-        roles
+        roles,
+        trends: {
+          new_users: buildNewUserTrends(parseSignupDates(signupRows))
+        }
       }
 
       return { success: true, data }

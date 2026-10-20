@@ -2377,9 +2377,11 @@ export type SelectMom = typeof momsTable.$inferSelect & {
   creator?: SelectUser
 }
 
+// `type` is intentionally not unique: every cron run inserts a new row
+// (a history of snapshots per type), not one row overwritten in place.
 export const snapshotsTable = pgTable("snapshots", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  type: varchar("type").notNull().unique(),
+  type: varchar("type").notNull(),
   snapshot: jsonb("snapshot").notNull().$type<Record<string, unknown>>(),
   ...timestamps
 })
