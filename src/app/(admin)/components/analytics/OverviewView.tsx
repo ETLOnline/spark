@@ -180,7 +180,7 @@ export default function OverviewView() {
           title="Top mentors"
           subtitle="Total sessions delivered"
           items={topMentors}
-          valueLabel="Sessions"
+          valueLabel="Completed"
           linkHref="/admin/analytics/mentorship"
           linkLabel="View mentor leaderboard →"
         />

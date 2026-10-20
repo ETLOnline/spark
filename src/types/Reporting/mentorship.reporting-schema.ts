@@ -21,13 +21,13 @@ export const MentorshipReportSchema = z.object({
   active: z.number(),
   verified: z.number(),
   availability: z.object({
-    total_slots: z.number(),
-    active_slots: z.number()
+    total_slots: z.number()
   }),
   sessions: z.object({
     total: z.number(),
-    // "pending" absorbs the real statuses accepted + resubmitted + pending,
-    // so that total == pending + completed + rejected always holds.
+    // "completed" = mentor confirmed attendance AND submitted feedback (not a
+    // status value). "pending" is every other non-rejected row, so that
+    // total == pending + completed + rejected always holds.
     pending: z.number(),
     completed: z.number(),
     rejected: z.number()
