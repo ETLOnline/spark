@@ -275,8 +275,7 @@ export const GetMentorshipReportModuleAction = CreateServerAction(
         active: Number(totals.active),
         verified: Number(totals.verified),
         availability: {
-          total_slots: Number(availability.total_slots),
-          active_slots: Number(availability.active_slots)
+          total_slots: Number(availability.total_slots)
         },
         sessions: {
           total: Number(sessions.total),

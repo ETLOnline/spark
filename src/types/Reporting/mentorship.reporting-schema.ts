@@ -21,8 +21,7 @@ export const MentorshipReportSchema = z.object({
   active: z.number(),
   verified: z.number(),
   availability: z.object({
-    total_slots: z.number(),
-    active_slots: z.number()
+    total_slots: z.number()
   }),
   sessions: z.object({
     total: z.number(),

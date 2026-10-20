@@ -18,7 +18,6 @@ import {
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
-import { Progress } from "@/src/components/ui/progress"
 import { Badge } from "@/src/components/ui/badge"
 import { cn } from "@/src/lib/utils"
 import PaginationComponent from "@/src/components/common/Pagination"
@@ -33,7 +32,7 @@ import {
   AVATAR_CLASSES,
   RANK_BADGE_CLASSES
 } from "../../admin/analytics/_data/constants"
-import { formatPercent, getInitials, toPercent } from "./format"
+import { formatPercent, getInitials } from "./format"
 
 const PAGE_SIZE = 8
 
@@ -200,45 +199,12 @@ export default function MentorshipAnalyticsView() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-5 pt-4 flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="min-w-0 rounded-lg border-0 bg-muted/40 p-3 shadow-none">
-                <CardDescription className="text-xs">
-                  Active slots
-                </CardDescription>
-                <CardTitle className="text-xl sm:text-2xl leading-7 sm:leading-8 tracking-normal font-bold mt-0.5 [overflow-wrap:anywhere]">
-                  {availability.active_slots.toLocaleString()}
-                </CardTitle>
-              </Card>
-              <Card className="min-w-0 rounded-lg border-0 bg-muted/40 p-3 shadow-none">
-                <CardDescription className="text-xs">
-                  Total slots
-                </CardDescription>
-                <CardTitle className="text-xl sm:text-2xl leading-7 sm:leading-8 tracking-normal font-bold mt-0.5 [overflow-wrap:anywhere]">
-                  {availability.total_slots.toLocaleString()}
-                </CardTitle>
-              </Card>
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-muted-foreground">Active share</span>
-                <span className="font-medium">
-                  {formatPercent(
-                    availability.active_slots,
-                    availability.total_slots
-                  )}
-                </span>
-              </div>
-              <Progress
-                value={
-                  toPercent(
-                    availability.active_slots,
-                    availability.total_slots
-                  ) ?? 0
-                }
-                className="bg-muted"
-                indicatorClassName="bg-emerald-500 rounded-full transition-none"
-              />
-            </div>
+            <Card className="min-w-0 rounded-lg border-0 bg-muted/40 p-3 shadow-none">
+              <CardDescription className="text-xs">Total slots</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl leading-7 sm:leading-8 tracking-normal font-bold mt-0.5 [overflow-wrap:anywhere]">
+                {availability.total_slots.toLocaleString()}
+              </CardTitle>
+            </Card>
           </CardContent>
         </Card>
 

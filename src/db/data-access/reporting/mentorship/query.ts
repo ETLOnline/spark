@@ -32,8 +32,7 @@ export async function GetMentorTotalsRaw(): Promise<RawMentorTotalsRow> {
 export async function GetMentorAvailabilityTotalsRaw(): Promise<RawAvailabilityRow> {
   const rows = await db.execute(sql`
     select
-      count(*) as total_slots,
-      count(*) filter (where is_active = true) as active_slots
+      count(*) as total_slots
     from mentor_availability
   `)
   return rows[0] as unknown as RawAvailabilityRow
