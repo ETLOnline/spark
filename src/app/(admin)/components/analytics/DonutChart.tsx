@@ -1,7 +1,13 @@
 "use client"
 
-import { ReactNode } from "react"
+import { cloneElement, ReactNode } from "react"
 import { cn } from "@/src/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 
 export interface DonutSegment {
   key: string
@@ -11,6 +17,8 @@ export interface DonutSegment {
   className?: string
   /** … or an explicit stroke colour */
   color?: string
+  /** Shown on hover over this segment's slice, e.g. "Mentor · 42 · 18.4%" */
+  tooltip?: ReactNode
 }
 
 interface DonutChartProps {
@@ -75,9 +83,8 @@ export function DonutChart({
           const dash = s.value * perPct
           const offset = startOffset * perPct - cumulative * perPct
           cumulative += s.value
-          return (
+          const circle = (
             <circle
-              key={s.key}
               cx={c}
               cy={c}
               r={radius}
@@ -86,13 +93,24 @@ export function DonutChart({
               stroke={s.color ?? "currentColor"}
               strokeDasharray={`${dash} ${gap === "full" ? 100 * perPct : circ - dash}`}
               strokeDashoffset={offset}
-              className={s.className}
+              className={cn(s.className, s.tooltip && "cursor-default")}
               transform={
                 segmentRotation !== undefined
                   ? `rotate(${segmentRotation} ${c} ${c})`
                   : undefined
               }
             />
+          )
+
+          if (!s.tooltip) return cloneElement(circle, { key: s.key })
+
+          return (
+            <TooltipProvider key={s.key}>
+              <Tooltip>
+                <TooltipTrigger asChild>{circle}</TooltipTrigger>
+                <TooltipContent>{s.tooltip}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )
         })}
       </svg>

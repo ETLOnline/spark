@@ -62,8 +62,12 @@ export default function NavMain({
               const isActive =
                 item.url === "#"
                   ? false
-                  : item.url === "/"
-                    ? pathName === "/"
+                  : item.url === "/" || item.url === "/admin"
+                    ? // These are prefixes of every other route in their
+                      // section ("/" of the whole site, "/admin" of every
+                      // admin page) — prefix-matching below would make them
+                      // always-active, so they need an exact match instead.
+                      pathName === item.url
                     : pathName === item.url ||
                       pathName.startsWith(item.url + "/") ||
                       pathName.startsWith(item.url + "?") ||

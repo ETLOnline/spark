@@ -1,14 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  Users,
-  UserCheck,
-  UserX,
-  ShieldCheck,
-  UserCog,
-  CircleDot
-} from "lucide-react"
+import { Users, ShieldCheck, UserCog } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -24,150 +17,25 @@ import {
   SnapshotUnavailable
 } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
-import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
-import { Progress } from "@/src/components/ui/progress"
-import { formatCount, formatPercent, humanizeKey, toPercent } from "./format"
+import { UserSegmentCard } from "./UserSegmentCard"
+import { formatCount, formatPercent, humanizeKey } from "./format"
 
 const ALL_ROLES = "all"
 
-/** One row of user stats — the whole user base or a single role. Roles carry no `inactive` count. */
+/**
+ * One row of user stats — the whole user base or a single role. Only
+ * total/verified/completed_profiles are shown: active/inactive/online have
+ * no backing data (no status/activity/presence column on `users`) and aren't
+ * part of any shipped ticket, so they're left out of this page entirely.
+ */
 interface UserStats {
   total: number
-  active: number | null
-  inactive: number | null
   verified: number
   completed_profiles: number
-  online: number | null
 }
 
-function AccountHealthCard({
-  stats,
-  label
-}: {
-  stats: UserStats
-  label: string
-}) {
-  const metrics = [
-    {
-      label: "Active",
-      users: stats.active,
-      color: "bg-emerald-500"
-    },
-    {
-      label: "Inactive",
-      users: stats.inactive,
-      color: "bg-amber-400"
-    },
-    {
-      label: "Verified",
-      users: stats.verified,
-      color: "bg-blue-500"
-    },
-    {
-      label: "Completed profiles",
-      users: stats.completed_profiles,
-      color: "bg-violet-500"
-    },
-    {
-      label: "Online now",
-      users: stats.online,
-      color: "bg-primary"
-    }
-  ]
-
-  return (
-    <Card className="min-w-0">
-      <CardHeader className="p-4 sm:p-5 pb-0">
-        <CardTitle className="text-sm">Account health · {label}</CardTitle>
-        <CardDescription>
-          Share of {stats.total.toLocaleString()} users
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5 pt-4">
-        <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-start">
-          <div className="flex flex-col items-center gap-2 flex-shrink-0">
-            <DonutChart
-              svgClassName="w-28 h-28 -rotate-90"
-              radius={30}
-              strokeWidth={14}
-              trackClassName="text-muted"
-              segments={[
-                {
-                  key: "active",
-                  value: toPercent(stats.active, stats.total) ?? 0,
-                  className: "text-emerald-500"
-                },
-                {
-                  key: "inactive",
-                  value: toPercent(stats.inactive, stats.total) ?? 0,
-                  className: "text-amber-400"
-                }
-              ]}
-            >
-              <span className="text-base font-bold">
-                {formatPercent(stats.active, stats.total)}
-              </span>
-              <span className="text-[10px] text-muted-foreground">active</span>
-            </DonutChart>
-            <div className="flex gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                Active
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                Inactive
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full lg:flex-1 min-w-0 overflow-x-auto">
-            <table className="w-full min-w-[20rem] text-sm">
-              <thead>
-                <tr className="text-xs text-muted-foreground border-b">
-                  <th className="text-left pb-2 font-medium">Metric</th>
-                  <th className="text-right pb-2 font-medium w-20">Users</th>
-                  <th className="text-right pb-2 font-medium w-16">Share</th>
-                  <th className="pb-2 w-20 sm:w-36 pl-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {metrics.map((m) => (
-                  <tr key={m.label} className="border-b last:border-0">
-                    <td className="py-2.5 pr-3 sm:pr-4">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${m.color}`}
-                        />
-                        <span>{m.label}</span>
-                      </div>
-                    </td>
-                    <td className="py-2.5 text-right font-semibold w-20">
-                      {formatCount(m.users)}
-                    </td>
-                    <td className="py-2.5 text-right text-muted-foreground w-16">
-                      {formatPercent(m.users, stats.total)}
-                    </td>
-                    <td className="py-2.5 pl-3 w-20 sm:w-36">
-                      <Progress
-                        value={toPercent(m.users, stats.total) ?? 0}
-                        className="bg-muted"
-                        indicatorClassName={`${m.color} rounded-full transition-none`}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function StatCell({ value, total }: { value: number | null; total: number }) {
+function StatCell({ value, total }: { value: number; total: number }) {
   return (
     <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
       <div>{formatCount(value)}</div>
@@ -197,13 +65,17 @@ export default function UsersAnalyticsView() {
   const roles = Object.entries(users.roles).map(([name, stats]) => ({
     name,
     label: humanizeKey(name),
-    stats: { ...stats, inactive: null } as UserStats
+    stats: {
+      total: stats.total,
+      verified: stats.verified,
+      completed_profiles: stats.completed_profiles
+    } as UserStats
   }))
   const selected = roles.find((r) => r.name === selectedRole)
   const stats: UserStats = selected?.stats ?? users
   const selectedLabel = selected?.label ?? "All roles"
 
-  const shareOf = (n: number | null) =>
+  const shareOf = (n: number) =>
     `${formatPercent(n, stats.total)} of ${selected ? "role" : "all users"}`
 
   const statCards = [
@@ -212,18 +84,6 @@ export default function UsersAnalyticsView() {
       value: formatCount(stats.total),
       sub: selected ? `${selectedLabel} accounts` : "All registered accounts",
       icon: Users
-    },
-    {
-      label: "Active",
-      value: formatCount(stats.active),
-      sub: shareOf(stats.active),
-      icon: UserCheck
-    },
-    {
-      label: "Inactive",
-      value: formatCount(stats.inactive),
-      sub: shareOf(stats.inactive),
-      icon: UserX
     },
     {
       label: "Verified",
@@ -236,12 +96,6 @@ export default function UsersAnalyticsView() {
       value: formatCount(stats.completed_profiles),
       sub: shareOf(stats.completed_profiles),
       icon: UserCog
-    },
-    {
-      label: "Online now",
-      value: formatCount(stats.online),
-      sub: "At snapshot time",
-      icon: CircleDot
     }
   ]
 
@@ -257,7 +111,7 @@ export default function UsersAnalyticsView() {
   return (
     <AnalyticsPage
       title="User reporting"
-      description="Account status, verification, profile completion and presence — for all users or one role."
+      description="Verification and profile completion — for all users or one role."
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground mr-1">
@@ -287,7 +141,7 @@ export default function UsersAnalyticsView() {
 
       <KpiCard items={statCards} variant="compact" />
 
-      <AccountHealthCard stats={stats} label={selectedLabel} />
+      <UserSegmentCard users={users} error={false} />
 
       <Card className="min-w-0">
         <CardHeader className="p-4 sm:p-5 border-b">
@@ -305,14 +159,7 @@ export default function UsersAnalyticsView() {
                   <th className="text-left px-3 sm:px-5 py-3 font-medium">
                     Role
                   </th>
-                  {[
-                    "Total",
-                    "Active",
-                    "Inactive",
-                    "Verified",
-                    "Completed",
-                    "Online"
-                  ].map((col) => (
+                  {["Total", "Verified", "Completed"].map((col) => (
                     <th
                       key={col}
                       className="text-right px-3 sm:px-5 py-3 whitespace-nowrap font-medium"
@@ -352,11 +199,6 @@ export default function UsersAnalyticsView() {
                       <td className="px-3 sm:px-5 py-3 text-right whitespace-nowrap">
                         {r.stats.total.toLocaleString()}
                       </td>
-                      <StatCell value={r.stats.active} total={r.stats.total} />
-                      <StatCell
-                        value={r.stats.inactive}
-                        total={r.stats.total}
-                      />
                       <StatCell
                         value={r.stats.verified}
                         total={r.stats.total}
@@ -365,7 +207,6 @@ export default function UsersAnalyticsView() {
                         value={r.stats.completed_profiles}
                         total={r.stats.total}
                       />
-                      <StatCell value={r.stats.online} total={r.stats.total} />
                     </tr>
                   )
                 })}

@@ -25,16 +25,19 @@ export async function GetUserTotalsRaw(): Promise<RawUserTotalsRow> {
   return rows[0] as unknown as RawUserTotalsRow
 }
 
-/** role_type = GLOBAL excludes scoped roles (Channel Admin, Space Viewer, etc.) — only identity-level roles like Student/Mentor/Faculty belong in this breakdown. */
+/**
+ * role_type = GLOBAL excludes scoped roles (Channel Admin, Space Viewer, etc.) — only identity-level roles like Student/Mentor/Faculty belong in this breakdown.
+ * Starts from `roles`, not `user_roles` — a left join keeps every GLOBAL role in the result (as a 0 row) even if no user currently holds it, instead of silently dropping it.
+ */
 export async function GetUserRoleBreakdownRaw(): Promise<RawUserRoleRow[]> {
   const rows = await db.execute(sql`
     select
       r.name as role_name,
-      count(*) as total,
+      count(ur.user_id) as total,
       count(*) filter (where p.verified = true) as verified,
       count(*) filter (where p.is_profile_completed <> 0) as completed_profiles
-    from user_roles ur
-    inner join roles r on r.id = ur.role_id
+    from roles r
+    left join user_roles ur on ur.role_id = r.id
     left join profile p on p.user_id = ur.user_id
     where r.role_type in ('GLOBAL')
     group by r.name

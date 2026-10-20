@@ -8,10 +8,10 @@ import {
   SnapshotUnavailable
 } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
-import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
 import { RankList } from "./RankList"
 import { TopCommunitiesCard } from "./TopCommunitiesCard"
+import { UserSegmentCard } from "./UserSegmentCard"
 import {
   Card,
   CardContent,
@@ -19,102 +19,10 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import {
-  CommunitiesReport,
-  UsersReport
-} from "@/src/types/Reporting/Reporting.schema"
-import {
-  SERIES_BG_CLASSES,
-  SERIES_STROKE_CLASSES
-} from "../../admin/analytics/_data/constants"
-import {
-  formatCount,
-  formatPercent,
-  getInitials,
-  humanizeKey,
-  toPercent
-} from "./format"
+import { CommunitiesReport } from "@/src/types/Reporting/Reporting.schema"
+import { formatCompactCount, formatCount, getInitials } from "./format"
 
 const TOP_LIST_SIZE = 5
-
-function UserSegmentCard({ users }: { users: UsersReport | null }) {
-  const segments = users
-    ? Object.entries(users.roles).map(([role, stats], i) => ({
-        role,
-        users: stats.total,
-        bg: SERIES_BG_CLASSES[i % SERIES_BG_CLASSES.length],
-        stroke: SERIES_STROKE_CLASSES[i % SERIES_STROKE_CLASSES.length]
-      }))
-    : []
-
-  return (
-    <Card className="w-full min-w-0">
-      <CardHeader className="p-4 sm:p-5 pb-0">
-        <CardTitle className="text-sm">User segmentation</CardTitle>
-        <CardDescription>
-          Current share of the user base by role
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5 pt-4">
-        {!users ? (
-          <SnapshotUnavailable />
-        ) : (
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <DonutChart
-              className="flex-shrink-0 self-center"
-              svgClassName="w-28 h-28 sm:w-24 sm:h-24 -rotate-90"
-              radius={28}
-              strokeWidth={14}
-              segments={segments.map((s) => ({
-                key: s.role,
-                value: toPercent(s.users, users.total) ?? 0,
-                className: s.stroke
-              }))}
-            >
-              <span className="text-sm font-bold">
-                {users.total.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-muted-foreground">users</span>
-            </DonutChart>
-
-            <div className="flex flex-col gap-0.5 flex-1 basis-56 text-sm min-w-0">
-              <div className="flex items-center justify-between pb-1 border-b mb-1">
-                <span className="text-xs text-muted-foreground flex-1">
-                  Role
-                </span>
-                <span className="text-xs text-muted-foreground w-14 text-right">
-                  Users
-                </span>
-                <span className="text-xs text-muted-foreground w-14 text-right">
-                  Share
-                </span>
-              </div>
-              {segments.map((s) => (
-                <div
-                  key={s.role}
-                  className="flex items-center justify-between py-1.5 border-b last:border-0"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${s.bg}`}
-                    />
-                    <span className="truncate">{humanizeKey(s.role)}</span>
-                  </div>
-                  <span className="font-semibold w-14 text-right flex-shrink-0 tabular-nums">
-                    {s.users.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground w-14 text-right flex-shrink-0">
-                    {formatPercent(s.users, users.total)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
 
 function CommunityPerformanceCard({
   communities
@@ -164,49 +72,63 @@ export default function OverviewView() {
 
   if (isLoading) return <SnapshotLoading />
 
-  if (!snapshot) {
-    return (
-      <AnalyticsPage
-        className="px-1 sm:px-4 lg:px-6 py-4 sm:py-6 pb-10"
-        {...header}
-      >
-        <SnapshotUnavailable />
-      </AnalyticsPage>
-    )
+  // Every section below treats a missing snapshot the same as every module
+  // inside it being null, so both render their own "couldn't load" state.
+  const { users, communities, mentorship, rewards } = snapshot ?? {
+    users: null,
+    communities: null,
+    mentorship: null,
+    rewards: null
   }
 
-  const { users, communities, mentorship, rewards } = snapshot
+  const totalUsers = formatCompactCount(users?.total)
+  const totalCommunities = formatCompactCount(communities?.total)
+  const activeMentors = formatCompactCount(mentorship?.active)
+  const totalRP = formatCompactCount(rewards?.types.rp_points.total)
+  const totalSC = formatCompactCount(rewards?.types.sc_points.total)
 
+  // A null module means its collection failed when the snapshot was built —
+  // that's the "Couldn't load this metric" case, distinct from a real zero.
   const kpis = [
     {
-      label: "Total users",
-      value: formatCount(users?.total),
-      sub: "Registered across all roles",
-      icon: Users
+      label: "Total Users",
+      value: totalUsers?.compact ?? "0",
+      fullValue: totalUsers?.full,
+      description: "Cumulative registered users across all roles.",
+      icon: Users,
+      error: users === null
     },
     {
       label: "Communities",
-      value: formatCount(communities?.total),
-      sub: "Live on the platform",
-      icon: Network
+      value: totalCommunities?.compact ?? "0",
+      fullValue: totalCommunities?.full,
+      description: "Total Communities live on the platform.",
+      icon: Network,
+      error: communities === null
     },
     {
-      label: "Active mentors",
-      value: formatCount(mentorship?.active),
-      sub: "Available or engaged on the marketplace",
-      icon: GraduationCap
+      label: "Active Mentors",
+      value: activeMentors?.compact ?? "0",
+      fullValue: activeMentors?.full,
+      description: "Mentors currently available or engaged on the marketplace.",
+      icon: GraduationCap,
+      error: mentorship === null
     },
     {
-      label: "Total RP",
-      value: formatCount(rewards?.types.rp_points.total),
-      sub: "Reputation Points held by users",
-      icon: Medal
+      label: "Total RP Issued",
+      value: totalRP?.compact ?? "0",
+      fullValue: totalRP?.full,
+      description: "Cumulative Reward Points issued platform-wide.",
+      icon: Medal,
+      error: rewards === null
     },
     {
-      label: "SC in circulation",
-      value: formatCount(rewards?.types.sc_points.total),
-      sub: "Spark Credits held by users",
-      icon: Coins
+      label: "Total SC Circulation",
+      value: totalSC?.compact ?? "0",
+      fullValue: totalSC?.full,
+      description: "Spark Coins currently in circulation across users.",
+      icon: Coins,
+      error: rewards === null
     }
   ]
 
@@ -215,7 +137,7 @@ export default function OverviewView() {
     .map((u) => ({
       initials: getInitials(u.info.user_name),
       name: u.info.user_name,
-      value: u.sessions.total,
+      value: u.sessions.completed,
       avatarColor: "bg-violet-100 text-violet-700"
     }))
 
@@ -233,10 +155,18 @@ export default function OverviewView() {
       className="px-1 sm:px-4 lg:px-6 py-4 sm:py-6 pb-10"
       {...header}
     >
-      <KpiCard items={kpis} />
+      <section className="flex flex-col gap-3 sm:gap-4">
+        <div>
+          <h2 className="text-sm font-semibold">Platform Overview</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Platform scale and economy health at a glance.
+          </p>
+        </div>
+        <KpiCard items={kpis} />
+      </section>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 [&>*]:min-w-0">
-        <UserSegmentCard users={users} />
+        <UserSegmentCard users={users} error={users === null} />
         {communities ? (
           <TopCommunitiesCard ranking={communities.ranking} />
         ) : (
@@ -248,7 +178,7 @@ export default function OverviewView() {
         <CommunityPerformanceCard communities={communities} />
         <RankList
           title="Top mentors"
-          subtitle="Total session requests"
+          subtitle="Total sessions delivered"
           items={topMentors}
           valueLabel="Sessions"
           linkHref="/admin/analytics/mentorship"

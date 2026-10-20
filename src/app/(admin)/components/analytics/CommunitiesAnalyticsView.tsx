@@ -3,18 +3,13 @@
 import { useState } from "react"
 import { Network, MessageSquare } from "lucide-react"
 import { useAtomValue } from "jotai"
-import {
-  AnalyticsPage,
-  SnapshotLoading,
-  SnapshotUnavailable
-} from "./AnalyticsPage"
+import { AnalyticsPage, SnapshotLoading } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
 import { Badge } from "@/src/components/ui/badge"
 import { cn } from "@/src/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import PaginationComponent from "@/src/components/common/Pagination"
 import {
   Card,
   CardContent,
@@ -23,9 +18,9 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { RANK_BADGE_CLASSES } from "../../admin/analytics/_data/constants"
-import { getInitials, toPercent } from "./format"
+import { formatCount, getInitials, toPercent } from "./format"
 
-const PAGE_SIZE = 8
+const TOP_LIST_SIZE = 10
 type RankMode = "members" | "posts"
 
 export default function CommunitiesAnalyticsView() {
@@ -33,37 +28,39 @@ export default function CommunitiesAnalyticsView() {
   const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
   const communities = snapshot?.communities ?? null
   const [mode, setMode] = useState<RankMode>("members")
-  const [page, setPage] = useState(1)
 
   if (isLoading) return <SnapshotLoading />
 
-  if (!communities) {
-    return (
-      <AnalyticsPage title="Community analytics">
-        <SnapshotUnavailable />
-      </AnalyticsPage>
-    )
-  }
-
-  // Both lists arrive already ranked (desc) from the snapshot.
-  const ranking =
+  // Backend orders by value desc but has no secondary sort, so ties can come
+  // back in any order — re-sort here with an alphabetical tiebreak to satisfy
+  // "ties share the same rank, ordered alphabetically".
+  const ranking = (
     mode === "members"
-      ? communities.ranking.by_members.map((c) => ({
+      ? (communities?.ranking.by_members ?? []).map((c) => ({
           id: c.community_id,
           title: c.title,
           value: c.total_members
         }))
-      : communities.ranking.by_posts.map((c) => ({
+      : (communities?.ranking.by_posts ?? []).map((c) => ({
           id: c.community_id,
           title: c.title,
           value: c.total_posts
         }))
+  ).sort((a, b) => b.value - a.value || a.title.localeCompare(b.title))
 
   const total = ranking.length
-  const totalPages = Math.ceil(total / PAGE_SIZE)
-  const globalOffset = (page - 1) * PAGE_SIZE
-  const pageData = ranking.slice(globalOffset, page * PAGE_SIZE)
   const topValue = ranking[0]?.value ?? 0
+
+  // Standard competition ranking (1, 2, 2, 4): equal values share a rank,
+  // and the next distinct value's rank accounts for the tied rows before it.
+  let lastValue: number | null = null
+  let lastRank = 0
+  const pageData = ranking.slice(0, TOP_LIST_SIZE).map((c, i) => {
+    const rank = c.value === lastValue ? lastRank : i + 1
+    lastValue = c.value
+    lastRank = rank
+    return { ...c, rank }
+  })
 
   const subtitle =
     mode === "members"
@@ -77,23 +74,39 @@ export default function CommunitiesAnalyticsView() {
       title="Community analytics"
       description="How communities are growing and where the conversation happens."
     >
-      <KpiCard
-        columns={2}
-        items={[
-          {
-            label: "Communities created",
-            value: communities.total.toLocaleString(),
-            sub: `${communities.public.toLocaleString()} public · ${communities.private.toLocaleString()} private`,
-            icon: Network
-          },
-          {
-            label: "Posts",
-            value: communities.channels.spaces.posts.total.toLocaleString(),
-            sub: "Across all communities",
-            icon: MessageSquare
-          }
-        ]}
-      />
+      <section className="flex flex-col gap-3 sm:gap-4">
+        <h2 className="text-sm font-semibold">Community performance</h2>
+        {communities === null ? (
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+            <span>Couldn&apos;t load community performance.</span>
+            {/* Not implemented: no refetch action exists yet, so Retry is a visual placeholder per the ticket's message spec. */}
+            <button
+              type="button"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <KpiCard
+            columns={2}
+            items={[
+              {
+                label: "Communities Created",
+                value: formatCount(communities.total),
+                sub: `${communities.public.toLocaleString()} public · ${communities.private.toLocaleString()} private`,
+                icon: Network
+              },
+              {
+                label: "Posts",
+                value: formatCount(communities.channels.spaces.posts.total),
+                sub: "Across all communities",
+                icon: MessageSquare
+              }
+            ]}
+          />
+        )}
+      </section>
 
       <Card className="min-w-0 flex flex-col md:flex-1">
         <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">
@@ -101,27 +114,34 @@ export default function CommunitiesAnalyticsView() {
             <CardTitle className="text-sm">Top communities</CardTitle>
             <CardDescription>{subtitle}</CardDescription>
           </div>
-          <Tabs
-            value={mode}
-            onValueChange={(v) => {
-              setMode(v as RankMode)
-              setPage(1)
-            }}
-          >
+          <Tabs value={mode} onValueChange={(v) => setMode(v as RankMode)}>
             <TabsList className="h-8 flex-shrink-0">
               <TabsTrigger value="members" className="text-xs">
                 Users
               </TabsTrigger>
               <TabsTrigger value="posts" className="text-xs">
-                Total posts
+                Total Posts
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
 
         <CardContent className="p-0 flex flex-1 flex-col">
-          {total === 0 ? (
-            <SnapshotUnavailable className="m-4 sm:m-5" />
+          {communities === null ? (
+            <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+              <span>Couldn&apos;t load the community leaderboard.</span>
+              {/* Not implemented: no refetch action exists yet, so Retry is a visual placeholder per the ticket's message spec. */}
+              <button
+                type="button"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          ) : total === 0 ? (
+            <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No communities to rank yet.
+            </div>
           ) : (
             <>
               <div className="w-full flex-1 overflow-x-auto">
@@ -143,8 +163,7 @@ export default function CommunitiesAnalyticsView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pageData.map((c, i) => {
-                      const rank = globalOffset + i + 1
+                    {pageData.map((c) => {
                       return (
                         <tr
                           key={c.id}
@@ -155,11 +174,11 @@ export default function CommunitiesAnalyticsView() {
                               variant="outline"
                               className={cn(
                                 "w-7 h-7 p-0 rounded-full flex-shrink-0 justify-center text-sm",
-                                RANK_BADGE_CLASSES[rank] ??
+                                RANK_BADGE_CLASSES[c.rank] ??
                                   "border-transparent text-muted-foreground font-medium"
                               )}
                             >
-                              {rank}
+                              {c.rank}
                             </Badge>
                           </td>
                           <td className="px-3 sm:px-5 py-3">
@@ -189,24 +208,11 @@ export default function CommunitiesAnalyticsView() {
                 </table>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t">
-                <span className="text-xs text-muted-foreground text-center sm:text-left">
-                  Showing {globalOffset + 1}–{Math.min(page * PAGE_SIZE, total)}{" "}
-                  of top {total.toLocaleString()} communities
+              <div className="px-3 sm:px-5 py-3 border-t">
+                <span className="text-xs text-muted-foreground">
+                  Showing top {pageData.length} of {total.toLocaleString()}{" "}
+                  communities
                 </span>
-                {totalPages > 1 && (
-                  <div className="sm:ml-auto">
-                    <PaginationComponent
-                      pagination={{
-                        total,
-                        page,
-                        limit: PAGE_SIZE,
-                        totalPages
-                      }}
-                      onPageChange={setPage}
-                    />
-                  </div>
-                )}
               </div>
             </>
           )}

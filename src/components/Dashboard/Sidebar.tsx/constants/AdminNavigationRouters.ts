@@ -1,15 +1,27 @@
 import { SiteRoutes } from "@/src/components/Dashboard/Sidebar.tsx/nav-types"
 
-import { BarChart2, Settings2, Shield, ShieldCheck } from "lucide-react"
+import {
+  BarChart2,
+  LayoutDashboard,
+  Settings2,
+  Shield,
+  ShieldCheck
+} from "lucide-react"
 
 export const adminSiteRoutes: SiteRoutes = {
   navMain: [
     {
+      title: "Overview",
+      url: "/admin",
+      icon: LayoutDashboard
+    },
+    {
       title: "Analytics",
       url: "/admin/analytics/users",
-      href: "/admin", // clicking "Analytics" opens the Analytics overview
+      // No href: clicking "Analytics" only expands/collapses the sub-menu,
+      // same as "Site Settings" below — it's not a page of its own anymore.
       icon: BarChart2,
-      extraActivePaths: ["/admin", "/admin/analytics/*"],
+      extraActivePaths: ["/admin/analytics/*"],
       items: [
         { title: "Users", url: "/admin/analytics/users" },
         { title: "Communities", url: "/admin/analytics/communities" },
