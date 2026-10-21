@@ -98,7 +98,10 @@ const buildBreadcrumbsFromConfig = async (
     } else if (typeof displayLabelOrLabels === "string") {
       crumbs.push({
         label: displayLabelOrLabels,
-        href: matchedConfigItem.href || segmentHref,
+        href:
+          typeof matchedConfigItem.href === "function"
+            ? matchedConfigItem.href(segmentHref, params)
+            : matchedConfigItem.href || segmentHref,
         isCurrent: false
       })
     }
