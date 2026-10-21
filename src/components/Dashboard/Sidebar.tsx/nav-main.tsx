@@ -39,23 +39,7 @@ export default function NavMain({
 }) {
   const pathName = usePathname()
   const sidebar = useSidebar()
-  // Pre-open any group whose child matches the current route, so a hard
-  // refresh (or opening a deep link) doesn't land on a collapsed group with
-  // its active item hidden inside — same match rule as isSubActive below.
-  const [openItems, setOpenItems] = useState<Set<string>>(() => {
-    const initial = new Set<string>()
-    for (const item of items ?? []) {
-      const hasActiveChild = item.items?.some(
-        (subItem) =>
-          subItem.url === pathName ||
-          (subItem.url !== item.url &&
-            pathName.startsWith(subItem.url + "/")) ||
-          pathName.startsWith(subItem.url + "?")
-      )
-      if (hasActiveChild) initial.add(item.url + item.title)
-    }
-    return initial
-  })
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set())
 
   const closeMobileIfNeeded = () => {
     if (sidebar?.isMobile) {
@@ -78,23 +62,11 @@ export default function NavMain({
               const isActive =
                 item.url === "#"
                   ? false
-                  : item.url === "/" || item.url === "/admin"
-                    ? // These are prefixes of every other route in their
-                      // section ("/" of the whole site, "/admin" of every
-                      // admin page) — prefix-matching below would make them
-                      // always-active, so they need an exact match instead.
-                      pathName === item.url
+                  : item.url === "/"
+                    ? pathName === "/"
                     : pathName === item.url ||
                       pathName.startsWith(item.url + "/") ||
-                      pathName.startsWith(item.url + "?") ||
-                      (item.extraActivePaths?.some((p) =>
-                        // "/x" matches only /x; "/x/*" matches /x and everything under it
-                        p.endsWith("/*")
-                          ? pathName === p.slice(0, -2) ||
-                            pathName.startsWith(p.slice(0, -1))
-                          : pathName === p
-                      ) ??
-                        false)
+                      pathName.startsWith(item.url + "?")
               const itemKey = item.url + item.title
               const isOpen = openItems.has(itemKey)
 
@@ -114,35 +86,7 @@ export default function NavMain({
                   }}
                 >
                   <SidebarMenuItem>
-                    {item.items && item.items.length && item.href ? (
-                      // Parent with its own page: clicking navigates there and opens the sub-menu
-                      // (the chevron on the right still collapses/expands it)
-                      <SidebarMenuButton
-                        className={
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                            : ""
-                        }
-                        asChild
-                        tooltip={item.title}
-                      >
-                        <Link
-                          href={item.href}
-                          onClick={() => {
-                            if (sidebar?.state === "collapsed")
-                              sidebar.toggleSidebar()
-                            setOpenItems((prev) => new Set(prev).add(itemKey))
-                            closeMobileIfNeeded()
-                          }}
-                        >
-                          {item.icon ? <item.icon /> : null}
-                          <span>{item.title}</span>
-                          {item?.isPrivate ? (
-                            <Lock className="text-sm" height={10} />
-                          ) : null}
-                        </Link>
-                      </SidebarMenuButton>
-                    ) : item.items && item.items.length ? (
+                    {item.items && item.items.length ? (
                       // If item has children, make the whole button a collapsible trigger
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
@@ -207,53 +151,41 @@ export default function NavMain({
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.items.map((subItem) => {
-                              const isSubActive =
-                                subItem.url === pathName ||
-                                (subItem.url !== item.url &&
-                                  pathName.startsWith(subItem.url + "/")) ||
-                                pathName.startsWith(subItem.url + "?")
-                              return (
-                                <TooltipProvider
-                                  key={subItem.url + subItem.title}
-                                >
-                                  <Tooltip delayDuration={300}>
-                                    <SidebarMenuSubItem>
-                                      <TooltipTrigger asChild>
-                                        <SidebarMenuSubButton
-                                          asChild
-                                          isActive={isSubActive}
+                            {item.items.map((subItem) => (
+                              <TooltipProvider
+                                key={subItem.url + subItem.title}
+                              >
+                                <Tooltip delayDuration={300}>
+                                  <SidebarMenuSubItem>
+                                    <TooltipTrigger asChild>
+                                      <SidebarMenuSubButton asChild>
+                                        <Link
+                                          href={subItem.url}
+                                          onClick={() => {
+                                            if (sidebar?.state === "collapsed")
+                                              sidebar.toggleSidebar()
+                                            closeMobileIfNeeded()
+                                          }}
                                         >
-                                          <Link
-                                            href={subItem.url}
-                                            onClick={() => {
-                                              if (
-                                                sidebar?.state === "collapsed"
-                                              )
-                                                sidebar.toggleSidebar()
-                                              closeMobileIfNeeded()
-                                            }}
-                                          >
-                                            {subItem.icon ? (
-                                              <subItem.icon />
-                                            ) : null}
-                                            <span className="truncate">
-                                              {subItem.title}
-                                            </span>
-                                          </Link>
-                                        </SidebarMenuSubButton>
-                                      </TooltipTrigger>
-                                    </SidebarMenuSubItem>
-                                    <TooltipContent
-                                      side="right"
-                                      className="bg-popover text-popover-foreground border"
-                                    >
-                                      {subItem.title}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )
-                            })}
+                                          {subItem.icon ? (
+                                            <subItem.icon />
+                                          ) : null}
+                                          <span className="truncate">
+                                            {subItem.title}
+                                          </span>
+                                        </Link>
+                                      </SidebarMenuSubButton>
+                                    </TooltipTrigger>
+                                  </SidebarMenuSubItem>
+                                  <TooltipContent
+                                    side="right"
+                                    className="bg-popover text-popover-foreground border"
+                                  >
+                                    {subItem.title}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ))}
                           </SidebarMenuSub>
                         </CollapsibleContent>
                       </>
