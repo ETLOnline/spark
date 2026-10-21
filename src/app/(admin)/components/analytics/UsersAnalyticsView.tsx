@@ -182,7 +182,7 @@ export default function UsersAnalyticsView() {
 
       <KpiCard items={statCards} variant="compact" />
 
-      <UserSegmentCard users={users} error={false} />
+      <UserSegmentCard users={users} error={false} showLink={false} />
 
       <Card className="min-w-0">
         <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">

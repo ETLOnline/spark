@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -18,10 +20,15 @@ import { humanizeKey, toExactPercentages } from "./format"
 interface UserSegmentCardProps {
   users: UsersReport | null
   error: boolean
+  showLink?: boolean
 }
 
 /** Pie chart of the user base by GLOBAL role, with a legend/count list beside it. Used on both the Overview page and the Users reporting page. */
-export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
+export function UserSegmentCard({
+  users,
+  error,
+  showLink = true
+}: UserSegmentCardProps) {
   // users.roles is already scoped to role_type = GLOBAL at the query level
   // (see GetUserRoleBreakdownRaw) — identity-level roles like Student/Mentor,
   // not scoped ones like Channel Viewer. Render whatever comes back rather
@@ -102,6 +109,15 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
               ))}
             </div>
           </div>
+        )}
+
+        {showLink && (
+          <Link
+            href="/admin/analytics/users"
+            className="flex items-center gap-1 text-xs text-primary hover:underline mt-4"
+          >
+            View user analytics <ArrowRight className="w-3 h-3" />
+          </Link>
         )}
       </CardContent>
     </Card>
