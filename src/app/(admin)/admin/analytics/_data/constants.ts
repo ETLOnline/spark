@@ -20,7 +20,7 @@ export const SERIES_BG_CLASSES = [
   "bg-slate-400"
 ]
 
-/** Matching stroke colours for DonutChart segments (same order as SERIES_BG_CLASSES). */
+/** Matching text colours for chart segments drawn with currentColor (same order as SERIES_BG_CLASSES). */
 export const SERIES_STROKE_CLASSES = [
   "text-emerald-500",
   "text-blue-500",

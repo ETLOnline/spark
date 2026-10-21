@@ -8,7 +8,7 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { UsersReport } from "@/src/types/Reporting/Reporting.schema"
-import { DonutChart } from "./DonutChart"
+import { PieDonutChart } from "./PieDonutChart"
 import {
   SERIES_BG_CLASSES,
   SERIES_STROKE_CLASSES
@@ -31,7 +31,7 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
       segment: humanizeKey(name),
       count: stats.total,
       bg: SERIES_BG_CLASSES[i % SERIES_BG_CLASSES.length],
-      stroke: SERIES_STROKE_CLASSES[i % SERIES_STROKE_CLASSES.length]
+      text: SERIES_STROKE_CLASSES[i % SERIES_STROKE_CLASSES.length]
     })
   )
   const total = segments.reduce((sum, s) => sum + s.count, 0)
@@ -56,23 +56,18 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <DonutChart
-              className="flex-shrink-0 self-center"
-              svgClassName="w-28 h-28 sm:w-24 sm:h-24 -rotate-90"
-              radius={28}
-              strokeWidth={14}
+            <PieDonutChart
+              className="self-center"
+              centerValue={total}
+              centerLabel="users"
               segments={segments.map((s, i) => ({
-                key: s.segment,
-                value: percentages[i],
-                className: s.stroke,
-                tooltip: `${s.segment} · ${s.count.toLocaleString()} · ${percentages[i]}%`
+                label: s.segment,
+                count: s.count,
+                share: `${percentages[i]}%`,
+                bg: s.bg,
+                text: s.text
               }))}
-            >
-              <span className="text-sm font-bold">
-                {total.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-muted-foreground">users</span>
-            </DonutChart>
+            />
 
             <div className="flex flex-col gap-0.5 flex-1 basis-56 text-sm min-w-0">
               <div className="flex items-center justify-between pb-1 border-b mb-1">
