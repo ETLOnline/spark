@@ -44,3 +44,28 @@ export const AVATAR_CLASSES = [
   "bg-rose-100 text-rose-700",
   "bg-teal-100 text-teal-700"
 ]
+
+export type TrendGranularity = "daily" | "weekly" | "monthly" | "yearly"
+
+export const TREND_TABS: { key: TrendGranularity; label: string }[] = [
+  { key: "daily", label: "Daily" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+  { key: "yearly", label: "Yearly" }
+]
+
+export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+export const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+]
