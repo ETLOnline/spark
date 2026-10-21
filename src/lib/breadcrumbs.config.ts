@@ -21,15 +21,8 @@ export interface BreadcrumbConfigItem {
    * Optional override for the breadcrumb link target when this segment's
    * own URL path doesn't resolve to a real page (e.g. a static segment
    * that should link elsewhere instead of its own non-existent route).
-   * Can be a function to build the target from the segment's own href
-   * and the current route params.
    */
-  href?:
-    | string
-    | ((
-        segmentHref: string,
-        params: Record<string, string | string[]>
-      ) => string)
+  href?: string
   dynamicLabelFetcher?: (
     slugOrId: string,
     allParams?: Record<string, string | string[]>,
@@ -146,14 +139,9 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
                   {
                     path: "/milestones",
                     label: "Milestones",
-                    // No milestones index page; link to the space's FYP milestones tab
-                    href: (_segmentHref, params) =>
-                      `/channels/${params["channel_slug"]}/spaces/${params["space_slug"]}?page-type=fyp&fyp-tab=milestones`,
                     children: [
                       {
                         path: "/[milestone_id]",
-                        // No milestone detail page; stay on its artifacts page
-                        href: (segmentHref) => `${segmentHref}/artifacts`,
                         dynamicLabelFetcher: async (milestoneId: string) => {
                           try {
                             const res =
@@ -163,7 +151,7 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
                             return milestoneId
                           }
                         },
-                        children: [{ path: "/artifacts" }]
+                        children: [{ path: "/artifacts", label: "Artifacts" }]
                       }
                     ]
                   }
@@ -313,18 +301,6 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
           },
           { path: "/users", label: "Users" },
           { path: "/settings", label: "Settings" }
-        ]
-      },
-      {
-        // There is no /admin/analytics page: the Analytics overview is /admin itself
-        path: "/analytics",
-        label: "Analytics",
-        href: "/admin",
-        children: [
-          { path: "/users", label: "Users" },
-          { path: "/communities", label: "Communities" },
-          { path: "/mentorship", label: "Mentorship" },
-          { path: "/leaderboards", label: "Leaderboards" }
         ]
       }
     ]
