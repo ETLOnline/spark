@@ -179,6 +179,11 @@ export function ToUpperCase(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
+/** Used everywhere a ranking/leaderboard query selects first_name + last_name separately and needs them combined for display. */
+export function FormatUserName(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName}`.trim()
+}
+
 export const checkUserPersonaCompletion = async (user: SelectUser) => {
   if (await isSuperAdmin(user)) {
     return true
