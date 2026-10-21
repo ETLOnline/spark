@@ -314,6 +314,18 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
           { path: "/users", label: "Users" },
           { path: "/settings", label: "Settings" }
         ]
+      },
+      {
+        // There is no /admin/analytics page: the Analytics overview is /admin itself
+        path: "/analytics",
+        label: "Analytics",
+        href: "/admin",
+        children: [
+          { path: "/users", label: "Users" },
+          { path: "/communities", label: "Communities" },
+          { path: "/mentorship", label: "Mentorship" },
+          { path: "/leaderboards", label: "Leaderboards" }
+        ]
       }
     ]
   }
