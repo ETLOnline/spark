@@ -4,6 +4,7 @@ import {
   Award,
   CalendarCheck,
   Clock,
+  Download,
   GraduationCap,
   MessageSquareText,
   ShieldCheck,
@@ -13,7 +14,9 @@ import { useAtomValue } from "jotai"
 import { AnalyticsPage, SnapshotLoading } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { Badge } from "@/src/components/ui/badge"
+import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
+import { downloadCsv } from "./csv"
 import { DonutChart } from "./DonutChart"
 import { KpiCard } from "./KpiCard"
 import {
@@ -55,6 +58,30 @@ export default function MentorshipAnalyticsView() {
 
   const pctOfMentors = (n: number) =>
     `${formatPercent(n, mentorship?.total ?? 0)} of mentors`
+
+  const exportMentorLeaderboardCsv = () => {
+    downloadCsv(
+      `mentor-leaderboard-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        "Rank",
+        "Mentor",
+        "Email",
+        "Total sessions",
+        "Completed",
+        "Rejected",
+        "Feedback"
+      ],
+      rankedMentors.map((m) => [
+        m.rank,
+        m.info.user_name,
+        m.info.email,
+        m.sessions.total,
+        m.sessions.completed,
+        m.sessions.rejected,
+        m.feedback.total
+      ])
+    )
+  }
 
   const kpis = mentorship
     ? [
@@ -244,9 +271,24 @@ export default function MentorshipAnalyticsView() {
       )}
 
       <Card className="min-w-0">
-        <CardHeader className="p-4 sm:p-5 border-b">
-          <CardTitle className="text-sm">Mentor leaderboard</CardTitle>
-          <CardDescription>Ranked by total sessions delivered</CardDescription>
+        <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">
+          <div className="min-w-0">
+            <CardTitle className="text-sm">Mentor leaderboard</CardTitle>
+            <CardDescription>
+              Ranked by total sessions delivered
+            </CardDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 flex-shrink-0"
+            onClick={exportMentorLeaderboardCsv}
+            disabled={rankedMentors.length === 0}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
         </CardHeader>
 
         <CardContent className="p-0">

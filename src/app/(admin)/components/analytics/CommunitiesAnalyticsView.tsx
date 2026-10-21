@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Network, MessageSquare } from "lucide-react"
+import { Download, Network, MessageSquare } from "lucide-react"
 import { useAtomValue } from "jotai"
 import { AnalyticsPage, SnapshotLoading } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
+import { Button } from "@/src/components/ui/button"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
 import { Badge } from "@/src/components/ui/badge"
@@ -17,6 +18,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
+import { downloadCsv } from "./csv"
 import { RANK_BADGE_CLASSES } from "../../admin/analytics/_data/constants"
 import { formatCount, getInitials, toPercent } from "./format"
 
@@ -68,6 +70,14 @@ export default function CommunitiesAnalyticsView() {
       : "Ranked by total posts in the community"
   const valueCol = mode === "members" ? "Members" : "Total posts"
 
+  const exportTopCommunitiesCsv = () => {
+    downloadCsv(
+      `top-communities-${mode}-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Rank", "Community", valueCol],
+      pageData.map((c) => [c.rank, c.title, c.value])
+    )
+  }
+
   return (
     <AnalyticsPage
       className="flex-1"
@@ -107,16 +117,29 @@ export default function CommunitiesAnalyticsView() {
             <CardTitle className="text-sm">Top communities</CardTitle>
             <CardDescription>{subtitle}</CardDescription>
           </div>
-          <Tabs value={mode} onValueChange={(v) => setMode(v as RankMode)}>
-            <TabsList className="h-8 flex-shrink-0">
-              <TabsTrigger value="members" className="text-xs">
-                Users
-              </TabsTrigger>
-              <TabsTrigger value="posts" className="text-xs">
-                Total Posts
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Tabs value={mode} onValueChange={(v) => setMode(v as RankMode)}>
+              <TabsList className="h-8">
+                <TabsTrigger value="members" className="text-xs">
+                  Users
+                </TabsTrigger>
+                <TabsTrigger value="posts" className="text-xs">
+                  Total Posts
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={exportTopCommunitiesCsv}
+              disabled={total === 0}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="p-0 flex flex-1 flex-col">

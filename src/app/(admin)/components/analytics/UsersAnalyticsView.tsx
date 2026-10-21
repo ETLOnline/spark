@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Users, ShieldCheck, UserCog } from "lucide-react"
+import { Download, Users, ShieldCheck, UserCog } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -10,6 +10,7 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { useAtomValue } from "jotai"
 import {
   AnalyticsPage,
@@ -17,11 +18,50 @@ import {
   SnapshotUnavailable
 } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
+import { downloadCsv } from "./csv"
 import { KpiCard } from "./KpiCard"
+import { TrendBarChart, TrendPoint } from "./TrendBarChart"
 import { UserSegmentCard } from "./UserSegmentCard"
 import { formatCount, formatPercent, humanizeKey } from "./format"
 
 const ALL_ROLES = "all"
+
+type TrendGranularity = "daily" | "weekly" | "monthly" | "yearly"
+
+const TREND_TABS: { key: TrendGranularity; label: string }[] = [
+  { key: "daily", label: "Daily" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+  { key: "yearly", label: "Yearly" }
+]
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+]
+
+/** date is always "YYYY-MM-DD" (see GetUsersReportModuleAction). Parsed with
+ * explicit Y/M/D, not `new Date(string)`, to avoid local-timezone shifting
+ * the date back a day. */
+function formatTrendLabel(date: string, granularity: TrendGranularity) {
+  const [year, month, day] = date.split("-").map(Number)
+  if (granularity === "yearly") return String(year)
+  if (granularity === "monthly") return MONTH_LABELS[month - 1]
+  const weekday =
+    WEEKDAY_LABELS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
+  return granularity === "daily" ? `${weekday} ${month}/${day}` : weekday
+}
 
 /**
  * One row of user stats — the whole user base or a single role. Only
@@ -51,6 +91,8 @@ export default function UsersAnalyticsView() {
   const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
   const users = snapshot?.users ?? null
   const [selectedRole, setSelectedRole] = useState(ALL_ROLES)
+  const [trendGranularity, setTrendGranularity] =
+    useState<TrendGranularity>("daily")
 
   if (isLoading) return <SnapshotLoading />
 
@@ -108,6 +150,33 @@ export default function UsersAnalyticsView() {
     }))
   ]
 
+  const breakdownRows = [
+    ...roles,
+    { name: ALL_ROLES, label: "All users", stats: users as UserStats }
+  ]
+
+  const exportBreakdownCsv = () => {
+    downloadCsv(
+      `users-breakdown-by-role-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        "Role",
+        "Total",
+        "Verified",
+        "Verified %",
+        "Completed profiles",
+        "Completed %"
+      ],
+      breakdownRows.map((r) => [
+        r.label,
+        r.stats.total,
+        r.stats.verified,
+        formatPercent(r.stats.verified, r.stats.total),
+        r.stats.completed_profiles,
+        formatPercent(r.stats.completed_profiles, r.stats.total)
+      ])
+    )
+  }
+
   return (
     <AnalyticsPage
       title="User reporting"
@@ -144,12 +213,53 @@ export default function UsersAnalyticsView() {
       <UserSegmentCard users={users} error={false} />
 
       <Card className="min-w-0">
-        <CardHeader className="p-4 sm:p-5 border-b">
-          <CardTitle className="text-sm">Breakdown by role</CardTitle>
-          <CardDescription>
-            Every user metric per global role. Percentages are of that
-            role&apos;s total. Select a role to focus the page on it.
-          </CardDescription>
+        <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">
+          <div className="min-w-0">
+            <CardTitle className="text-sm">New user signups</CardTitle>
+            <CardDescription>
+              Signups by profile creation date (approximate, see note below)
+            </CardDescription>
+          </div>
+          <Tabs
+            value={trendGranularity}
+            onValueChange={(v) => setTrendGranularity(v as TrendGranularity)}
+          >
+            <TabsList className="h-8 flex-shrink-0">
+              {TREND_TABS.map((t) => (
+                <TabsTrigger key={t.key} value={t.key} className="text-xs">
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5 pt-5">
+          <TrendBarChart
+            data={users.trends.new_users[trendGranularity] as TrendPoint[]}
+            formatLabel={(date) => formatTrendLabel(date, trendGranularity)}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0">
+        <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">
+          <div className="min-w-0">
+            <CardTitle className="text-sm">Breakdown by role</CardTitle>
+            <CardDescription>
+              Every user metric per global role. Percentages are of that
+              role&apos;s total. Select a role to focus the page on it.
+            </CardDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 flex-shrink-0"
+            onClick={exportBreakdownCsv}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
         </CardHeader>
         <CardContent className="p-0">
           <div className="relative w-full overflow-x-auto overscroll-x-contain">
@@ -170,14 +280,7 @@ export default function UsersAnalyticsView() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ...roles,
-                  {
-                    name: ALL_ROLES,
-                    label: "All users",
-                    stats: users as UserStats
-                  }
-                ].map((r) => {
+                {breakdownRows.map((r) => {
                   const isAll = r.name === ALL_ROLES
                   return (
                     <tr

@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { Download } from "lucide-react"
 import { SnapshotUnavailable } from "./AnalyticsPage"
+import { Button } from "@/src/components/ui/button"
 import { Progress } from "@/src/components/ui/progress"
 import { Badge } from "@/src/components/ui/badge"
 import { cn } from "@/src/lib/utils"
@@ -13,6 +15,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
+import { downloadCsv } from "./csv"
 import { RewardTypeBlock } from "@/src/types/Reporting/Reporting.schema"
 import {
   AVATAR_CLASSES,
@@ -57,6 +60,45 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
   const totalPages = Math.ceil(earners.length / PAGE_SIZE)
   const globalOffset = (page - 1) * PAGE_SIZE
   const pageEarners = earners.slice(globalOffset, page * PAGE_SIZE)
+
+  const exportEarnersCsv = () => {
+    // Union of every action type across all earners, not just the first
+    // row's — different users trigger different action types, so the column
+    // set has to cover everyone. A user who never did a given action gets an
+    // explicit 0 for it rather than a missing/blank cell.
+    const actionTypeSet = new Set<string>()
+    for (const e of earners) {
+      for (const a of e.actions.type) actionTypeSet.add(a.action_type)
+    }
+    const actionTypes = Array.from(actionTypeSet).sort()
+
+    downloadCsv(
+      `top-${short.toLowerCase()}-earners-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        "Rank",
+        "Name",
+        "Email",
+        "Level",
+        `Total ${short}`,
+        "Total actions",
+        ...actionTypes.map(humanizeKey)
+      ],
+      earners.map((e, i) => {
+        const countByType = new Map(
+          e.actions.type.map((a) => [a.action_type, a.count])
+        )
+        return [
+          i + 1,
+          e.info.user_name,
+          e.info.email,
+          e.level ? `L${e.level.level_id} · ${e.level.level_name}` : "No level",
+          e.info.total,
+          e.actions.total,
+          ...actionTypes.map((t) => countByType.get(t) ?? 0)
+        ]
+      })
+    )
+  }
 
   return (
     <>
@@ -131,12 +173,25 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
 
       {/* Top earners */}
       <Card className="min-w-0">
-        <CardHeader className="p-4 sm:p-5 border-b">
-          <CardTitle className="text-sm">Top {label} earners</CardTitle>
-          <CardDescription className="text-xs">
-            Users ranked by current {short} balance, with their level and the
-            actions that earned it.
-          </CardDescription>
+        <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">
+          <div className="min-w-0">
+            <CardTitle className="text-sm">Top {label} earners</CardTitle>
+            <CardDescription className="text-xs">
+              Users ranked by current {short} balance, with their level and the
+              actions that earned it.
+            </CardDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 flex-shrink-0"
+            onClick={exportEarnersCsv}
+            disabled={earners.length === 0}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
         </CardHeader>
 
         <CardContent className="p-0">
