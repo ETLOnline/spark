@@ -41,6 +41,10 @@ interface RewardTypePanelProps {
  */
 export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
   const [page, setPage] = useState(1)
+  // Levels are an RP-only concept (status/identity progression) — SC is a
+  // spendable currency with no level, so don't show a column that would
+  // just read "No level" for every single row.
+  const showLevel = short === "RP"
 
   const summary = [
     { label: `${short} held by users`, value: block.total.toLocaleString() },
@@ -78,7 +82,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
         "Rank",
         "Name",
         "Email",
-        "Level",
+        ...(showLevel ? ["Level"] : []),
         `Total ${short}`,
         "Total actions",
         ...actionTypes.map(humanizeKey)
@@ -91,7 +95,13 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
           i + 1,
           e.info.user_name,
           e.info.email,
-          e.level ? `L${e.level.level_id} · ${e.level.level_name}` : "No level",
+          ...(showLevel
+            ? [
+                e.level
+                  ? `L${e.level.level_id} · ${e.level.level_name}`
+                  : "No level"
+              ]
+            : []),
           e.info.total,
           e.actions.total,
           ...actionTypes.map((t) => countByType.get(t) ?? 0)
@@ -177,8 +187,9 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
           <div className="min-w-0">
             <CardTitle className="text-sm">Top {label} earners</CardTitle>
             <CardDescription className="text-xs">
-              Users ranked by current {short} balance, with their level and the
-              actions that earned it.
+              Users ranked by current {short} balance, with
+              {showLevel ? " their level and " : " "}
+              the actions that earned it.
             </CardDescription>
           </div>
           <Button
@@ -199,10 +210,17 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
             <SnapshotUnavailable className="m-4 sm:m-5" />
           ) : (
             <>
-              <div className="hidden lg:grid lg:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] gap-x-4 items-center px-5 py-3 border-b text-xs text-muted-foreground font-medium">
+              <div
+                className={cn(
+                  "hidden lg:grid gap-x-4 items-center px-5 py-3 border-b text-xs text-muted-foreground font-medium",
+                  showLevel
+                    ? "lg:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto]"
+                    : "lg:grid-cols-[3rem_minmax(0,1fr)_auto_auto]"
+                )}
+              >
                 <span>Rank</span>
                 <span>User</span>
-                <span className="w-28 text-center">Level</span>
+                {showLevel && <span className="w-28 text-center">Level</span>}
                 <span className="w-24 text-right">Total {short}</span>
                 <span className="w-16 text-right">Actions</span>
               </div>
@@ -215,7 +233,14 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                       key={e.info.email}
                       className="p-3 sm:p-5 flex flex-col gap-3"
                     >
-                      <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 gap-y-3 lg:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] lg:gap-x-4 items-center">
+                      <div
+                        className={cn(
+                          "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 gap-y-3 lg:gap-x-4 items-center",
+                          showLevel
+                            ? "lg:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto]"
+                            : "lg:grid-cols-[3rem_minmax(0,1fr)_auto_auto]"
+                        )}
+                      >
                         <Badge
                           variant="outline"
                           className={cn(
@@ -248,13 +273,15 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                           </div>
                         </div>
                         <div className="col-span-2 flex items-center justify-between gap-3 lg:contents">
-                          <span className="min-w-0 lg:w-28 lg:text-center">
-                            <span className="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-medium">
-                              {e.level
-                                ? `L${e.level.level_id}·${e.level.level_name}`
-                                : "No level"}
+                          {showLevel && (
+                            <span className="min-w-0 lg:w-28 lg:text-center">
+                              <span className="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-medium">
+                                {e.level
+                                  ? `L${e.level.level_id}·${e.level.level_name}`
+                                  : "No level"}
+                              </span>
                             </span>
-                          </span>
+                          )}
                           <div className="ml-auto lg:ml-0 w-24 text-right">
                             <p className="text-xl font-bold [overflow-wrap:anywhere]">
                               {e.info.total.toLocaleString()}
@@ -276,15 +303,9 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
 
                       {e.actions.type.length > 0 && (
                         <div className="ml-0 lg:ml-[calc(3rem+1rem)] min-w-0 rounded-lg border bg-muted/20 p-3 flex flex-col gap-2.5">
-                          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                              Action types
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {e.actions.type.length} types ·{" "}
-                              {e.actions.total.toLocaleString()} actions
-                            </span>
-                          </div>
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                            Action types
+                          </span>
                           <div className="flex h-3 rounded-md overflow-hidden gap-px">
                             {e.actions.type.map((b, idx) => (
                               <div

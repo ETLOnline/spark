@@ -11,7 +11,11 @@ import {
   UserCheck
 } from "lucide-react"
 import { useAtomValue } from "jotai"
-import { AnalyticsPage, SnapshotLoading } from "./AnalyticsPage"
+import {
+  AnalyticsPage,
+  SnapshotLoading,
+  SnapshotUnavailable
+} from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
@@ -292,14 +296,8 @@ export default function MentorshipAnalyticsView() {
         </CardHeader>
 
         <CardContent className="p-0">
-          {mentorship === null ? (
-            <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-              No data found
-            </div>
-          ) : rankedMentors.length === 0 ? (
-            <div className="m-4 sm:m-5 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-              No mentoring sessions have been delivered yet.
-            </div>
+          {mentorship === null || rankedMentors.length === 0 ? (
+            <SnapshotUnavailable className="m-4 sm:m-5" />
           ) : (
             <>
               {/* Spotlight on the #1-ranked mentor */}

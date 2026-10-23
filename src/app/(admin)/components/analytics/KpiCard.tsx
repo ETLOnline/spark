@@ -19,8 +19,6 @@ export interface KpiItem {
   description?: string
   /** Full, uncompacted number shown in a hover tooltip over a compacted value (e.g. 12.4K → 12,412). */
   fullValue?: string
-  /** True when the underlying data failed to load — renders "No data found" instead of the value. */
-  error?: boolean
 }
 
 const COLUMN_CLASSES = {
@@ -69,10 +67,7 @@ export function KpiCard({
       className={cn("grid gap-3 sm:gap-4", COLUMN_CLASSES[columns], className)}
     >
       {items.map(
-        (
-          { label, value, sub, icon: Icon, description, fullValue, error },
-          idx
-        ) => (
+        ({ label, value, sub, icon: Icon, description, fullValue }, idx) => (
           <Card
             key={label}
             className={
@@ -116,21 +111,15 @@ export function KpiCard({
                 </span>
               )}
             </div>
-            {error ? (
-              <span className="text-sm text-muted-foreground">
-                No data found
-              </span>
-            ) : (
-              <span
-                title={fullValue}
-                className={cn(
-                  "font-bold tracking-tight [overflow-wrap:anywhere]",
-                  compact ? "text-2xl" : "text-2xl sm:text-3xl"
-                )}
-              >
-                {value}
-              </span>
-            )}
+            <span
+              title={fullValue}
+              className={cn(
+                "font-bold tracking-tight [overflow-wrap:anywhere]",
+                compact ? "text-2xl" : "text-2xl sm:text-3xl"
+              )}
+            >
+              {value}
+            </span>
             {sub && (
               <span
                 className={cn(

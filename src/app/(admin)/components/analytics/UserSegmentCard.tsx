@@ -8,6 +8,7 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { UsersReport } from "@/src/types/Reporting/Reporting.schema"
+import { SnapshotUnavailable } from "./AnalyticsPage"
 import { DonutChart } from "./DonutChart"
 import {
   SERIES_BG_CLASSES,
@@ -46,14 +47,8 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4 sm:p-5 pt-4">
-        {error ? (
-          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No data found
-          </div>
-        ) : total === 0 ? (
-          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No user data available yet.
-          </div>
+        {error || total === 0 ? (
+          <SnapshotUnavailable />
         ) : (
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <DonutChart
