@@ -3,6 +3,12 @@
  * as "0" — no separate placeholder/error text for "no data" here.
  */
 
+import {
+  MONTH_LABELS,
+  TrendGranularity,
+  WEEKDAY_LABELS
+} from "../../admin/analytics/_data/constants"
+
 export function formatCount(value: number | null | undefined) {
   return value === null || value === undefined ? "0" : value.toLocaleString()
 }
@@ -84,4 +90,16 @@ export function humanizeKey(key: string) {
   return spaced === spaced.toLowerCase()
     ? spaced.charAt(0).toUpperCase() + spaced.slice(1)
     : spaced
+}
+
+/** date is always "YYYY-MM-DD" (see GetUsersReportModuleAction). Parsed with
+ * explicit Y/M/D, not `new Date(string)`, to avoid local-timezone shifting
+ * the date back a day. */
+export function formatTrendLabel(date: string, granularity: TrendGranularity) {
+  const [year, month, day] = date.split("-").map(Number)
+  if (granularity === "yearly") return String(year)
+  if (granularity === "monthly") return MONTH_LABELS[month - 1]
+  const weekday =
+    WEEKDAY_LABELS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
+  return granularity === "daily" ? `${weekday} ${month}/${day}` : weekday
 }

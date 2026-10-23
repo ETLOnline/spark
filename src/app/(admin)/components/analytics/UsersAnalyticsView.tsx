@@ -22,46 +22,18 @@ import { downloadCsv } from "./csv"
 import { KpiCard } from "./KpiCard"
 import { TrendBarChart, TrendPoint } from "./TrendBarChart"
 import { UserSegmentCard } from "./UserSegmentCard"
-import { formatCount, formatPercent, humanizeKey } from "./format"
+import {
+  formatCount,
+  formatPercent,
+  formatTrendLabel,
+  humanizeKey
+} from "./format"
+import {
+  TREND_TABS,
+  TrendGranularity
+} from "../../admin/analytics/_data/constants"
 
 const ALL_ROLES = "all"
-
-type TrendGranularity = "daily" | "weekly" | "monthly" | "yearly"
-
-const TREND_TABS: { key: TrendGranularity; label: string }[] = [
-  { key: "daily", label: "Daily" },
-  { key: "weekly", label: "Weekly" },
-  { key: "monthly", label: "Monthly" },
-  { key: "yearly", label: "Yearly" }
-]
-
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec"
-]
-
-/** date is always "YYYY-MM-DD" (see GetUsersReportModuleAction). Parsed with
- * explicit Y/M/D, not `new Date(string)`, to avoid local-timezone shifting
- * the date back a day. */
-function formatTrendLabel(date: string, granularity: TrendGranularity) {
-  const [year, month, day] = date.split("-").map(Number)
-  if (granularity === "yearly") return String(year)
-  if (granularity === "monthly") return MONTH_LABELS[month - 1]
-  const weekday =
-    WEEKDAY_LABELS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
-  return granularity === "daily" ? `${weekday} ${month}/${day}` : weekday
-}
 
 /**
  * One row of user stats — the whole user base or a single role. Only
@@ -210,7 +182,7 @@ export default function UsersAnalyticsView() {
 
       <KpiCard items={statCards} variant="compact" />
 
-      <UserSegmentCard users={users} error={false} />
+      <UserSegmentCard users={users} error={false} showLink={false} />
 
       <Card className="min-w-0">
         <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row items-start justify-between gap-3 space-y-0">

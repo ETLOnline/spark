@@ -1,5 +1,14 @@
 "use client"
 
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts"
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/src/components/ui/chart"
+import { cn } from "@/src/lib/utils"
+
 export interface TrendPoint {
   date: string
   count: number
@@ -11,48 +20,53 @@ interface TrendBarChartProps {
   className?: string
 }
 
-/**
- * Flexbox bar chart — heights are plain CSS percentages of the max value in
- * the series, no SVG geometry needed for a shape this simple (unlike
- * DonutChart's arcs). A series of all zeros still renders empty bars rather
- * than divide-by-zero NaN heights.
- */
+const chartConfig = {
+  count: {
+    label: "New users",
+    color: "hsl(var(--primary))"
+  }
+} satisfies ChartConfig
+
+/** shadcn "Bar Chart – Label": one bar per period with its count above it and a hover tooltip. */
 export function TrendBarChart({
   data,
   formatLabel,
   className
 }: TrendBarChartProps) {
-  const max = Math.max(1, ...data.map((d) => d.count))
-
   return (
-    <div
-      className={`flex items-end gap-1 sm:gap-2 h-40 sm:h-48 ${className ?? ""}`}
+    <ChartContainer
+      config={chartConfig}
+      className={cn("aspect-auto h-40 sm:h-48 w-full", className)}
     >
-      {data.map((d) => {
-        const heightPct = (d.count / max) * 100
-        return (
-          <div
-            key={d.date}
-            className="flex-1 min-w-0 h-full flex flex-col items-center gap-1.5"
-          >
-            <div className="w-full flex-1 flex flex-col items-center justify-end gap-1">
-              <span className="text-[10px] font-medium tabular-nums">
-                {d.count.toLocaleString()}
-              </span>
-              <div
-                title={`${formatLabel(d.date)}: ${d.count.toLocaleString()}`}
-                className="w-full rounded-t bg-primary/70 hover:bg-primary transition-colors"
-                style={{
-                  height: `${d.count > 0 ? Math.max(heightPct, 3) : 0}%`
-                }}
-              />
-            </div>
-            <span className="text-[10px] text-muted-foreground truncate w-full text-center">
-              {formatLabel(d.date)}
-            </span>
-          </div>
-        )
-      })}
-    </div>
+      <BarChart accessibilityLayer data={data} margin={{ top: 20 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey="date"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          minTickGap={8}
+          tickFormatter={formatLabel}
+          className="text-[10px]"
+        />
+        <ChartTooltip
+          cursor={false}
+          content={
+            <ChartTooltipContent
+              labelFormatter={(date) => formatLabel(String(date))}
+            />
+          }
+        />
+        <Bar dataKey="count" fill="var(--color-count)" radius={4}>
+          <LabelList
+            position="top"
+            offset={6}
+            className="fill-foreground"
+            fontSize={10}
+            formatter={(value: number) => value.toLocaleString()}
+          />
+        </Bar>
+      </BarChart>
+    </ChartContainer>
   )
 }

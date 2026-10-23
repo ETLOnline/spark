@@ -21,7 +21,7 @@ import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
 import { downloadCsv } from "./csv"
-import { DonutChart } from "./DonutChart"
+import { PieDonutChart } from "./PieDonutChart"
 import { KpiCard } from "./KpiCard"
 import {
   Card,
@@ -34,7 +34,7 @@ import {
   AVATAR_CLASSES,
   RANK_BADGE_CLASSES
 } from "../../admin/analytics/_data/constants"
-import { formatPercent, getInitials, toPercent } from "./format"
+import { formatPercent, getInitials } from "./format"
 
 export default function MentorshipAnalyticsView() {
   const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
@@ -156,32 +156,18 @@ export default function MentorshipAnalyticsView() {
             </CardHeader>
             <CardContent className="p-4 sm:p-5 pt-4">
               <div className="flex flex-wrap items-center justify-center gap-6">
-                <DonutChart
-                  className="flex-shrink-0 self-center"
-                  svgClassName="w-28 h-28 sm:w-24 sm:h-24 -rotate-90"
-                  radius={28}
-                  strokeWidth={14}
+                <PieDonutChart
+                  className="self-center"
+                  centerValue={mentorship.sessions.total}
+                  centerLabel="sessions"
                   segments={sessionStats.map((s) => ({
-                    key: s.label,
-                    // Percent of the three displayed statuses, not of
-                    // sessions.total — if that total doesn't exactly equal
-                    // completed+rejected+pending, dividing by it leaves a gap
-                    // in the ring instead of a full circle.
-                    value:
-                      toPercent(
-                        s.count,
-                        sessionStats.reduce((sum, x) => sum + x.count, 0)
-                      ) ?? 0,
-                    className: s.stroke
+                    label: s.label,
+                    count: s.count,
+                    share: formatPercent(s.count, mentorship.sessions.total),
+                    bg: s.bg,
+                    text: s.stroke
                   }))}
-                >
-                  <span className="text-sm font-bold">
-                    {mentorship.sessions.total.toLocaleString()}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    sessions
-                  </span>
-                </DonutChart>
+                />
                 <div className="flex flex-col gap-2 flex-1 basis-48 min-w-0">
                   {[
                     ...sessionStats,

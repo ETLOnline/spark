@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -9,7 +11,7 @@ import {
 } from "@/src/components/ui/card"
 import { UsersReport } from "@/src/types/Reporting/Reporting.schema"
 import { SnapshotUnavailable } from "./AnalyticsPage"
-import { DonutChart } from "./DonutChart"
+import { PieDonutChart } from "./PieDonutChart"
 import {
   SERIES_BG_CLASSES,
   SERIES_STROKE_CLASSES
@@ -19,10 +21,15 @@ import { humanizeKey, toExactPercentages } from "./format"
 interface UserSegmentCardProps {
   users: UsersReport | null
   error: boolean
+  showLink?: boolean
 }
 
 /** Pie chart of the user base by GLOBAL role, with a legend/count list beside it. Used on both the Overview page and the Users reporting page. */
-export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
+export function UserSegmentCard({
+  users,
+  error,
+  showLink = true
+}: UserSegmentCardProps) {
   // users.roles is already scoped to role_type = GLOBAL at the query level
   // (see GetUserRoleBreakdownRaw) — identity-level roles like Student/Mentor,
   // not scoped ones like Channel Viewer. Render whatever comes back rather
@@ -32,7 +39,7 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
       segment: humanizeKey(name),
       count: stats.total,
       bg: SERIES_BG_CLASSES[i % SERIES_BG_CLASSES.length],
-      stroke: SERIES_STROKE_CLASSES[i % SERIES_STROKE_CLASSES.length]
+      text: SERIES_STROKE_CLASSES[i % SERIES_STROKE_CLASSES.length]
     })
   )
   const total = segments.reduce((sum, s) => sum + s.count, 0)
@@ -51,23 +58,18 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
           <SnapshotUnavailable />
         ) : (
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <DonutChart
-              className="flex-shrink-0 self-center"
-              svgClassName="w-28 h-28 sm:w-24 sm:h-24 -rotate-90"
-              radius={28}
-              strokeWidth={14}
+            <PieDonutChart
+              className="self-center"
+              centerValue={total}
+              centerLabel="users"
               segments={segments.map((s, i) => ({
-                key: s.segment,
-                value: percentages[i],
-                className: s.stroke,
-                tooltip: `${s.segment} · ${s.count.toLocaleString()} · ${percentages[i]}%`
+                label: s.segment,
+                count: s.count,
+                share: `${percentages[i]}%`,
+                bg: s.bg,
+                text: s.text
               }))}
-            >
-              <span className="text-sm font-bold">
-                {total.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-muted-foreground">users</span>
-            </DonutChart>
+            />
 
             <div className="flex flex-col gap-0.5 flex-1 basis-56 text-sm min-w-0">
               <div className="flex items-center justify-between pb-1 border-b mb-1">
@@ -102,6 +104,15 @@ export function UserSegmentCard({ users, error }: UserSegmentCardProps) {
               ))}
             </div>
           </div>
+        )}
+
+        {showLink && (
+          <Link
+            href="/admin/analytics/users"
+            className="flex items-center gap-1 text-xs text-primary hover:underline mt-4"
+          >
+            View user analytics <ArrowRight className="w-3 h-3" />
+          </Link>
         )}
       </CardContent>
     </Card>

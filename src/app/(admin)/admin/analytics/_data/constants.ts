@@ -20,7 +20,7 @@ export const SERIES_BG_CLASSES = [
   "bg-slate-400"
 ]
 
-/** Matching stroke colours for DonutChart segments (same order as SERIES_BG_CLASSES). */
+/** Matching text colours for chart segments drawn with currentColor (same order as SERIES_BG_CLASSES). */
 export const SERIES_STROKE_CLASSES = [
   "text-emerald-500",
   "text-blue-500",
@@ -43,4 +43,29 @@ export const AVATAR_CLASSES = [
   "bg-indigo-100 text-indigo-700",
   "bg-rose-100 text-rose-700",
   "bg-teal-100 text-teal-700"
+]
+
+export type TrendGranularity = "daily" | "weekly" | "monthly" | "yearly"
+
+export const TREND_TABS: { key: TrendGranularity; label: string }[] = [
+  { key: "daily", label: "Daily" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+  { key: "yearly", label: "Yearly" }
+]
+
+export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+export const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
 ]
