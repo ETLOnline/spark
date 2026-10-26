@@ -162,11 +162,9 @@ export default function OverviewView() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 [&>*]:min-w-0">
         <UserSegmentCard users={users} error={users === null} />
-        {communities ? (
-          <TopCommunitiesCard ranking={communities.ranking} />
-        ) : (
-          <SnapshotUnavailable />
-        )}
+        <TopCommunitiesCard
+          ranking={communities?.ranking ?? { by_members: [], by_posts: [] }}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 [&>*]:min-w-0">

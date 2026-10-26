@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { cn } from "@/src/lib/utils"
+import { SnapshotUnavailable } from "./AnalyticsPage"
 
 export interface RankListItem {
   initials: string
@@ -48,31 +49,38 @@ export function RankList({
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
-        {items.map((item, i) => (
-          <div key={item.name} className="flex min-w-0 items-center gap-3">
-            <span className="text-sm text-muted-foreground w-4 flex-shrink-0">
-              {i + 1}
-            </span>
-            <span
-              className={cn(
-                "w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0",
-                item.avatarColor ?? "bg-primary/10 text-primary"
-              )}
-            >
-              {item.initials}
-            </span>
-            <span className="text-sm flex-1 min-w-0 truncate" title={item.name}>
-              {item.name}
-            </span>
-            <span className="text-sm font-semibold flex-shrink-0 tabular-nums">
-              {typeof item.value === "number"
-                ? item.value.toLocaleString()
-                : item.value}
-            </span>
-          </div>
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <SnapshotUnavailable />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {items.map((item, i) => (
+            <div key={item.name} className="flex min-w-0 items-center gap-3">
+              <span className="text-sm text-muted-foreground w-4 flex-shrink-0">
+                {i + 1}
+              </span>
+              <span
+                className={cn(
+                  "w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0",
+                  item.avatarColor ?? "bg-primary/10 text-primary"
+                )}
+              >
+                {item.initials}
+              </span>
+              <span
+                className="text-sm flex-1 min-w-0 truncate"
+                title={item.name}
+              >
+                {item.name}
+              </span>
+              <span className="text-sm font-semibold flex-shrink-0 tabular-nums">
+                {typeof item.value === "number"
+                  ? item.value.toLocaleString()
+                  : item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {linkHref && (
         <Link
