@@ -22,6 +22,7 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { downloadCsv } from "./csv"
+import { KpiCard } from "./KpiCard"
 import { RewardTypeBlock } from "@/src/types/Reporting/Reporting.schema"
 import {
   AVATAR_CLASSES,
@@ -118,74 +119,56 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
 
   return (
     <>
-      {/* Summary + Actions by rule */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 [&>*]:min-w-0">
-        <Card>
-          <CardHeader className="p-4 sm:p-5 pb-0">
-            <CardTitle className="text-sm">{label} summary</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-5 pt-4">
-            <div className="grid grid-cols-2 gap-3">
-              {summary.map((s) => (
-                <Card
-                  key={s.label}
-                  className="min-w-0 rounded-lg border-0 bg-muted/40 p-3 shadow-none"
+      {/* Summary — compact stat row, kept out of a side-by-side grid with
+          "Actions by rule" so it doesn't stretch to match that taller card's
+          height and waste space. */}
+      <KpiCard
+        columns={2}
+        items={summary.map((s) => ({ label: s.label, value: s.value }))}
+      />
+
+      <Card>
+        <CardHeader className="p-4 sm:p-5 pb-0 flex flex-col sm:flex-row items-start justify-between gap-1 sm:gap-3 space-y-0">
+          <CardTitle className="text-sm">Actions by rule</CardTitle>
+          <span className="text-xs text-muted-foreground">
+            Times each rule awarded {short}
+          </span>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5 pt-4">
+          {rules.length === 0 ? (
+            <SnapshotUnavailable />
+          ) : (
+            <div className="flex flex-col gap-3">
+              {rules.map((a) => (
+                <div
+                  key={a.key}
+                  className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5"
                 >
-                  <CardDescription className="text-xs [overflow-wrap:anywhere]">
-                    {s.label}
-                  </CardDescription>
-                  <CardTitle className="text-xl sm:text-2xl leading-7 sm:leading-8 tracking-normal font-bold mt-0.5 [overflow-wrap:anywhere]">
-                    {s.value}
-                  </CardTitle>
-                </Card>
+                  <div className="w-full sm:w-36 flex-shrink-0 min-w-0">
+                    <p className="text-xs font-medium leading-none [overflow-wrap:anywhere]">
+                      {humanizeKey(a.key)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono mt-0.5 [overflow-wrap:anywhere]">
+                      {a.key}
+                    </p>
+                  </div>
+                  <Progress
+                    value={toPercent(a.count, topRuleCount) ?? 0}
+                    className="flex-1 min-w-0 bg-muted"
+                    indicatorClassName="bg-emerald-500 rounded-full transition-none"
+                  />
+                  <span className="text-sm font-semibold w-14 text-right flex-shrink-0 tabular-nums">
+                    {a.count.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-muted-foreground w-12 text-right flex-shrink-0">
+                    {formatPercent(a.count, block.actions.total)}
+                  </span>
+                </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 sm:p-5 pb-0 flex flex-col sm:flex-row items-start justify-between gap-1 sm:gap-3 space-y-0">
-            <CardTitle className="text-sm">Actions by rule</CardTitle>
-            <span className="text-xs text-muted-foreground">
-              Times each rule awarded {short}
-            </span>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-5 pt-4">
-            {rules.length === 0 ? (
-              <SnapshotUnavailable />
-            ) : (
-              <div className="flex flex-col gap-3">
-                {rules.map((a) => (
-                  <div
-                    key={a.key}
-                    className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1.5"
-                  >
-                    <div className="w-full sm:w-36 flex-shrink-0 min-w-0">
-                      <p className="text-xs font-medium leading-none [overflow-wrap:anywhere]">
-                        {humanizeKey(a.key)}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5 [overflow-wrap:anywhere]">
-                        {a.key}
-                      </p>
-                    </div>
-                    <Progress
-                      value={toPercent(a.count, topRuleCount) ?? 0}
-                      className="flex-1 min-w-0 bg-muted"
-                      indicatorClassName="bg-emerald-500 rounded-full transition-none"
-                    />
-                    <span className="text-sm font-semibold w-14 text-right flex-shrink-0 tabular-nums">
-                      {a.count.toLocaleString()}
-                    </span>
-                    <span className="text-xs text-muted-foreground w-12 text-right flex-shrink-0">
-                      {formatPercent(a.count, block.actions.total)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Top earners */}
       <Card className="min-w-0">
