@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Download } from "lucide-react"
+import { Download, Info } from "lucide-react"
 import { SnapshotUnavailable } from "./AnalyticsPage"
 import { Button } from "@/src/components/ui/button"
 import { Progress } from "@/src/components/ui/progress"
@@ -15,6 +15,12 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 import { downloadCsv } from "./csv"
 import { RewardTypeBlock } from "@/src/types/Reporting/Reporting.schema"
 import {
@@ -83,7 +89,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
         "Name",
         "Email",
         ...(showLevel ? ["Level"] : []),
-        `Total ${short}`,
+        `Current ${short} Balance`,
         "Total actions",
         ...actionTypes.map(humanizeKey)
       ],
@@ -221,7 +227,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                 <span>Rank</span>
                 <span>User</span>
                 {showLevel && <span className="w-28 text-center">Level</span>}
-                <span className="w-24 text-right">Total {short}</span>
+                <span className="w-24 text-right">Current {short} Balance</span>
                 <span className="w-16 text-right">Actions</span>
               </div>
 
@@ -287,7 +293,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                               {e.info.total.toLocaleString()}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              {short} held
+                              Current {short} Balance
                             </p>
                           </div>
                           <div className="w-16 text-right">
@@ -303,9 +309,27 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
 
                       {e.actions.type.length > 0 && (
                         <div className="ml-0 lg:ml-[calc(3rem+1rem)] min-w-0 rounded-lg border bg-muted/20 p-3 flex flex-col gap-2.5">
-                          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                            Action types
-                          </span>
+                          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                              Action types
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3 h-3 flex-shrink-0 cursor-help normal-case font-normal" />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-56 normal-case font-normal">
+                                    Bar segments show each action type&apos;s
+                                    share of this user&apos;s total rewarded
+                                    actions.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {e.actions.type.length} Action Types ·{" "}
+                              {e.actions.total.toLocaleString()} Total Actions
+                            </span>
+                          </div>
                           <div className="flex h-3 rounded-md overflow-hidden gap-px">
                             {e.actions.type.map((b, idx) => (
                               <div

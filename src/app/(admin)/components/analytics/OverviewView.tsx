@@ -182,7 +182,7 @@ export default function OverviewView() {
             title="Most engaged"
             subtitle="Current SC balance"
             items={mostEngaged}
-            valueLabel="SC held"
+            valueLabel="Current SC Balance"
             linkHref="/admin/analytics/leaderboards"
             linkLabel="View leaderboards →"
             className="w-full"

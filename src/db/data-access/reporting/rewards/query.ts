@@ -107,9 +107,13 @@ export async function GetRewardRankingRaw(
     -- a user has one or several rows in user_rewards_level.
     left join user_rewards_level url on url.user_id = urb.user_id
     left join reward_level rl on rl.id = url.level_id and rl.reward_id = ${rewardId}
+    -- total must be the sum of per-type occurrence counts, not count(*) —
+    -- count(*) here would run over the already-grouped subquery below
+    -- (one row per distinct action_type) and silently count TYPES instead
+    -- of total action OCCURRENCES, which is what "actions" is supposed to mean.
     left join lateral (
       select
-        count(*) as total,
+        sum(grouped.cnt) as total,
         json_agg(json_build_object('action_type', grouped.action_type, 'count', grouped.cnt)) as by_type
       from (
         select ar.action_type as action_type, count(*) as cnt
