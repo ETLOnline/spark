@@ -98,7 +98,10 @@ const buildBreadcrumbsFromConfig = async (
     } else if (typeof displayLabelOrLabels === "string") {
       crumbs.push({
         label: displayLabelOrLabels,
-        href: matchedConfigItem.href || segmentHref,
+        href:
+          typeof matchedConfigItem.href === "function"
+            ? matchedConfigItem.href(segmentHref, params)
+            : matchedConfigItem.href || segmentHref,
         isCurrent: false
       })
     }
@@ -182,6 +185,22 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
           finalBreadcrumbs.push(crumb)
         }
       })
+
+      // Admin root page is the Analytics overview → "Admin / Analytics / Overview",
+      // matching the "Admin / Analytics / Users" trail of the analytics sub-pages
+      if (pathname === "/admin" && finalBreadcrumbs.length > 0) {
+        finalBreadcrumbs[finalBreadcrumbs.length - 1].isCurrent = false
+        finalBreadcrumbs.push({
+          label: "Analytics",
+          href: "/admin",
+          isCurrent: false
+        })
+        finalBreadcrumbs.push({
+          label: "Overview",
+          href: "/admin",
+          isCurrent: true
+        })
+      }
 
       const pageType = searchParams.get("page-type")
       if (pageType) {

@@ -31,7 +31,7 @@ export default function TermsPage() {
             <div className="space-y-2">
               <p className="text-xl text-muted-foreground">Spark Platform</p>
               <p className="text-sm text-muted-foreground/70">
-                Effective Date: 14-Aug-2025
+                Effective Date: 06-Oct-2026
               </p>
             </div>
           </div>
@@ -138,6 +138,14 @@ export default function TermsPage() {
                 </li>
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  You are solely responsible for protecting your own
+                  intellectual property. ETL is not responsible for the
+                  protection of intellectual property shared on Spark, including
+                  any use, copying, or disclosure of your content by other users
+                  or third parties.
+                </li>
+                <li className="flex items-start">
+                  <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   By sharing content on Spark, you grant ETL permission to use
                   it for educational purposes, research, and platform
                   improvement.
@@ -205,8 +213,9 @@ export default function TermsPage() {
                 </li>
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  ETL is not responsible for loss of data, project delays, or
-                  damages arising from platform use.
+                  To the fullest extent permitted by law, ETL shall not be
+                  liable for any loss or damage arising from the use of, or
+                  inability to use, Spark.
                 </li>
               </ul>
             </section>
