@@ -118,7 +118,7 @@ export default function OverviewView() {
       label: "Total RP Issued",
       value: totalRP?.compact ?? "0",
       fullValue: totalRP?.full,
-      description: "Cumulative Reward Points issued platform-wide.",
+      description: "Cumulative Reputation Points issued platform-wide.",
       icon: Medal,
       error: rewards === null
     },
