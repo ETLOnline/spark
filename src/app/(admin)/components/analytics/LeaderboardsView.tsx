@@ -52,9 +52,11 @@ export default function LeaderboardsView() {
       icon: Trophy
     },
     {
-      label: "Reputation Points",
+      label: "Total RP Issued",
       value: rp_points.total.toLocaleString(),
-      sub: `RP issued · ${rp_points.actions.total.toLocaleString()} actions`,
+      sub: `${rp_points.actions.total.toLocaleString()} rewarded actions`,
+      description:
+        "Cumulative Reputation Points awarded to all users since launch.",
       icon: Medal
     },
     {
@@ -74,7 +76,7 @@ export default function LeaderboardsView() {
   return (
     <AnalyticsPage
       title="Rewards & leaderboards"
-      description="Reputation Points and Spark Credits held, the actions that earned them, and the top earners."
+      description="Reputation Points and Spark Credits issued, the actions that earned them, and the top earners."
     >
       <KpiCard items={kpis} />
 
