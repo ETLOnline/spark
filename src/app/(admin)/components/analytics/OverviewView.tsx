@@ -119,10 +119,10 @@ export default function OverviewView() {
       icon: Medal
     },
     {
-      label: "Total SC Circulation",
+      label: "SC in Circulation",
       value: totalSC?.compact ?? "0",
       fullValue: totalSC?.full,
-      description: "Spark Coins currently in circulation across users.",
+      description: "Spark Credits currently in circulation across users.",
       icon: Coins
     }
   ]

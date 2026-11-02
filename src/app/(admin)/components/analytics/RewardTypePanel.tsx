@@ -53,8 +53,18 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
   // just read "No level" for every single row.
   const showLevel = short === "RP"
 
+  const balanceColumnLabel = showLevel
+    ? "Reputation Score"
+    : `Current ${short} Balance`
+  const rankedByPhrase = showLevel
+    ? "cumulative Reputation Score"
+    : `current ${short} balance`
+
   const summary = [
-    { label: `${short} held by users`, value: block.total.toLocaleString() },
+    {
+      label: showLevel ? "Total RP Issued" : `${short} Issued`,
+      value: block.total.toLocaleString()
+    },
     {
       label: "Rewarded actions",
       value: block.actions.total.toLocaleString()
@@ -90,7 +100,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
         "Name",
         "Email",
         ...(showLevel ? ["Level"] : []),
-        `Current ${short} Balance`,
+        balanceColumnLabel,
         "Total actions",
         ...actionTypes.map(humanizeKey)
       ],
@@ -176,7 +186,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
           <div className="min-w-0">
             <CardTitle className="text-sm">Top {label} earners</CardTitle>
             <CardDescription className="text-xs">
-              Users ranked by current {short} balance, with
+              Users ranked by {rankedByPhrase}, with
               {showLevel ? " their level and " : " "}
               the actions that earned it.
             </CardDescription>
@@ -209,9 +219,51 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
               >
                 <span>Rank</span>
                 <span>User</span>
-                {showLevel && <span className="w-28 text-center">Level</span>}
-                <span className="w-24 text-right">Current {short} Balance</span>
-                <span className="w-16 text-right">Actions</span>
+                {showLevel && (
+                  <span className="w-28 flex items-center justify-center gap-1">
+                    Level
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="w-3 h-3 flex-shrink-0 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-56 text-xs">
+                          Status tier based on cumulative Reputation Score, from
+                          Spark Starter to the platform&apos;s highest tier.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </span>
+                )}
+                <span className="w-24 flex items-center justify-end gap-1">
+                  {balanceColumnLabel}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3 h-3 flex-shrink-0 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-56 text-xs">
+                        {showLevel
+                          ? "Cumulative Reputation Score earned since the user joined. This value only grows — Reputation Points are never spent."
+                          : "Current spendable Spark Credits balance. Increases when earned and decreases when spent."}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
+                <span className="w-16 flex items-center justify-end gap-1">
+                  Actions
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3 h-3 flex-shrink-0 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-56 text-xs">
+                        Total number of individual rewarded actions performed,
+                        not the number of distinct action types.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
               </div>
 
               <div className="divide-y">
@@ -276,7 +328,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                               {e.info.total.toLocaleString()}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              Current {short} Balance
+                              {balanceColumnLabel}
                             </p>
                           </div>
                           <div className="w-16 text-right">
