@@ -62,7 +62,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
 
   const summary = [
     {
-      label: showLevel ? "Total RP Issued" : `${short} Issued`,
+      label: showLevel ? "Total RP Issued" : `${short} in Circulation`,
       value: block.total.toLocaleString()
     },
     {
