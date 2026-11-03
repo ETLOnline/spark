@@ -1,3 +1,4 @@
+import PostAiTags from "./post-ai-tags"
 import { RadioGroup } from "../../ui/radio-group"
 import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
@@ -254,6 +255,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
           )}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
+          <PostAiTags tags={post.ai_tags} />
           {post.hashtags &&
             post.hashtags.map((tag) => (
               <Badge key={tag.id} variant="secondary">

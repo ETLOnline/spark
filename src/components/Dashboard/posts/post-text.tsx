@@ -1,3 +1,4 @@
+import PostAiTags from "./post-ai-tags"
 import { CardContent, CardFooter } from "../../ui/card"
 import PostInteractions from "./post-interactions"
 import { Separator } from "@/src/components/ui/separator"
@@ -90,6 +91,7 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
         <ExpandableText content={content} lines={6} isHtml />
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <PostAiTags tags={post.ai_tags} />
           {post.hashtags &&
             post.hashtags.map((tag) => (
               <Badge key={tag.id} variant="secondary">

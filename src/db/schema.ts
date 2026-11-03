@@ -738,6 +738,8 @@ export const postsTable = pgTable("posts", {
   likes: integer().notNull().default(0),
   comments: integer().notNull().default(0),
   category: varchar(),
+  // tags added by TypeSafe AI when the post is created/edited, e.g. ["helpful", "impressive"]
+  ai_tags: jsonb("ai_tags").$type<string[]>().notNull().default([]),
   ...timestamps
 })
 

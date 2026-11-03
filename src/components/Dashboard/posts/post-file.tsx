@@ -1,3 +1,4 @@
+import PostAiTags from "./post-ai-tags"
 import { FileIcon } from "lucide-react"
 import { SelectComment, SelectFilePost } from "@/src/db/schema"
 import Link from "next/link"
@@ -120,6 +121,7 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
           </Link>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
+          <PostAiTags tags={post.ai_tags} />
           {post.hashtags &&
             post.hashtags.map((tag) => (
               <Badge key={tag.id} variant="secondary">

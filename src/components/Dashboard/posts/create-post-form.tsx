@@ -203,6 +203,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     }
     return null
   }
+  // Moderation blocks come back as a readable string, other failures as Error objects
+  const getPostErrorMessage = (error: unknown) =>
+    typeof error === "string" ? error : "Error creating post please try again!"
+
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
@@ -266,7 +270,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Error creating post please try again!"
+            description: getPostErrorMessage(post.error)
           })
           return
         }
@@ -319,6 +323,13 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 author: authUser as SelectUser,
                 files: imagesResult.data
               } as SelectPollPost
+            } else if (typeof imagesResult?.error === "string") {
+              // images blocked by moderation; the poll is published without them
+              toast({
+                variant: "destructive",
+                title: "Images not added",
+                description: imagesResult.error
+              })
             }
           }
 
@@ -358,7 +369,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Error creating post please try again!"
+            description: getPostErrorMessage(pollPost.error)
           })
           return
         }
@@ -434,7 +445,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             toast({
               variant: "destructive",
               title: "Error",
-              description: "Error creating post please try again!"
+              description: getPostErrorMessage(post.error)
             })
             return
           }
@@ -511,7 +522,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             toast({
               variant: "destructive",
               title: "Error",
-              description: "Error creating post please try again!"
+              description: getPostErrorMessage(post.error)
             })
             return
           }

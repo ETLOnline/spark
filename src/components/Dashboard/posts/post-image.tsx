@@ -1,4 +1,5 @@
 "use client"
+import PostAiTags from "./post-ai-tags"
 
 import { useState } from "react"
 import Image from "next/image"
@@ -177,6 +178,7 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <PostAiTags tags={post.ai_tags} />
           {post.hashtags &&
             post.hashtags.map((tag) => (
               <Badge key={tag.id} variant="secondary">

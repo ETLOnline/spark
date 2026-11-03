@@ -36,11 +36,15 @@ export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
 
-export const UpdatePost = async (postId: string, content: string) => {
+export const UpdatePost = async (
+  postId: string,
+  content: string,
+  aiTags?: string[]
+) => {
   try {
     const updatedPost = await db
       .update(postsTable)
-      .set({ content })
+      .set({ content, ...(aiTags ? { ai_tags: aiTags } : {}) })
       .where(eq(postsTable.id, postId))
       .returning()
 

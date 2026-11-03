@@ -37,6 +37,30 @@ import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { AddRewardAction } from "../Reward/Reward"
 import { getPostUrl } from "@/src/utils/serverHelpers"
+import { checkPost } from "@/src/services/ai/post/postCheck"
+import { UploadedImage } from "@/src/services/ai/types/interface"
+
+// Checks post text, poll options and images with AI before the post is saved.
+// `blocked` is an error result when the post must not be published, `aiTags` are the tags to save on the post.
+const checkPostModeration = async (
+  content?: string | null,
+  pollOptions?: string[],
+  images?: UploadedImage[]
+) => {
+  const moderation = await checkPost({ content, pollOptions, images })
+
+  // the caller saves the post only when `blocked` is null.
+  // Until posts have a "pending review" status, held posts are not saved and the user is told why.
+  const blocked = moderation.publish
+    ? null
+    : {
+        success: false as const,
+        data: undefined,
+        error: moderation.message,
+        moderation
+      }
+  return { blocked, aiTags: moderation.aiTags }
+}
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -50,13 +74,17 @@ export const CreatePostAction = CreateServerAction(
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
+        const { blocked, aiTags } = await checkPostModeration(content)
+        if (blocked) return blocked
+
         const postData = await CreatePost({
           content,
           type,
           user_id: userId,
           category,
           entity_type: entityType,
-          entity_id: entityId
+          entity_id: entityId,
+          ai_tags: aiTags
         })
         const { proof_url, communityId } = await getPostUrl(
           postData[0].id,
@@ -83,7 +111,10 @@ export const UpdatePostAction = CreateServerAction(
   true,
   async (postId: string, content: string) => {
     try {
-      const updatedPost = await UpdatePost(postId, content)
+      const { blocked, aiTags } = await checkPostModeration(content)
+      if (blocked) return blocked
+
+      const updatedPost = await UpdatePost(postId, content, aiTags)
       return { success: true, data: updatedPost }
     } catch (error: any) {
       return {
@@ -123,6 +154,12 @@ export const UpdatePollOptionsAction = CreateServerAction(
       if (hasVotes) {
         throw new Error("Cannot edit poll options after voting has started")
       }
+
+      const { blocked } = await checkPostModeration(
+        post.content,
+        options.map((opt) => opt.text)
+      )
+      if (blocked) return blocked
 
       const existingOptions = post.options || []
       const existingOptionIds = existingOptions.map((opt) => opt.id)
@@ -204,6 +241,14 @@ export const CreateFilesPostAction = CreateServerAction(
         throw new Error("No files provided")
       }
 
+      // checked before upload, so a blocked image is never stored
+      const { blocked, aiTags } = await checkPostModeration(
+        content,
+        undefined,
+        files
+      )
+      if (blocked) return blocked
+
       // If there are multiple files, treat it as an image post (existing behavior)
       if (files.length > 1) {
         // Create a single post for all images
@@ -213,7 +258,8 @@ export const CreateFilesPostAction = CreateServerAction(
           content,
           category,
           entity_type: entityType,
-          entity_id: entityId
+          entity_id: entityId,
+          ai_tags: aiTags
         })
 
         if (!postData || postData.length === 0) {
@@ -266,7 +312,8 @@ export const CreateFilesPostAction = CreateServerAction(
         content,
         category,
         entity_type: entityType,
-        entity_id: entityId
+        entity_id: entityId,
+        ai_tags: aiTags
       })
 
       if (!postData || postData.length === 0) {
@@ -314,13 +361,17 @@ export const CreatePollPostAction = CreateServerAction(
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
+        const { blocked, aiTags } = await checkPostModeration(content, options)
+        if (blocked) return blocked
+
         const postData = await CreatePost({
           content,
           type,
           user_id: userId,
           category,
           entity_type: entityType,
-          entity_id: entityId
+          entity_id: entityId,
+          ai_tags: aiTags
         })
         if (postData[0]) {
           const pollOptions = options.map((option) => {
@@ -367,6 +418,10 @@ export const AttachImagesToPostAction = CreateServerAction(
       if (!files || files.length === 0) {
         throw new Error("No files provided")
       }
+
+      // poll images: the poll text was already checked when the poll was created
+      const { blocked } = await checkPostModeration(undefined, undefined, files)
+      if (blocked) return blocked
 
       const fileRecords: any[] = []
 

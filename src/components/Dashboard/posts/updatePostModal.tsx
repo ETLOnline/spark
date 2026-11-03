@@ -212,6 +212,19 @@ function UpdatePostModal({
 
       const newPostContent = await updatePost(selectedPost.id, data.content)
 
+      // Moderation blocks come back as a readable string
+      if (
+        !newPostContent?.success &&
+        typeof newPostContent?.error === "string"
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: newPostContent.error
+        })
+        return
+      }
+
       // Update poll options if it's a poll and can be edited
       let updatedPollOptions = null
       if (
@@ -245,6 +258,7 @@ function UpdatePostModal({
               ? ({
                   ...post,
                   content: newPostContent.data.content,
+                  ai_tags: newPostContent.data.ai_tags,
                   hashtags: updatedHashtags,
                   ...(isPoll && canEditPoll && updatedPollOptions
                     ? { options: updatedPollOptions }

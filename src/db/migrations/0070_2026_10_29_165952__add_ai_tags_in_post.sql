@@ -1,0 +1,1 @@
+ALTER TABLE "posts" ADD COLUMN "ai_tags" jsonb DEFAULT '[]'::jsonb NOT NULL;
