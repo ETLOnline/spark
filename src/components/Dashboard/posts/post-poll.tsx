@@ -1,3 +1,4 @@
+import { PostStatus } from "@/src/types/Post/PostStatus"
 import PostAiTags from "./post-ai-tags"
 import { RadioGroup } from "../../ui/radio-group"
 import { Label } from "../../ui/label"
@@ -175,6 +176,9 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   }
 
   const isSingle = post.files?.length === 1
+  // a poll under review can't be voted on until an admin approves it
+  const isPending = post.status === PostStatus.PENDING_REVIEW
+  const votingDisabled = votePollLoading || hasVoted || isPending
   return (
     <>
       <CardContent
@@ -219,7 +223,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
         <div onClick={(e) => e.stopPropagation()}>
           <RadioGroup
             onValueChange={handleOptionChange}
-            disabled={votePollLoading || hasVoted}
+            disabled={votingDisabled}
             value={tempSelectedOption}
           >
             {post.options?.map((option) => (
@@ -230,7 +234,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
                 <RadioGroupItem
                   value={option.option_text}
                   id={option.option_text}
-                  disabled={votePollLoading || hasVoted}
+                  disabled={votingDisabled}
                 />
                 <Label htmlFor={option.option_text}>
                   {option.option_text}
@@ -244,7 +248,12 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
               </div>
             ))}
           </RadioGroup>
-          {!hasVoted && tempSelectedOption && (
+          {isPending && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Voting opens once the post is approved.
+            </p>
+          )}
+          {!hasVoted && !isPending && tempSelectedOption && (
             <Button
               onClick={handleSubmitVote}
               disabled={votePollLoading}
@@ -264,34 +273,37 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4 p-0">
-        <PostInteractions
-          postId={post.id}
-          likes={post.likes}
-          comments={post.comments}
-          likers={post.postLikes}
-          spaceId={spaceId}
-          isCommentsVisible={iscCommetsVisible}
-          setIsCommentsVisible={setIsCommentsVisible}
-        />
-        <Separator />
-        {iscCommetsVisible ? (
-          <>
-            <PostCommentsSection
-              comments={post.postComments || []}
-              onEditComment={handleEditComment}
-            />
-          </>
-        ) : null}
-        <PostCommentForm
-          postId={post.id}
-          comments={post.comments}
-          spaceId={spaceId}
-          editingComment={editingComment}
-          onCancelEdit={handleCancelEdit}
-          onUpdateComment={handleUpdateComment}
-        />
-      </CardFooter>
+      {/* likes, comments and sharing open once the post is published */}
+      {post.status !== PostStatus.PENDING_REVIEW && (
+        <CardFooter className="flex flex-col items-start space-y-4 p-0">
+          <PostInteractions
+            postId={post.id}
+            likes={post.likes}
+            comments={post.comments}
+            likers={post.postLikes}
+            spaceId={spaceId}
+            isCommentsVisible={iscCommetsVisible}
+            setIsCommentsVisible={setIsCommentsVisible}
+          />
+          <Separator />
+          {iscCommetsVisible ? (
+            <>
+              <PostCommentsSection
+                comments={post.postComments || []}
+                onEditComment={handleEditComment}
+              />
+            </>
+          ) : null}
+          <PostCommentForm
+            postId={post.id}
+            comments={post.comments}
+            spaceId={spaceId}
+            editingComment={editingComment}
+            onCancelEdit={handleCancelEdit}
+            onUpdateComment={handleUpdateComment}
+          />
+        </CardFooter>
+      )}
     </>
   )
 }

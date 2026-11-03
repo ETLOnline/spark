@@ -153,6 +153,66 @@ export const moderationDetailsSchema = z.object({
 
 export type ModerationDetails = z.infer<typeof moderationDetailsSchema>
 
+// Saved on a held post (posts.moderation_result). Each answer is stored once, in `details`;
+// the overall verdict and top checks the admin sees are worked out from it (getModerationSummary).
+export const postModerationResultSchema = z.object({
+  // blocked / needs_review from the AI, error -> the AI is not configured or the call failed
+  outcome: z.enum(["needs_review", "blocked", "error"]),
+  // one readable line for the admin, e.g. "This post may contain hate speech, nudity."
+  reason: z.string(),
+  // every answer for the text and each image (verdict, severity, every check, decision);
+  // absent when the check failed
+  details: moderationDetailsSchema.omit({ raw: true }).optional(),
+  error: z.string().optional(),
+  checked_at: z.string(),
+  // set when an admin approves or rejects the post; the admin's id is in posts.reviewed_by
+  review: z
+    .object({
+      action: z.enum(["approved", "rejected"]),
+      reviewed_at: z.string()
+    })
+    .optional()
+})
+
+export type PostModerationResult = z.infer<typeof postModerationResultSchema>
+
+const OUTCOME_RANK: Record<ModerationOutcome, number> = {
+  safe: 0,
+  needs_review: 1,
+  blocked: 2
+}
+
+// Overall view of a saved result: the strictest part's verdict, and every check once
+// (text and images merged, each label at its highest probability), highest first
+export function getModerationSummary(result?: PostModerationResult | null) {
+  const details = result?.details
+  const parts = details
+    ? [...(details.text ? [details.text] : []), ...details.images]
+    : []
+
+  const strictest = parts.reduce<ModerationPartResult | undefined>(
+    (worst, part) =>
+      !worst ||
+      OUTCOME_RANK[part.decision.outcome] > OUTCOME_RANK[worst.decision.outcome]
+        ? part
+        : worst,
+    undefined
+  )
+
+  const byLabel = new Map<string, CheckResult>()
+  for (const check of parts.flatMap((p) => p.checks)) {
+    const seen = byLabel.get(check.label)
+    if (!seen || check.probability > seen.probability) {
+      byLabel.set(check.label, check)
+    }
+  }
+
+  return {
+    verdict: strictest?.verdict,
+    checks: [...byLabel.values()].sort((a, b) => b.probability - a.probability)
+  }
+}
+
 // What the server action gets back from checkPost()
 export const postCheckResultSchema = z.object({
   // true -> save the post, false -> hold it and show `message`
@@ -163,6 +223,8 @@ export const postCheckResultSchema = z.object({
   aiTags: z.array(postAiTagSchema),
   // absent when nothing was checked or the check failed
   moderation: moderationDetailsSchema.optional(),
+  // what to save on the post when it is held; absent when it can be published
+  moderationResult: postModerationResultSchema.optional(),
   message: z.string().optional()
 })
 

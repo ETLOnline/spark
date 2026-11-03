@@ -2,6 +2,8 @@ import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import type { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
 import {
   integer,
   pgTable,
@@ -740,6 +742,12 @@ export const postsTable = pgTable("posts", {
   category: varchar(),
   // tags added by TypeSafe AI when the post is created/edited, e.g. ["helpful", "impressive"]
   ai_tags: jsonb("ai_tags").$type<string[]>().notNull().default([]),
+  // published | pending_review | rejected
+  status: varchar().notNull().default(PostStatus.PUBLISHED),
+  // why the AI held the post; null when the post was published straight away
+  moderation_result: jsonb("moderation_result").$type<PostModerationResult>(),
+  // user id of the admin who approved or rejected the post
+  reviewed_by: varchar(),
   ...timestamps
 })
 

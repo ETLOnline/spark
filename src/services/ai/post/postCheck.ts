@@ -2,7 +2,7 @@
 //   1. buildPostModerationInput()  - post -> text + images (this file)
 //   2. buildState()                - adapter
 //   3. moderate()                  - adapter
-//   4. save the post according to `result.publish` (server action)
+//   4. save the post as published, or as pending review with `moderationResult` (server action)
 
 import { getAIClient } from "../client/ai.client"
 import {
@@ -12,12 +12,17 @@ import {
 import {
   PostAiTag,
   PostCheckInput,
-  PostCheckResult
+  PostCheckResult,
+  PostModerationResult
 } from "../schemas/postCheck.schema"
 import { ModerationInput, ModerationResult } from "../types/interface"
 import { htmlToPlainText } from "../utils/text"
+import {
+  AI_FAILED_REASON,
+  POST_UNDER_REVIEW_MESSAGE
+} from "./postCheck.messages"
 
-type PostModerationResult = ModerationResult<PostAiTag>
+type AiPostResult = ModerationResult<PostAiTag>
 
 // Step 1: what readers of the post see, as plain text and images, plus the tag questions
 export function buildPostModerationInput(
@@ -37,7 +42,7 @@ export function buildPostModerationInput(
 }
 
 // Positive tags for the post (helpful, impressive, ...); empty when there was no text or the check failed
-export function getPostTags(result: PostModerationResult): PostAiTag[] {
+export function getPostTags(result: AiPostResult): PostAiTag[] {
   const tagScores = result.extraScores
   if (!tagScores) return []
   return (Object.keys(tagScores) as PostAiTag[]).filter(
@@ -46,7 +51,7 @@ export function getPostTags(result: PostModerationResult): PostAiTag[] {
 }
 
 // Labels of the checks that held the post, e.g. ["hate speech", "nudity"]
-const heldChecks = (result: PostModerationResult) => {
+const heldChecks = (result: AiPostResult) => {
   const details = result.details
   if (!details) return []
   const status =
@@ -60,15 +65,33 @@ const heldChecks = (result: PostModerationResult) => {
   return [...new Set(labels)]
 }
 
-// Message for a post that was not published
-export function getModerationMessage(result: PostModerationResult) {
-  if (!result.details) {
-    return "We couldn't check your post right now. Please try again in a moment."
+// What is saved on a held post: the outcome, a readable reason and every answer
+// for the text and images (without the untouched API response)
+export function buildPostModerationResult(
+  result: AiPostResult
+): PostModerationResult {
+  const checked_at = new Date().toISOString()
+  const details = result.details
+  if (result.outcome === "error" || !details) {
+    return {
+      outcome: "error",
+      reason: AI_FAILED_REASON,
+      error: result.error,
+      checked_at
+    }
   }
-  const checks = heldChecks(result)
-  return checks.length
-    ? `Your post can't be published because it may contain ${checks.join(", ")}. Please edit it and try again.`
-    : "Your post can't be published because it may break our community guidelines. Please edit it and try again."
+
+  const held = heldChecks(result)
+  const { raw, ...answers } = details
+  return {
+    outcome:
+      details.decision.outcome === "blocked" ? "blocked" : "needs_review",
+    reason: held.length
+      ? `This post may contain ${held.join(", ")}.`
+      : "This post may break our community guidelines.",
+    details: answers,
+    checked_at
+  }
 }
 
 // Runs steps 1-3 for a post
@@ -89,6 +112,9 @@ export async function checkPost(
     reasons: result.reasons,
     aiTags: getPostTags(result),
     moderation: result.details,
-    message: result.publish ? undefined : getModerationMessage(result)
+    moderationResult: result.publish
+      ? undefined
+      : buildPostModerationResult(result),
+    message: result.publish ? undefined : POST_UNDER_REVIEW_MESSAGE
   }
 }

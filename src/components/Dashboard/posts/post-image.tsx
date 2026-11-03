@@ -1,4 +1,5 @@
 "use client"
+import { PostStatus } from "@/src/types/Post/PostStatus"
 import PostAiTags from "./post-ai-tags"
 
 import { useState } from "react"
@@ -187,34 +188,37 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4 p-0">
-        <PostInteractions
-          postId={post.id}
-          likes={post.likes}
-          comments={post.comments}
-          likers={post.postLikes}
-          spaceId={spaceId}
-          isCommentsVisible={iscCommetsVisible}
-          setIsCommentsVisible={setIsCommentsVisible}
-        />
-        <Separator />
-        {iscCommetsVisible ? (
-          <>
-            <PostCommentsSection
-              comments={post.postComments || []}
-              onEditComment={handleEditComment}
-            />
-          </>
-        ) : null}
-        <PostCommentForm
-          postId={post.id}
-          comments={post.comments}
-          spaceId={spaceId}
-          editingComment={editingComment}
-          onCancelEdit={handleCancelEdit}
-          onUpdateComment={handleUpdateComment}
-        />
-      </CardFooter>
+      {/* likes, comments and sharing open once the post is published */}
+      {post.status !== PostStatus.PENDING_REVIEW && (
+        <CardFooter className="flex flex-col items-start space-y-4 p-0">
+          <PostInteractions
+            postId={post.id}
+            likes={post.likes}
+            comments={post.comments}
+            likers={post.postLikes}
+            spaceId={spaceId}
+            isCommentsVisible={iscCommetsVisible}
+            setIsCommentsVisible={setIsCommentsVisible}
+          />
+          <Separator />
+          {iscCommetsVisible ? (
+            <>
+              <PostCommentsSection
+                comments={post.postComments || []}
+                onEditComment={handleEditComment}
+              />
+            </>
+          ) : null}
+          <PostCommentForm
+            postId={post.id}
+            comments={post.comments}
+            spaceId={spaceId}
+            editingComment={editingComment}
+            onCancelEdit={handleCancelEdit}
+            onUpdateComment={handleUpdateComment}
+          />
+        </CardFooter>
+      )}
     </>
   )
 }

@@ -1,3 +1,5 @@
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import { POST_UNDER_REVIEW_MESSAGE } from "@/src/services/ai/post/postCheck.messages"
 import React, { useEffect, useState } from "react"
 import {
   Dialog,
@@ -212,7 +214,7 @@ function UpdatePostModal({
 
       const newPostContent = await updatePost(selectedPost.id, data.content)
 
-      // Moderation blocks come back as a readable string
+      // Readable failures come back as a string
       if (
         !newPostContent?.success &&
         typeof newPostContent?.error === "string"
@@ -227,6 +229,8 @@ function UpdatePostModal({
 
       // Update poll options if it's a poll and can be edited
       let updatedPollOptions = null
+      // a held edit sends the post back to review
+      let updatedStatus = newPostContent?.data?.status
       if (
         isPoll &&
         canEditPoll &&
@@ -248,6 +252,7 @@ function UpdatePostModal({
         const updatedPostResult = await getPostById(selectedPost.id)
         if (updatedPostResult?.success && updatedPostResult.data) {
           updatedPollOptions = updatedPostResult.data.options
+          updatedStatus = updatedPostResult.data.status
         }
       }
 
@@ -259,6 +264,7 @@ function UpdatePostModal({
                   ...post,
                   content: newPostContent.data.content,
                   ai_tags: newPostContent.data.ai_tags,
+                  status: updatedStatus ?? post.status,
                   hashtags: updatedHashtags,
                   ...(isPoll && canEditPoll && updatedPollOptions
                     ? { options: updatedPollOptions }
@@ -268,7 +274,14 @@ function UpdatePostModal({
           )
         )
 
-        toast({ title: "Success", description: "Post updated successfully!" })
+        if (updatedStatus === PostStatus.PENDING_REVIEW) {
+          toast({
+            title: "Your post is under review",
+            description: POST_UNDER_REVIEW_MESSAGE
+          })
+        } else {
+          toast({ title: "Success", description: "Post updated successfully!" })
+        }
 
         setOpenDialog(false)
       }

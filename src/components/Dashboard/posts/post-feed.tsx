@@ -1,4 +1,7 @@
 "use client"
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import { Badge } from "@/src/components/ui/badge"
+import { Clock } from "lucide-react"
 
 import { useEffect, useRef, useState } from "react"
 import {
@@ -135,6 +138,16 @@ const PostFeed: React.FC<PostFeedProps> = ({
                         <p className="text-xs text-muted-foreground">
                           {formatRelativeTime(post.created_at || "")}
                         </p>
+                        {/* only the author sees their own post while it waits for review */}
+                        {post.status === PostStatus.PENDING_REVIEW && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 gap-1 text-amber-600"
+                          >
+                            <Clock className="h-3 w-3" />
+                            Under review
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <PostMenu post={post} spaceId={spaceId} />
