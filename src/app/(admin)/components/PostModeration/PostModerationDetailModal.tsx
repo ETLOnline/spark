@@ -150,7 +150,7 @@ function PostModerationDetailModal({
             </section>
 
             {result?.outcome === "error" ? (
-              <section className="flex gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <section className="flex gap-3 rounded-md border  p-4 text-sm text-blue-500">
                 <Info className="h-5 w-5 shrink-0" />
                 <div className="space-y-1">
                   <p className="font-semibold">{result.reason}</p>

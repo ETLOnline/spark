@@ -3,8 +3,6 @@
 
 // --- Request limits ---
 
-// only the first images of a post are checked
-export const MAX_IMAGES = 4
 // TypeSafe image rules: each side must be 280-1568 px. Docs: https://docs.typesafe.ai/go/images.md
 export const MIN_IMAGE_SIDE = 280
 export const MAX_IMAGE_SIDE = 1568

@@ -1,7 +1,7 @@
 import sharp from "sharp"
 import { randomUUID } from "crypto"
 import { TypeSafeImageAsset, UploadedImage } from "../types/interface"
-import { MAX_IMAGE_SIDE, MAX_IMAGES, MIN_IMAGE_SIDE } from "../constants"
+import { MAX_IMAGE_SIDE, MIN_IMAGE_SIDE } from "../constants"
 
 // TypeSafe image rules: PNG/JPEG only, each side 280-1568 px, EXIF rotation is not applied.
 // Docs: https://docs.typesafe.ai/go/images.md
@@ -9,13 +9,11 @@ import { MAX_IMAGE_SIDE, MAX_IMAGES, MIN_IMAGE_SIDE } from "../constants"
 export type PreparedImage = { ref: string; asset: TypeSafeImageAsset }
 
 // Turns uploaded images (data URLs from the post form) into upright JPEGs sized for TypeSafe.
-// Only the first MAX_IMAGES images are checked; images that can't be converted are skipped.
+// Every image is checked; images that can't be converted are skipped.
 export async function prepareImagesForTypeSafe(
   files: UploadedImage[] = []
 ): Promise<PreparedImage[]> {
-  const images = files
-    .filter((f) => f.fileType?.startsWith("image/"))
-    .slice(0, MAX_IMAGES)
+  const images = files.filter((f) => f.fileType?.startsWith("image/"))
 
   const prepared = await Promise.all(images.map((f) => toTypeSafeJpeg(f)))
   return prepared.filter((img): img is PreparedImage => img !== null)
