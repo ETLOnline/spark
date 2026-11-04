@@ -16,14 +16,12 @@ import {
   getModerationSummary
 } from "@/src/services/ai/schemas/postCheck.schema"
 import { PostStatus } from "@/src/types/Post/PostStatus"
+import { TOP_CHECKS_COUNT } from "@/src/services/ai/constants"
 import { formatRelativeTime } from "@/src/utils/helpers"
 import { Check, Info, X } from "lucide-react"
 import React from "react"
 import PostModerationOutcomeBadge from "./PostModerationOutcomeBadge"
 import { ModerationPost } from "./types"
-
-// every check is saved; the modal shows only the strongest ones
-const TOP_CHECKS_COUNT = 3
 
 const BAR_COLORS: Record<CheckStatus, string> = {
   flagged: "bg-red-600",

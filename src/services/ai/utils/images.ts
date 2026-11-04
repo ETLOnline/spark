@@ -1,12 +1,10 @@
 import sharp from "sharp"
 import { randomUUID } from "crypto"
 import { TypeSafeImageAsset, UploadedImage } from "../types/interface"
+import { MAX_IMAGE_SIDE, MAX_IMAGES, MIN_IMAGE_SIDE } from "../constants"
 
 // TypeSafe image rules: PNG/JPEG only, each side 280-1568 px, EXIF rotation is not applied.
 // Docs: https://docs.typesafe.ai/go/images.md
-const MIN_SIDE = 280
-const MAX_SIDE = 1568
-const MAX_IMAGES = 4
 
 export type PreparedImage = { ref: string; asset: TypeSafeImageAsset }
 
@@ -60,11 +58,11 @@ async function toTypeSafeJpeg(
   }
 }
 
-// Scale so both sides end up within MIN_SIDE..MAX_SIDE; null when the aspect ratio makes that impossible
+// Scale so both sides end up within MIN_IMAGE_SIDE..MAX_IMAGE_SIDE; null when the aspect ratio makes that impossible
 function fitScale(width: number, height: number): number | null {
-  let scale = Math.min(1, MAX_SIDE / Math.max(width, height))
-  if (Math.min(width, height) * scale < MIN_SIDE) {
-    scale = MIN_SIDE / Math.min(width, height)
+  let scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(width, height))
+  if (Math.min(width, height) * scale < MIN_IMAGE_SIDE) {
+    scale = MIN_IMAGE_SIDE / Math.min(width, height)
   }
-  return Math.max(width, height) * scale <= MAX_SIDE ? scale : null
+  return Math.max(width, height) * scale <= MAX_IMAGE_SIDE ? scale : null
 }

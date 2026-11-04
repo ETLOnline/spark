@@ -1,22 +1,13 @@
 "use client"
-import { PostStatus } from "@/src/types/Post/PostStatus"
 import PostAiTags from "./post-ai-tags"
+import PostFooter from "./post-footer"
 
 import { useState } from "react"
 import Image from "next/image"
-import { CardContent, CardFooter } from "../../ui/card"
-import { SelectComment, SelectFilePost } from "@/src/db/schema"
+import { CardContent } from "../../ui/card"
+import { SelectFilePost } from "@/src/db/schema"
 import { Badge } from "../../ui/badge"
-import PostInteractions from "./post-interactions"
-import { Separator } from "@/src/components/ui/separator"
-import PostCommentForm from "./post-comment-form"
-import PostCommentsSection from "./post-comments-section"
 import ImageLightbox from "@/src/components/common/LightBox"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { UpdateCommentAction } from "@/src/server-actions/Post/Post"
-import { useToast } from "@/src/hooks/use-toast"
-import { useSetAtom } from "jotai"
-import { postStore } from "@/src/store/post/postStore"
 import ExpandableText from "./ExpandableText"
 import {
   Carousel,
@@ -34,19 +25,6 @@ type Props = {
 const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
-  const [editingComment, setEditingComment] = useState<SelectComment | null>(
-    null
-  )
-  const { toast } = useToast()
-  const setPosts = useSetAtom(postStore.posts)
-  const [iscCommetsVisible, setIsCommentsVisible] = useState(false)
-
-  const [
-    updateCommentLoading,
-    updatedComment,
-    updateCommentError,
-    updateComment
-  ] = useServerAction(UpdateCommentAction)
 
   const images = post.files?.length
     ? post.files
@@ -57,51 +35,6 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
   const imageUrls = images.map((f) => f.file_path)
 
   const isSingle = images.length === 1
-
-  const handleEditComment = (comment: SelectComment) => {
-    setEditingComment(comment)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingComment(null)
-  }
-
-  const handleUpdateComment = async (commentId: number, newContent: string) => {
-    try {
-      const response = await updateComment(commentId, newContent)
-      if (response?.data) {
-        setPosts((posts) =>
-          posts.map((p) =>
-            p.id === post.id
-              ? {
-                  ...p,
-                  postComments: (p.postComments as SelectComment[]).map((c) =>
-                    c.id === commentId ? { ...c, content: newContent } : c
-                  )
-                }
-              : p
-          )
-        )
-        toast({
-          title: "Comment updated",
-          description: "Your comment has been updated successfully"
-        })
-        setEditingComment(null)
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Error updating comment please try again!"
-        })
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Error updating comment please try again!"
-      })
-    }
-  }
 
   return (
     <>
@@ -188,37 +121,7 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      {/* likes, comments and sharing open once the post is published */}
-      {post.status === PostStatus.PUBLISHED && (
-        <CardFooter className="flex flex-col items-start space-y-4 p-0">
-          <PostInteractions
-            postId={post.id}
-            likes={post.likes}
-            comments={post.comments}
-            likers={post.postLikes}
-            spaceId={spaceId}
-            isCommentsVisible={iscCommetsVisible}
-            setIsCommentsVisible={setIsCommentsVisible}
-          />
-          <Separator />
-          {iscCommetsVisible ? (
-            <>
-              <PostCommentsSection
-                comments={post.postComments || []}
-                onEditComment={handleEditComment}
-              />
-            </>
-          ) : null}
-          <PostCommentForm
-            postId={post.id}
-            comments={post.comments}
-            spaceId={spaceId}
-            editingComment={editingComment}
-            onCancelEdit={handleCancelEdit}
-            onUpdateComment={handleUpdateComment}
-          />
-        </CardFooter>
-      )}
+      <PostFooter post={post} spaceId={spaceId} />
     </>
   )
 }

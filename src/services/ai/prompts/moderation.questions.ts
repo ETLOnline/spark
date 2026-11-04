@@ -1,4 +1,4 @@
-// All shared TypeSafe moderation question wording and thresholds live here, so they can be reviewed and tuned in one place.
+// All shared TypeSafe moderation question wording lives here; the thresholds are in ../constants.ts.
 // They are not tied to posts: every question gets the state path of what it checks
 // (e.g. "post.text", "profile.text", "images.image_1"), so any feature can reuse them.
 // Each part (the text, each image) is asked three kinds of question:
@@ -126,15 +126,3 @@ export const IMAGE_MODERATION_QUESTIONS: ModerationQuestionSet = {
       "Extreme content such as sexual violence or extreme gore"
     ])
 }
-
-// Noul probability at or above YES reads as "yes" (flagged), below NO reads as "no" (clear),
-// anything between is "not settled" (uncertain) and goes to review.
-export const NOUL_YES_THRESHOLD = 0.7
-export const NOUL_NO_THRESHOLD = 0.3
-
-// Severity: the part is blocked when level BLOCK or above is a clear "yes",
-// and goes to review when level REVIEW or above is not a clear "no".
-// Text: 2 = personal insults, 3 = harassment or hate speech.
-// Images: 2 = partial nudity or non-graphic violence, 3 = explicit or graphic.
-export const SEVERITY_REVIEW_LEVEL = 2
-export const SEVERITY_BLOCK_LEVEL = 3

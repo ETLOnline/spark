@@ -20,6 +20,7 @@ import { eq, and, desc, inArray, or, isNull, SQL } from "drizzle-orm"
 import { like } from "drizzle-orm"
 import { Tag } from "@/src/components/TagsInput/tags-input-types"
 import { PostStatus } from "@/src/types/Post/PostStatus"
+import { MODERATION_PAGE_SIZE } from "@/src/services/ai/constants"
 import { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
 
 interface PostQueryFilters {
@@ -484,7 +485,7 @@ export type ModerationPostFilters = {
 
 // Posts held by the AI check (pending) or rejected by an admin, newest first
 export const GetModerationPosts = async (filters: ModerationPostFilters) => {
-  const { status, page = 1, limit = 10 } = filters
+  const { status, page = 1, limit = MODERATION_PAGE_SIZE } = filters
   const where = eq(postsTable.status, status)
 
   const posts = await db.query.postsTable.findMany({
