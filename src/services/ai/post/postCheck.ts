@@ -5,10 +5,8 @@
 //   4. save the post as published, or as pending review with `moderationResult` (server action)
 
 import { getAIClient } from "../client/ai.client"
-import {
-  POST_TAG_QUESTIONS,
-  TAG_THRESHOLD
-} from "../prompts/postTags.questions"
+import { TAG_THRESHOLD } from "../constants"
+import { POST_TAG_QUESTIONS } from "../prompts/postTags.questions"
 import {
   PostAiTag,
   PostCheckInput,

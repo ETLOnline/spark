@@ -2,13 +2,15 @@
 // Docs: https://docs.typesafe.ai/go/api.md
 // Server-only: never import this from a client component, the API key must stay on the server.
 
+import { TYPESAFE_API_KEY, TYPESAFE_API_URL, TYPESAFE_MODEL } from "../config"
 import {
-  TYPESAFE_API_KEY,
-  TYPESAFE_API_URL,
+  NOUL_NO_THRESHOLD,
+  NOUL_YES_THRESHOLD,
+  SEVERITY_BLOCK_LEVEL,
+  SEVERITY_REVIEW_LEVEL,
   TYPESAFE_IMAGE_TIMEOUT_MS,
-  TYPESAFE_MODEL,
   TYPESAFE_TIMEOUT_MS
-} from "../config"
+} from "../constants"
 import {
   AIAdapter,
   ChoiceAnswer,
@@ -26,10 +28,6 @@ import {
 import {
   IMAGE_MODERATION_QUESTIONS,
   ModerationQuestionSet,
-  NOUL_NO_THRESHOLD,
-  NOUL_YES_THRESHOLD,
-  SEVERITY_BLOCK_LEVEL,
-  SEVERITY_REVIEW_LEVEL,
   TEXT_MODERATION_QUESTIONS
 } from "../prompts/moderation.questions"
 import {
@@ -103,8 +101,6 @@ export async function askSystemOne<Q extends Record<string, TypeSafeQuestion>>(
 
 // --- Step 2: state ---
 
-const MAX_TEXT_LENGTH = 8000
-
 const PLATFORM_CONTEXT =
   "Spark, the ETL Online community where students, mentors, and professionals share updates, questions, and projects."
 
@@ -146,7 +142,7 @@ const buildPartQuestions = (
 async function buildState<E extends string = never>(
   input: ModerationInput<E>
 ): Promise<ModerationRequest<E>> {
-  const text = (input.text ?? "").trim().slice(0, MAX_TEXT_LENGTH)
+  const text = (input.text ?? "").trim()
   const images = await prepareImagesForTypeSafe(input.images)
   // image_1, image_2, ... -> asset ref; the model sees these keys in `images`
   const imageKeys = images.map((_, i) => `image_${i + 1}`)

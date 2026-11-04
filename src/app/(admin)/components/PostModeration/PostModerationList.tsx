@@ -7,6 +7,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetModerationPostsAction } from "@/src/server-actions/Post/PostModeration"
 import { htmlToPlainText } from "@/src/services/ai/utils/text"
 import { PostStatus } from "@/src/types/Post/PostStatus"
+import { MODERATION_PAGE_SIZE } from "@/src/services/ai/constants"
 import { formatRelativeTime } from "@/src/utils/helpers"
 import {
   ArrowRight,
@@ -41,7 +42,7 @@ function PostModerationList({ status }: PostModerationListProps) {
   const page = parseInt(searchParams.get("page") || "1", 10)
 
   const fetchData = async () => {
-    const res = await getPosts({ page, limit: 10, status })
+    const res = await getPosts({ page, limit: MODERATION_PAGE_SIZE, status })
     if (res?.success && res?.data) {
       setPosts(res.data.posts)
       setPagination(res.data.pagination)

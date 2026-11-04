@@ -147,6 +147,3 @@ export const POST_TAG_QUESTIONS = {
     instructions: `Is the author of \`${textPath}\` asking a general question to the community?`
   })
 } satisfies Record<PostAiTag, QuestionBuilder>
-
-// A tag is added when its Noul is at least this likely
-export const TAG_THRESHOLD = 0.7
