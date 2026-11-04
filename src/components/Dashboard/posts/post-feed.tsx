@@ -150,7 +150,9 @@ const PostFeed: React.FC<PostFeedProps> = ({
                         )}
                       </div>
                     </div>
-                    <PostMenu post={post} spaceId={spaceId} />
+                    {post.status === PostStatus.PUBLISHED && (
+                      <PostMenu post={post} spaceId={spaceId} />
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
