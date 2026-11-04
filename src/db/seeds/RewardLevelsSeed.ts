@@ -9,7 +9,7 @@ const rewardLevels: InsertRewardLevel[] = [
     key: "spark_starter",
     min_points: 0,
     max_points: 500,
-    reward_id: 2
+    reward_id: 1
   },
   {
     id: 2,
@@ -18,7 +18,7 @@ const rewardLevels: InsertRewardLevel[] = [
     key: "spark_contributor",
     min_points: 500,
     max_points: 1500,
-    reward_id: 2
+    reward_id: 1
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ const rewardLevels: InsertRewardLevel[] = [
     key: "spark_collaborator",
     min_points: 1500,
     max_points: 3000,
-    reward_id: 2
+    reward_id: 1
   },
   {
     id: 4,
@@ -36,7 +36,7 @@ const rewardLevels: InsertRewardLevel[] = [
     key: "spark_leader",
     min_points: 3000,
     max_points: 5000,
-    reward_id: 2
+    reward_id: 1
   },
   {
     id: 5,
@@ -45,7 +45,7 @@ const rewardLevels: InsertRewardLevel[] = [
     key: "spark_champion",
     min_points: 5000,
     max_points: null, // open-ended
-    reward_id: 2
+    reward_id: 1
   }
 ]
 

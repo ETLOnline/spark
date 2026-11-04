@@ -484,6 +484,13 @@
       "when": 1790597545114,
       "tag": "0068_2026_09_29_130854__add_feature_flag_value",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1792494521291,
+      "tag": "0069_2026_10_20_190840__add_snapshot_table",
+      "breakpoints": true
     }
   ]
 }

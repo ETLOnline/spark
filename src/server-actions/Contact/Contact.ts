@@ -17,6 +17,15 @@ import pusherServer from "@/src/services/realtime/pusherServer"
 import { AddRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
+// Pusher rejects payloads over 10KB (413), so only send the fields listeners render
+const toPusherUser = (user: Awaited<ReturnType<typeof AuthUserAction>>) =>
+  user && {
+    unique_id: user.unique_id,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    profile_url: user.profile_url
+  }
+
 export const CreateContactAction = CreateServerAction(
   true,
   async (contact_id: string) => {
@@ -30,10 +39,14 @@ export const CreateContactAction = CreateServerAction(
 
       await AddRewardAction(ActivityTypes.SendConnectionRequest, user.unique_id)
 
-      await pusherServer.trigger(contact_id, ActivityType.request, {
-        ...newRequest[0],
-        otherUser: user
-      })
+      try {
+        await pusherServer.trigger(contact_id, ActivityType.request, {
+          ...newRequest[0],
+          otherUser: toPusherUser(user)
+        })
+      } catch (error) {
+        console.error("Failed to send realtime connection request:", error)
+      }
 
       try {
         await createContactEmailNotification(
@@ -68,10 +81,14 @@ export const AcceptConnectionAction = CreateServerAction(
         is_requested: 0
       })
 
-      await pusherServer.trigger(user_id, ActivityType.acceptRequest, {
-        ...res[0],
-        otherUser: user
-      })
+      try {
+        await pusherServer.trigger(user_id, ActivityType.acceptRequest, {
+          ...res[0],
+          otherUser: toPusherUser(user)
+        })
+      } catch (error) {
+        console.error("Failed to send realtime connection accept:", error)
+      }
 
       try {
         await createContactEmailNotification(

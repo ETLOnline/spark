@@ -3,7 +3,7 @@ import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
 import SpacePostComponent from "./SpacePost"
 import { redirect, useRouter, useSearchParams } from "next/navigation"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
-import { EarthLock } from "lucide-react"
+import { ClipboardCheck, EarthLock } from "lucide-react"
 import FileSharing from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileSharing"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -21,6 +21,15 @@ import { isEntityUser } from "@/src/utils/clientHelper"
 import { GetMyProgramFeedbackAction } from "@/src/server-actions/ProgramFeedback/ProgramFeedback"
 import { GetMilestonesForSpaceAction } from "@/src/server-actions/Milestone/Milestone"
 import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import { Button } from "@/src/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/src/components/ui/dialog"
 
 interface Props {
   features: SelectSpaceFeature[]
@@ -54,38 +63,28 @@ function SpaceFeatures({ features, space }: Props) {
   )
   const encodedSpaceSlug = encodeURIComponent(space.space_slug)
 
-  const [feedbackCheckLoading, setFeedbackCheckLoading] = useState(true)
+  // Pending closure feedback no longer force-redirects the user into the
+  // Feedback section on entry — it shows a dismissible reminder modal
+  // instead, with an action to go there. (Per SW ticket: forced redirect
+  // was the old/wrong behavior — the user should be able to land on the
+  // Space overview and choose when to go submit it.)
+  const [feedbackReminderOpen, setFeedbackReminderOpen] = useState(false)
   const [, , , getMyFeedback] = useServerAction(GetMyProgramFeedbackAction)
   const [, , , getMilestones] = useServerAction(GetMilestonesForSpaceAction)
-  // Fires on every fresh page load/refresh, but only once per load — after
-  // it redirects, the user can click into any tab (posts, milestones, etc.)
-  // without getting bounced back to feedback again. A ref (not
-  // sessionStorage) is what gives us that: it resets on an actual refresh
-  // (new JS execution) but survives in-app navigation (component stays
-  // mounted), which is exactly the "once per visit" behavior we want.
-  const hasCheckedFeedbackRedirect = useRef(false)
+  // Checked once per fresh page load, not on every render — re-opening the
+  // modal every time the user clicks back to the overview tab (without a
+  // real refresh) would be just as annoying as the old forced redirect was.
+  const hasCheckedFeedbackReminder = useRef(false)
 
-  // Client-side redirect belongs in an effect, not a render-time call to
-  // next/navigation's redirect() — calling that conditionally from a nested
-  // client component can desync the App Router's own hook bookkeeping
-  // ("Rendered more hooks than during the previous render").
   useEffect(() => {
-    // Only the default landing (no explicit tab in the URL) redirects.
-    // Someone who explicitly navigated to a tab — fyp/milestones, posts,
-    // chat, whatever — should land exactly there, not get bounced to
-    // feedback out from under them.
-    if (pageType || !space.is_FYP_enable || !canSubmitFeedback) {
-      setFeedbackCheckLoading(false)
-      return
-    }
+    // Only the default landing (no explicit tab in the URL) triggers the
+    // check. Someone who explicitly navigated to a tab — fyp/milestones,
+    // posts, chat, whatever — should land exactly there; the modal still
+    // surfaces next time they land back on the overview.
+    if (pageType || !space.is_FYP_enable || !canSubmitFeedback) return
+    if (hasCheckedFeedbackReminder.current) return
+    hasCheckedFeedbackReminder.current = true
 
-    if (hasCheckedFeedbackRedirect.current) {
-      setFeedbackCheckLoading(false)
-      return
-    }
-    hasCheckedFeedbackRedirect.current = true
-
-    setFeedbackCheckLoading(true)
     Promise.all([getMyFeedback(space.id), getMilestones(space.id)]).then(
       ([feedbackRes, milestonesRes]) => {
         const alreadySubmitted = !!(feedbackRes?.success && feedbackRes.data)
@@ -95,10 +94,8 @@ function SpaceFeatures({ features, space }: Props) {
           milestones.every((m) => m.status === MilestoneStatus.VERIFIED)
 
         if (allVerified && !alreadySubmitted) {
-          router.replace(`./${encodedSpaceSlug}/feedback`)
-          return
+          setFeedbackReminderOpen(true)
         }
-        setFeedbackCheckLoading(false)
       }
     )
   }, [pageType, space.id, space.is_FYP_enable, canSubmitFeedback])
@@ -231,20 +228,49 @@ function SpaceFeatures({ features, space }: Props) {
     return <>{renderFeatureModule(pageType)}</>
   }
 
-  if (feedbackCheckLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader size={LoaderSizes.xl} />
-      </div>
-    )
-  }
-
   return (
-    <SpaceOverview
-      features={features}
-      hasAnyFeatureAccess={hasAnyFeatureAccess}
-      space={space}
-    />
+    <>
+      <SpaceOverview
+        features={features}
+        hasAnyFeatureAccess={hasAnyFeatureAccess}
+        space={space}
+      />
+
+      <Dialog
+        open={feedbackReminderOpen}
+        onOpenChange={setFeedbackReminderOpen}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <ClipboardCheck className="h-5 w-5 text-primary" />
+            </div>
+            <DialogTitle>Closure feedback is pending</DialogTitle>
+            <DialogDescription>
+              All project milestones are verified. Please submit
+              your closure feedback to finish up — you can keep exploring
+              the Space and come back to it whenever you&apos;re ready.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setFeedbackReminderOpen(false)}
+            >
+              Not now
+            </Button>
+            <Button
+              onClick={() => {
+                setFeedbackReminderOpen(false)
+                router.push(`./${encodedSpaceSlug}/feedback`)
+              }}
+            >
+              Go to Feedback
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
