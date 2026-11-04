@@ -9,6 +9,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import {
+  GetMyPostsAction,
   GetPostsAction,
   GetSpacePostsAction
 } from "@/src/server-actions/Post/Post"
@@ -37,6 +38,7 @@ const PostFeedTabs: React.FC<PostFeedTabsProps> = ({
   const [switching, setSwitching] = useState(false)
   const setPosts = useSetAtom(postStore.posts)
 
+  const [, , , getMyPosts] = useServerAction(GetMyPostsAction)
   const [, , , getPosts] = useServerAction(GetPostsAction)
   const [, , , getSpacePosts] = useServerAction(GetSpacePostsAction)
 
@@ -54,20 +56,14 @@ const PostFeedTabs: React.FC<PostFeedTabsProps> = ({
     // empty the shared post list, so PostFeed starts the new tab from its own posts
     setPosts([])
     try {
-      // My Posts uses the same actions with `onlyMine`
-      const onlyMine = nextFeed === "mine"
-      const res = spaceId
-        ? await getSpacePosts(
-            spaceId,
-            categoryFilter,
-            undefined,
-            undefined,
-            onlyMine
-          )
-        : await getPosts(undefined, onlyMine)
-      if (res?.success && res.data) {
-        if (onlyMine) setMyFeedPosts(res.data)
-        else setPublicFeedPosts(res.data)
+      if (nextFeed === "mine") {
+        const res = await getMyPosts(0, spaceId, categoryFilter)
+        if (res?.success && res.data) setMyFeedPosts(res.data)
+      } else {
+        const res = spaceId
+          ? await getSpacePosts(spaceId, categoryFilter)
+          : await getPosts()
+        if (res?.success && res.data) setPublicFeedPosts(res.data)
       }
     } finally {
       setSwitching(false)

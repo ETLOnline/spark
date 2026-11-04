@@ -22,6 +22,7 @@ import PostMenu from "./post-menu"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
 import { formatRelativeTime, getUserRole } from "@/src/utils/helpers"
 import {
+  GetMyPostsAction,
   GetPostsAction,
   GetSpacePostsAction
 } from "@/src/server-actions/Post/Post"
@@ -52,6 +53,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
     useServerAction(GetSpacePostsAction)
   const [postsLoading, oldPosts, postsError, getPosts] =
     useServerAction(GetPostsAction)
+  const [, oldMyPosts, , getMyPosts] = useServerAction(GetMyPostsAction)
 
   const handleLoadMore = () => {
     if (loadingMore || !hasMorePosts) return
@@ -85,6 +87,19 @@ const PostFeed: React.FC<PostFeedProps> = ({
   }, [oldPosts])
 
   useEffect(() => {
+    if (oldMyPosts && oldMyPosts.success) {
+      const newPosts = oldMyPosts?.data as (
+        | SelectPost
+        | SelectFilePost
+        | SelectPollPost
+      )[]
+      setPosts((prevPosts) => [...prevPosts, ...newPosts])
+      setHasMorePosts(newPosts.length === 10)
+      setLoadingMore(false)
+    }
+  }, [oldMyPosts])
+
+  useEffect(() => {
     if (oldSpacePosts && oldSpacePosts.success) {
       const newPosts = oldSpacePosts?.data as (
         | SelectPost
@@ -98,18 +113,16 @@ const PostFeed: React.FC<PostFeedProps> = ({
   }, [oldSpacePosts])
 
   const fetchOldPosts = () => {
-    // My Posts uses the same actions, limited to the user's own posts
-    const onlyMine = feed === "mine"
-    if (spaceId) {
-      getSpacePosts(
-        spaceId,
-        category === "All" ? "" : category,
+    if (feed === "mine") {
+      getMyPosts(
         offset.current,
-        undefined,
-        onlyMine
+        spaceId,
+        category === "All" ? "" : (category ?? "")
       )
+    } else if (spaceId) {
+      getSpacePosts(spaceId, category === "All" ? "" : category, offset.current)
     } else {
-      getPosts(offset.current, onlyMine)
+      getPosts(offset.current)
     }
     offset.current += 10
   }

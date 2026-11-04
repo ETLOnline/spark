@@ -581,23 +581,11 @@ export const VotePollAction = CreateServerAction(
   }
 )
 
-// My Posts: only the signed-in user's posts, in every status
-const getMyPostsFilters = async () => {
-  const userId = (await AuthUserAction())?.unique_id
-  if (!userId) throw new Error("Unauthorized", { cause: 401 })
-  return { userIds: [userId], statuses: Object.values(PostStatus) }
-}
-
-// Global feed: published posts of everyone, or with `onlyMine` the user's own posts (My Posts)
 export const GetPostsAction = CreateServerAction(
   true,
-  async (offset?: number, onlyMine: boolean = false) => {
+  async (offset?: number) => {
     try {
-      const posts = await GetPosts({
-        offset,
-        globalPostsOnly: true,
-        ...(onlyMine ? await getMyPostsFilters() : {})
-      })
+      const posts = await GetPosts({ offset, globalPostsOnly: true })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
@@ -641,23 +629,20 @@ export const GetPostsAction = CreateServerAction(
   }
 )
 
-// Space feed: published posts of the space, or with `onlyMine` the user's own posts there (My Posts)
 export const GetSpacePostsAction = CreateServerAction(
   true,
   async (
     spaceId: string,
     category: string = "",
     offset?: number,
-    limit?: number,
-    onlyMine: boolean = false
+    limit?: number
   ) => {
     try {
       const posts = await GetPosts({
         entityId: spaceId,
         category: category,
         offset,
-        limit,
-        ...(onlyMine ? await getMyPostsFilters() : {})
+        limit
       })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
@@ -697,6 +682,66 @@ export const GetSpacePostsAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to fetch user posts"
+      }
+    }
+  }
+)
+
+// My Posts: the signed-in user's posts in every status (published, under review, rejected),
+// either their global posts or their posts in one space
+export const GetMyPostsAction = CreateServerAction(
+  true,
+  async (offset?: number, spaceId?: string, category: string = "") => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) throw new Error("Unauthorized", { cause: 401 })
+
+      const posts = await GetPosts({
+        offset,
+        userIds: [user.unique_id],
+        statuses: Object.values(PostStatus),
+        ...(spaceId
+          ? { entityId: spaceId, category }
+          : { globalPostsOnly: true })
+      })
+      const sanitizedPosts = posts.map((post) => ({
+        ...post,
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+        files: post.files?.map((f: any) => f.postFile) || [],
+        file:
+          post.files && post.files.length > 0
+            ? post.files[0].postFile
+            : undefined
+      }))
+
+      // Merge consecutive posts from the same author with same type/content and close timestamps
+      const mergedPosts: any[] = []
+      for (const p of sanitizedPosts) {
+        const last = mergedPosts[mergedPosts.length - 1]
+        if (
+          last &&
+          last.author?.unique_id === p.author?.unique_id &&
+          last.type === p.type &&
+          (last.content || "").trim() === (p.content || "").trim() &&
+          Math.abs(
+            moment(last.created_at).valueOf() - moment(p.created_at).valueOf()
+          ) <= 5000
+        ) {
+          last.files = [...(last.files || []), ...(p.files || [])]
+          last.created_at = moment
+            .min(moment(last.created_at), moment(p.created_at))
+            .toISOString()
+          last.file =
+            last.files && last.files.length > 0 ? last.files[0] : last.file
+        } else {
+          mergedPosts.push({ ...p })
+        }
+      }
+      return { success: true, data: mergedPosts }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch your posts"
       }
     }
   }
