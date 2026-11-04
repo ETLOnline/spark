@@ -1,7 +1,6 @@
 "use client"
 import { PostStatus } from "@/src/types/Post/PostStatus"
 import PostStatusBadge from "./post-status-badge"
-import PostRejectionReason from "./post-rejection-reason"
 import { PostFeedType } from "./types/posts-types"
 
 import { useEffect, useRef, useState } from "react"
@@ -172,11 +171,6 @@ const PostFeed: React.FC<PostFeedProps> = ({
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  {/* only rejected posts, which only appear in My Posts */}
-                  <PostRejectionReason
-                    status={post.status}
-                    moderationResult={post.moderation_result}
-                  />
                   {post.type === "text" ? (
                     <TextPost key={post.id} post={post} spaceId={spaceId} />
                   ) : post.type === "image" ? (
