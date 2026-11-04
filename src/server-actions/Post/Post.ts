@@ -581,12 +581,23 @@ export const VotePollAction = CreateServerAction(
   }
 )
 
+// My Posts: only the signed-in user's posts, in every status
+const getMyPostsFilters = async () => {
+  const userId = (await AuthUserAction())?.unique_id
+  if (!userId) throw new Error("Unauthorized", { cause: 401 })
+  return { userIds: [userId], statuses: Object.values(PostStatus) }
+}
+
+// Global feed: published posts of everyone, or with `onlyMine` the user's own posts (My Posts)
 export const GetPostsAction = CreateServerAction(
   true,
-  async (offset?: number) => {
+  async (offset?: number, onlyMine: boolean = false) => {
     try {
-      const viewerId = (await AuthUserAction())?.unique_id
-      const posts = await GetPosts({ offset, globalPostsOnly: true, viewerId })
+      const posts = await GetPosts({
+        offset,
+        globalPostsOnly: true,
+        ...(onlyMine ? await getMyPostsFilters() : {})
+      })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
@@ -630,22 +641,23 @@ export const GetPostsAction = CreateServerAction(
   }
 )
 
+// Space feed: published posts of the space, or with `onlyMine` the user's own posts there (My Posts)
 export const GetSpacePostsAction = CreateServerAction(
   true,
   async (
     spaceId: string,
     category: string = "",
     offset?: number,
-    limit?: number
+    limit?: number,
+    onlyMine: boolean = false
   ) => {
     try {
-      const viewerId = (await AuthUserAction())?.unique_id
       const posts = await GetPosts({
         entityId: spaceId,
         category: category,
         offset,
         limit,
-        viewerId
+        ...(onlyMine ? await getMyPostsFilters() : {})
       })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
@@ -770,16 +782,13 @@ export const DeletePostAction = CreateServerAction(
   }
 )
 
-// Published posts are public; a pending post is seen by its author and admins, a rejected one by admins
+// Published posts are public; any other post is seen only by its author (My Posts) and admins
 const canViewPost = async (post: { status: string; user_id: string }) => {
   if (post.status === PostStatus.PUBLISHED) return true
   const viewer = await AuthUserAction().catch(() => undefined)
   if (!viewer) return false
-  if (await isSuperAdmin(viewer)) return true
-  return (
-    post.status === PostStatus.PENDING_REVIEW &&
-    post.user_id === viewer.unique_id
-  )
+  if (post.user_id === viewer.unique_id) return true
+  return await isSuperAdmin(viewer)
 }
 
 export const GetPostByIdAction = CreateServerAction(

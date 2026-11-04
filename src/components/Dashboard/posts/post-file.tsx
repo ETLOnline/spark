@@ -132,7 +132,7 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
         </div>
       </CardContent>
       {/* likes, comments and sharing open once the post is published */}
-      {post.status !== PostStatus.PENDING_REVIEW && (
+      {post.status === PostStatus.PUBLISHED && (
         <CardFooter className="flex flex-col items-start space-y-4 p-0">
           <PostInteractions
             postId={post.id}

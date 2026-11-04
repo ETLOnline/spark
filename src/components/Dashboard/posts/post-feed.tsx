@@ -1,7 +1,8 @@
 "use client"
 import { PostStatus } from "@/src/types/Post/PostStatus"
-import { Badge } from "@/src/components/ui/badge"
-import { Clock } from "lucide-react"
+import PostStatusBadge from "./post-status-badge"
+import PostRejectionReason from "./post-rejection-reason"
+import { PostFeedType } from "./types/posts-types"
 
 import { useEffect, useRef, useState } from "react"
 import {
@@ -33,12 +34,14 @@ type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
   spaceId?: string
   category?: string
+  feed?: PostFeedType
 }
 
 const PostFeed: React.FC<PostFeedProps> = ({
   fetchedPosts,
   spaceId,
-  category
+  category,
+  feed = "public"
 }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const offset = useRef<number>(10)
@@ -96,28 +99,49 @@ const PostFeed: React.FC<PostFeedProps> = ({
   }, [oldSpacePosts])
 
   const fetchOldPosts = () => {
+    // My Posts uses the same actions, limited to the user's own posts
+    const onlyMine = feed === "mine"
     if (spaceId) {
-      getSpacePosts(spaceId, category === "All" ? "" : category, offset.current)
+      getSpacePosts(
+        spaceId,
+        category === "All" ? "" : category,
+        offset.current,
+        undefined,
+        onlyMine
+      )
     } else {
-      getPosts(offset.current)
+      getPosts(offset.current, onlyMine)
     }
     offset.current += 10
   }
 
+  // Public Posts never shows posts under review or rejected, e.g. one the user just created or edited
+  const visiblePosts =
+    feed === "public"
+      ? posts.filter((p) => p.status === PostStatus.PUBLISHED)
+      : posts
+
   return (
     <div className="space-y-6">
-      {posts.length === 0 ? (
-        <NoDataCard title="No posts available" />
+      {visiblePosts.length === 0 ? (
+        <NoDataCard
+          title={
+            feed === "mine"
+              ? "You haven't posted anything yet"
+              : "No posts available"
+          }
+        />
       ) : (
         <>
-          {posts.map((post) => {
+          {visiblePosts.map((post) => {
             const name = `${post.author.first_name} ${post.author.last_name}`
 
             return (
               <Card className="bg-background shadow-lg" key={post.id}>
                 <CardHeader className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                  {/* left: author profile, right: status badge + menu */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center space-x-4">
                       <Avatar className="h-12 w-12 shrink-0">
                         <AvatarImage
                           src={post.author.profile_url as string}
@@ -125,7 +149,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                         />
                         <AvatarFallback>{name}</AvatarFallback>
                       </Avatar>
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-semibold flex items-center gap-1">
                           {name}
                           {post.author.profile?.verified && (
@@ -138,22 +162,21 @@ const PostFeed: React.FC<PostFeedProps> = ({
                         <p className="text-xs text-muted-foreground">
                           {formatRelativeTime(post.created_at || "")}
                         </p>
-                        {/* only the author sees their own post while it waits for review */}
-                        {post.status === PostStatus.PENDING_REVIEW && (
-                          <Badge
-                            variant="outline"
-                            className="mt-1 gap-1 text-amber-600"
-                          >
-                            <Clock className="h-3 w-3" />
-                            Under review
-                          </Badge>
-                        )}
                       </div>
                     </div>
-                    <PostMenu post={post} spaceId={spaceId} />
+                    <div className="flex shrink-0 items-center gap-2">
+                      {/* Under Review / Rejected, only shown in My Posts */}
+                      <PostStatusBadge status={post.status} />
+                      <PostMenu post={post} spaceId={spaceId} />
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
+                  {/* only rejected posts, which only appear in My Posts */}
+                  <PostRejectionReason
+                    status={post.status}
+                    moderationResult={post.moderation_result}
+                  />
                   {post.type === "text" ? (
                     <TextPost key={post.id} post={post} spaceId={spaceId} />
                   ) : post.type === "image" ? (
