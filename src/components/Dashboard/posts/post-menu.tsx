@@ -42,9 +42,9 @@ const PostMenu = ({ post, spaceId }: PostMenuProps) => {
     : false
 
   const isPostOwner = user?.unique_id === post.user_id
-  // rejected posts are read-only: no edit or delete
+  // edit/delete only on published posts (not under review or rejected)
   const shouldShowDeleteButton =
-    post.status !== PostStatus.REJECTED && (canDelete || isPostOwner)
+    post.status === PostStatus.PUBLISHED && (canDelete || isPostOwner)
 
   const { toast } = useToast()
 
