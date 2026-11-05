@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import {
   Tabs,
   TabsContent,
@@ -12,6 +12,8 @@ import PostModerationList from "./PostModerationList"
 
 // Posts held by the AI check. Approved posts are published and leave this page.
 function PostModeration() {
+  const [pendingCount, setPendingCount] = useState<number>()
+
   return (
     <>
       <div>
@@ -26,11 +28,16 @@ function PostModeration() {
 
       <Tabs defaultValue="pending-posts">
         <TabsList>
-          <TabsTrigger value="pending-posts">Pending</TabsTrigger>
+          <TabsTrigger value="pending-posts">
+            Pending{pendingCount !== undefined ? ` (${pendingCount})` : ""}
+          </TabsTrigger>
           <TabsTrigger value="rejected-posts">Rejected</TabsTrigger>
         </TabsList>
         <TabsContent value="pending-posts">
-          <PostModerationList status={PostStatus.PENDING_REVIEW} />
+          <PostModerationList
+            status={PostStatus.PENDING_REVIEW}
+            onTotalChange={setPendingCount}
+          />
         </TabsContent>
         <TabsContent value="rejected-posts">
           <PostModerationList status={PostStatus.REJECTED} />
