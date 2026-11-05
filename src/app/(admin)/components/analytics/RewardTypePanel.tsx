@@ -67,7 +67,8 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
     },
     {
       label: "Rewarded actions",
-      value: block.actions.total.toLocaleString()
+      value: block.actions.total.toLocaleString(),
+      tip: `Total number of times an action was rewarded with ${short}.`
     }
   ]
 
@@ -76,7 +77,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
     .sort((a, b) => b.count - a.count)
   const topRuleCount = rules[0]?.count ?? 0
 
-  // Already ranked by balance (desc) in the snapshot.
+  // Already ranked by total (desc) in the snapshot.
   const earners = block.ranking.users
   const totalPages = Math.ceil(earners.length / PAGE_SIZE)
   const globalOffset = (page - 1) * PAGE_SIZE
@@ -365,21 +366,39 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                               {e.actions.total.toLocaleString()} Total Actions
                             </span>
                           </div>
-                          <div className="flex h-3 rounded-md overflow-hidden gap-px">
-                            {e.actions.type.map((b, idx) => (
-                              <div
-                                key={b.action_type}
-                                className={
-                                  SERIES_BG_CLASSES[
-                                    idx % SERIES_BG_CLASSES.length
-                                  ]
-                                }
-                                style={{
-                                  width: `${toPercent(b.count, e.actions.total) ?? 0}%`
-                                }}
-                              />
-                            ))}
-                          </div>
+                          <TooltipProvider delayDuration={0}>
+                            <div className="flex h-3 rounded-md overflow-hidden gap-px">
+                              {e.actions.type.map((b, idx) => (
+                                <Tooltip key={b.action_type}>
+                                  <TooltipTrigger asChild>
+                                    <div
+                                      className={
+                                        SERIES_BG_CLASSES[
+                                          idx % SERIES_BG_CLASSES.length
+                                        ]
+                                      }
+                                      style={{
+                                        width: `${toPercent(b.count, e.actions.total) ?? 0}%`
+                                      }}
+                                    />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-xs flex items-center gap-1.5">
+                                    <span
+                                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${SERIES_BG_CLASSES[idx % SERIES_BG_CLASSES.length]}`}
+                                    />
+                                    <span>
+                                      <span className="font-medium">
+                                        {humanizeKey(b.action_type)}
+                                      </span>
+                                      : {b.count.toLocaleString()}{" "}
+                                      {b.count === 1 ? "action" : "actions"} (
+                                      {formatPercent(b.count, e.actions.total)})
+                                    </span>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                            </div>
+                          </TooltipProvider>
                           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-1 text-xs">
                             {e.actions.type.map((b, idx) => (
                               <div
