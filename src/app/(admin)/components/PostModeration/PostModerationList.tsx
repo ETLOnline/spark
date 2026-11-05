@@ -26,9 +26,14 @@ import { ModerationPost } from "./types"
 
 interface PostModerationListProps {
   status: PostStatus.PENDING_REVIEW | PostStatus.REJECTED
+  // called with the total number of posts in this status after every fetch
+  onTotalChange?: (total: number) => void
 }
 
-function PostModerationList({ status }: PostModerationListProps) {
+function PostModerationList({
+  status,
+  onTotalChange
+}: PostModerationListProps) {
   const [posts, setPosts] = useState<ModerationPost[]>([])
   const [pagination, setPagination] = useState<PaginationType>()
   const [selectedPost, setSelectedPost] = useState<ModerationPost | null>(null)
@@ -47,6 +52,7 @@ function PostModerationList({ status }: PostModerationListProps) {
     if (res?.success && res?.data) {
       setPosts(res.data.posts)
       setPagination(res.data.pagination)
+      onTotalChange?.(res.data.pagination.total)
     }
   }
 
