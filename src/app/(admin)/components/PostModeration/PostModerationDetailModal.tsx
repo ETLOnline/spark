@@ -1,4 +1,5 @@
 import ExpandableText from "@/src/components/Dashboard/posts/ExpandableText"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -80,13 +81,25 @@ function PostModerationDetailModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl">
-            {post?.author?.first_name} {post?.author?.last_name}
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            {formatRelativeTime(post?.created_at)}
-          </p>
+        <DialogHeader className="flex-row items-center gap-3 space-y-0">
+          <Avatar>
+            <AvatarImage
+              src={post?.author?.profile_url || undefined}
+              alt={post?.author?.first_name}
+            />
+            <AvatarFallback>
+              {post?.author?.first_name?.[0]}
+              {post?.author?.last_name?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <DialogTitle className="text-xl truncate">
+              {post?.author?.first_name} {post?.author?.last_name}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {formatRelativeTime(post?.created_at)}
+            </p>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(100vh-12rem)] w-full overflow-y-auto pr-3">
@@ -137,7 +150,7 @@ function PostModerationDetailModal({
             </section>
 
             {result?.outcome === "error" ? (
-              <section className="flex gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <section className="flex gap-3 rounded-md border  p-4 text-sm text-blue-500">
                 <Info className="h-5 w-5 shrink-0" />
                 <div className="space-y-1">
                   <p className="font-semibold">{result.reason}</p>
@@ -148,7 +161,7 @@ function PostModerationDetailModal({
               </section>
             ) : (
               <>
-                <section className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+                <section className="rounded-md border bg-card p-4 text-sm text-red-600">
                   <h3 className="mb-1 font-semibold">Why it was held</h3>
                   <p>{result?.reason}</p>
                 </section>

@@ -2,6 +2,7 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetModerationPostsAction } from "@/src/server-actions/Post/PostModeration"
@@ -102,8 +103,20 @@ function PostModerationList({ status }: PostModerationListProps) {
                 key={post.id}
                 className="grid grid-cols-12 gap-3 p-4 border-t items-center hover:bg-muted/50 transition delay-150 duration-300 text-sm"
               >
-                <div className="col-span-2 font-medium">
-                  {post.author?.first_name} {post.author?.last_name}
+                <div className="col-span-2 flex items-center gap-2 min-w-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={post.author?.profile_url || undefined}
+                      alt={post.author?.first_name}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {post.author?.first_name?.[0]}
+                      {post.author?.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium truncate">
+                    {post.author?.first_name} {post.author?.last_name}
+                  </span>
                 </div>
                 <div className="col-span-3">
                   <p
