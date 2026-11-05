@@ -704,7 +704,8 @@ export const GetMyPostsAction = CreateServerAction(
           ? { entityId: spaceId, category }
           : { globalPostsOnly: true })
       })
-      const sanitizedPosts = posts.map((post) => ({
+      // any[], like the other feed actions, so the post cards accept it
+      const sanitizedPosts: any[] = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
         files: post.files?.map((f: any) => f.postFile) || [],
@@ -714,30 +715,7 @@ export const GetMyPostsAction = CreateServerAction(
             : undefined
       }))
 
-      // Merge consecutive posts from the same author with same type/content and close timestamps
-      const mergedPosts: any[] = []
-      for (const p of sanitizedPosts) {
-        const last = mergedPosts[mergedPosts.length - 1]
-        if (
-          last &&
-          last.author?.unique_id === p.author?.unique_id &&
-          last.type === p.type &&
-          (last.content || "").trim() === (p.content || "").trim() &&
-          Math.abs(
-            moment(last.created_at).valueOf() - moment(p.created_at).valueOf()
-          ) <= 5000
-        ) {
-          last.files = [...(last.files || []), ...(p.files || [])]
-          last.created_at = moment
-            .min(moment(last.created_at), moment(p.created_at))
-            .toISOString()
-          last.file =
-            last.files && last.files.length > 0 ? last.files[0] : last.file
-        } else {
-          mergedPosts.push({ ...p })
-        }
-      }
-      return { success: true, data: mergedPosts }
+      return { success: true, data: sanitizedPosts }
     } catch (error: any) {
       return {
         success: false,
