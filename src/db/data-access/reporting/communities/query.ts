@@ -26,7 +26,7 @@ const scopedCommunityPostsCte = sql`
     select ch.community_id as community_id, p.id as post_id
     from channels ch
     inner join spaces sp on sp.channel_id = ch.channel_id
-    inner join posts p on p.entity_id = sp.id and p.entity_type = 'space'
+    inner join posts p on p.entity_id = sp.id and p.entity_type = 'space' and p.status = 'published'
     where ch.community_id is not null
   )
 `

@@ -9,15 +9,19 @@ import {
 } from "@/src/types/Reporting/raw-rows.reporting-types"
 import { RANKING_LIMIT } from "../constants"
 
+// Posts waiting for review or rejected by an admin are not counted
+
 export async function GetPostTotalRaw(): Promise<RawTotal> {
-  const rows = await db.execute(sql`select count(*) as total from posts`)
+  const rows = await db.execute(
+    sql`select count(*) as total from posts where status = 'published'`
+  )
   return rows[0] as unknown as RawTotal
 }
 
 /** Dynamic group-by over the plain varchar posts.type column, not a fixed enum. */
 export async function GetPostsByTypeRaw(): Promise<RawGroupCountRow[]> {
   const rows = await db.execute(sql`
-    select type as value, count(*) as count from posts group by type
+    select type as value, count(*) as count from posts where status = 'published' group by type
   `)
   return rows as unknown as RawGroupCountRow[]
 }
@@ -27,6 +31,7 @@ export async function GetPostsByCategoryRaw(): Promise<RawGroupCountRow[]> {
   const rows = await db.execute(sql`
     select coalesce(category, 'uncategorized') as value, count(*) as count
     from posts
+    where status = 'published'
     group by coalesce(category, 'uncategorized')
   `)
   return rows as unknown as RawGroupCountRow[]
@@ -44,7 +49,7 @@ export async function GetCommentsTotalRaw(): Promise<RawTotal> {
 
 export async function GetPollsTotalRaw(): Promise<RawTotal> {
   const rows = await db.execute(sql`
-    select count(*) as total from posts where type = 'poll'
+    select count(*) as total from posts where type = 'poll' and status = 'published'
   `)
   return rows[0] as unknown as RawTotal
 }
@@ -98,6 +103,7 @@ export async function GetTopPostsRaw(): Promise<RawTopPostRow[]> {
     left join lateral (
       select count(*) as total from comments cm where cm.post_id = p.id
     ) c on true
+    where p.status = 'published'
     order by (coalesce(l.total, 0) + coalesce(c.total, 0)) desc
     limit ${RANKING_LIMIT}
   `)
@@ -109,6 +115,7 @@ export async function GetTopCreatorsRaw(): Promise<RawTopCreatorRow[]> {
     select p.user_id, u.first_name, u.last_name, u.email, count(*) as total_posts
     from posts p
     inner join users u on u.unique_id = p.user_id
+    where p.status = 'published'
     group by p.user_id, u.first_name, u.last_name, u.email
     order by total_posts desc
     limit ${RANKING_LIMIT}
