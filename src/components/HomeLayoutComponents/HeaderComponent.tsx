@@ -26,7 +26,8 @@ function Header() {
     { title: "Enterprise", href: "/#enterprise" },
     { title: "Architecture", href: "/#architecture" },
     { title: "Features", href: "/#features" },
-    { title: "Roadmap", href: "/#roadmap" }
+    { title: "Roadmap", href: "/#roadmap" },
+    { title: "User Guides", href: "/#user-guide" }
   ]
 
   return (
