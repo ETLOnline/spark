@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Download } from "lucide-react"
+import { Download, Info } from "lucide-react"
 import { SnapshotUnavailable } from "./AnalyticsPage"
 import { Button } from "@/src/components/ui/button"
 import { Progress } from "@/src/components/ui/progress"
@@ -15,6 +15,12 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 import { downloadCsv } from "./csv"
 import { RewardTypeBlock } from "@/src/types/Reporting/Reporting.schema"
 import {
@@ -25,6 +31,33 @@ import {
 import { formatPercent, getInitials, humanizeKey, toPercent } from "./format"
 
 const PAGE_SIZE = 4
+
+/** Label followed by an info icon whose tooltip explains the value. */
+function LabelWithTip({
+  label,
+  tip,
+  className
+}: {
+  label: string
+  tip: string
+  className?: string
+}) {
+  return (
+    <span className={cn("flex items-center gap-1", className)}>
+      {label}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-3 h-3 flex-shrink-0 cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-56 font-normal">
+            {tip}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </span>
+  )
+}
 
 interface RewardTypePanelProps {
   /** rp_points or sc_points block from the snapshot */
@@ -42,11 +75,23 @@ interface RewardTypePanelProps {
 export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
   const [page, setPage] = useState(1)
 
+  const isRP = short === "RP"
+  // RP is never spent, so a user's RP is their cumulative Reputation Score —
+  // not a "balance". SC is spendable, so balance is the right word there.
+  const scoreLabel = isRP ? "Reputation Score" : `Current ${short} Balance`
+
   const summary = [
-    { label: `${short} held by users`, value: block.total.toLocaleString() },
+    {
+      label: isRP ? "Total RP Issued" : `${short} held by users`,
+      value: block.total.toLocaleString(),
+      tip: isRP
+        ? "Cumulative Reputation Points awarded to all users since launch."
+        : `Total ${short} currently held by all users.`
+    },
     {
       label: "Rewarded actions",
-      value: block.actions.total.toLocaleString()
+      value: block.actions.total.toLocaleString(),
+      tip: `Total number of times an action was rewarded with ${short}.`
     }
   ]
 
@@ -55,7 +100,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
     .sort((a, b) => b.count - a.count)
   const topRuleCount = rules[0]?.count ?? 0
 
-  // Already ranked by balance (desc) in the snapshot.
+  // Already ranked by total (desc) in the snapshot.
   const earners = block.ranking.users
   const totalPages = Math.ceil(earners.length / PAGE_SIZE)
   const globalOffset = (page - 1) * PAGE_SIZE
@@ -79,7 +124,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
         "Name",
         "Email",
         "Level",
-        `Total ${short}`,
+        scoreLabel,
         "Total actions",
         ...actionTypes.map(humanizeKey)
       ],
@@ -116,7 +161,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                   className="min-w-0 rounded-lg border-0 bg-muted/40 p-3 shadow-none"
                 >
                   <CardDescription className="text-xs [overflow-wrap:anywhere]">
-                    {s.label}
+                    <LabelWithTip label={s.label} tip={s.tip} />
                   </CardDescription>
                   <CardTitle className="text-xl sm:text-2xl leading-7 sm:leading-8 tracking-normal font-bold mt-0.5 [overflow-wrap:anywhere]">
                     {s.value}
@@ -177,8 +222,9 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
           <div className="min-w-0">
             <CardTitle className="text-sm">Top {label} earners</CardTitle>
             <CardDescription className="text-xs">
-              Users ranked by current {short} balance, with their level and the
-              actions that earned it.
+              {isRP
+                ? "Users ranked by cumulative Reputation Score, with their level and the actions that earned it."
+                : `Users ranked by current ${short} balance, with their level and the actions that earned it.`}
             </CardDescription>
           </div>
           <Button
@@ -203,7 +249,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                 <span>Rank</span>
                 <span>User</span>
                 <span className="w-28 text-center">Level</span>
-                <span className="w-24 text-right">Total {short}</span>
+                <span className="w-24 text-right">{scoreLabel}</span>
                 <span className="w-16 text-right">Actions</span>
               </div>
 
@@ -260,7 +306,7 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                               {e.info.total.toLocaleString()}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              {short} held
+                              {scoreLabel}
                             </p>
                           </div>
                           <div className="w-16 text-right">
@@ -285,21 +331,39 @@ export function RewardTypePanel({ block, label, short }: RewardTypePanelProps) {
                               {e.actions.total.toLocaleString()} actions
                             </span>
                           </div>
-                          <div className="flex h-3 rounded-md overflow-hidden gap-px">
-                            {e.actions.type.map((b, idx) => (
-                              <div
-                                key={b.action_type}
-                                className={
-                                  SERIES_BG_CLASSES[
-                                    idx % SERIES_BG_CLASSES.length
-                                  ]
-                                }
-                                style={{
-                                  width: `${toPercent(b.count, e.actions.total) ?? 0}%`
-                                }}
-                              />
-                            ))}
-                          </div>
+                          <TooltipProvider delayDuration={0}>
+                            <div className="flex h-3 rounded-md overflow-hidden gap-px">
+                              {e.actions.type.map((b, idx) => (
+                                <Tooltip key={b.action_type}>
+                                  <TooltipTrigger asChild>
+                                    <div
+                                      className={
+                                        SERIES_BG_CLASSES[
+                                          idx % SERIES_BG_CLASSES.length
+                                        ]
+                                      }
+                                      style={{
+                                        width: `${toPercent(b.count, e.actions.total) ?? 0}%`
+                                      }}
+                                    />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-xs flex items-center gap-1.5">
+                                    <span
+                                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${SERIES_BG_CLASSES[idx % SERIES_BG_CLASSES.length]}`}
+                                    />
+                                    <span>
+                                      <span className="font-medium">
+                                        {humanizeKey(b.action_type)}
+                                      </span>
+                                      : {b.count.toLocaleString()}{" "}
+                                      {b.count === 1 ? "action" : "actions"} (
+                                      {formatPercent(b.count, e.actions.total)})
+                                    </span>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ))}
+                            </div>
+                          </TooltipProvider>
                           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-1 text-xs">
                             {e.actions.type.map((b, idx) => (
                               <div
