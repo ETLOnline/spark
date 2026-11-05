@@ -62,7 +62,7 @@ export default function LeaderboardsView() {
     {
       label: "Spark Credits",
       value: sc_points.total.toLocaleString(),
-      sub: `SC issued · ${sc_points.actions.total.toLocaleString()} actions`,
+      sub: `SC in circulation · ${sc_points.actions.total.toLocaleString()} actions`,
       icon: Coins
     },
     {

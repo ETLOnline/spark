@@ -247,9 +247,9 @@ function SpaceFeatures({ features, space }: Props) {
             </div>
             <DialogTitle>Closure feedback is pending</DialogTitle>
             <DialogDescription>
-              All project milestones are verified. Please submit
-              your closure feedback to finish up — you can keep exploring
-              the Space and come back to it whenever you&apos;re ready.
+              All project milestones are verified. Please submit your closure
+              feedback to finish up — you can keep exploring the Space and come
+              back to it whenever you&apos;re ready.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
