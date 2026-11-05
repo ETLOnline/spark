@@ -66,8 +66,8 @@ export default function MentorshipAnalyticsView() {
         "Rank",
         "Mentor",
         "Email",
+        "Sessions delivered",
         "Total sessions",
-        "Completed",
         "Rejected",
         "Feedback"
       ],
@@ -75,8 +75,8 @@ export default function MentorshipAnalyticsView() {
         m.rank,
         m.info.user_name,
         m.info.email,
-        m.sessions.total,
         m.sessions.completed,
+        m.sessions.total,
         m.sessions.rejected,
         m.feedback.total
       ])
@@ -261,7 +261,7 @@ export default function MentorshipAnalyticsView() {
           <div className="min-w-0">
             <CardTitle className="text-sm">Mentor leaderboard</CardTitle>
             <CardDescription>
-              Ranked by total sessions delivered
+              Ranked by sessions delivered (completed)
             </CardDescription>
           </div>
           <Button
@@ -302,7 +302,7 @@ export default function MentorshipAnalyticsView() {
                 </div>
                 <div className="flex-1 basis-40 min-w-0">
                   <p className="text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-semibold">
-                    Most sessions mentor
+                    Top mentor by sessions delivered
                   </p>
                   <p className="font-bold text-base break-words">
                     {rankedMentors[0].info.user_name}
@@ -311,24 +311,26 @@ export default function MentorshipAnalyticsView() {
                     {rankedMentors[0].info.email}
                   </p>
                 </div>
-                <div className="flex flex-1 basis-60 items-center gap-6 justify-around sm:justify-end">
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">
+                <div className="flex flex-1 basis-72 items-end gap-6 justify-around sm:justify-end">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                      {rankedMentors[0].sessions.completed.toLocaleString()}
+                    </p>
+                    <p className="text-xs font-medium">Sessions delivered</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-muted-foreground tabular-nums">
                       {rankedMentors[0].sessions.total.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      total sessions
+                      Total sessions
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">
-                      {rankedMentors[0].sessions.completed.toLocaleString()}
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-muted-foreground tabular-nums">
+                      {rankedMentors[0].feedback.total.toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      completed ·{" "}
-                      {rankedMentors[0].feedback.total.toLocaleString()}{" "}
-                      feedback
-                    </p>
+                    <p className="text-xs text-muted-foreground">Feedback</p>
                   </div>
                 </div>
               </div>
@@ -344,14 +346,14 @@ export default function MentorshipAnalyticsView() {
                         Mentor
                       </th>
                       {[
+                        "Sessions delivered",
                         "Total sessions",
-                        "Completed",
                         "Rejected",
                         "Feedback"
                       ].map((col) => (
                         <th
                           key={col}
-                          className="text-right px-3 sm:px-5 py-3 font-medium whitespace-nowrap"
+                          className="text-center px-3 sm:px-5 py-3 font-medium whitespace-nowrap"
                         >
                           {col}
                         </th>
@@ -400,16 +402,16 @@ export default function MentorshipAnalyticsView() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 sm:px-5 py-4 text-right font-semibold tabular-nums">
-                          {m.sessions.total.toLocaleString()}
-                        </td>
-                        <td className="px-3 sm:px-5 py-4 text-right tabular-nums">
+                        <td className="px-3 sm:px-5 py-4 text-center font-semibold tabular-nums">
                           {m.sessions.completed.toLocaleString()}
                         </td>
-                        <td className="px-3 sm:px-5 py-4 text-right text-muted-foreground tabular-nums">
+                        <td className="px-3 sm:px-5 py-4 text-center tabular-nums">
+                          {m.sessions.total.toLocaleString()}
+                        </td>
+                        <td className="px-3 sm:px-5 py-4 text-center text-muted-foreground tabular-nums">
                           {m.sessions.rejected.toLocaleString()}
                         </td>
-                        <td className="px-3 sm:px-5 py-4 text-right text-muted-foreground tabular-nums">
+                        <td className="px-3 sm:px-5 py-4 text-center text-muted-foreground tabular-nums">
                           {m.feedback.total.toLocaleString()}
                         </td>
                       </tr>
