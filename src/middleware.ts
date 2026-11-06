@@ -53,6 +53,7 @@ export const config = {
     "/terms",
     "/privacy",
     "/code-of-conduct",
+    "/user-guide",
     "/email_preview(.*)",
     "/api-keys(.*)",
     "/api/app/(.*)",

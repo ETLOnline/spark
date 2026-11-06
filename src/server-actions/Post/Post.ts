@@ -19,7 +19,9 @@ import {
   RemoveHashtagFromPostLink,
   UpdatePollOption,
   DeletePollOption,
-  UpdateComment
+  UpdateComment,
+  GetPostStatusById,
+  HoldPostForReview
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -37,6 +39,44 @@ import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { AddRewardAction } from "../Reward/Reward"
 import { getPostUrl } from "@/src/utils/serverHelpers"
+import { checkPost } from "@/src/services/ai/post/postCheck"
+import { UploadedImage } from "@/src/services/ai/types/interface"
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import { isSuperAdmin } from "@/src/utils/helpers"
+import { rewardPublishedPost } from "@/src/services/post/postReview"
+
+// Checks post text, poll options and images with AI before the post is saved.
+// Held posts are still saved, as pending review with the AI result, until an admin approves or rejects them.
+// `moderationFields` go on the post, `aiTags` are the tags to save on it, `message` is for the author when held.
+const checkPostModeration = async (
+  content?: string | null,
+  pollOptions?: string[],
+  images?: UploadedImage[]
+) => {
+  const moderation = await checkPost({ content, pollOptions, images })
+
+  const moderationFields =
+    moderation.publish || !moderation.moderationResult
+      ? { status: PostStatus.PUBLISHED, moderation_result: null }
+      : {
+          status: PostStatus.PENDING_REVIEW,
+          moderation_result: moderation.moderationResult
+        }
+  return {
+    moderationFields,
+    held: moderationFields.status === PostStatus.PENDING_REVIEW,
+    aiTags: moderation.aiTags,
+    message: moderation.message
+  }
+}
+
+// Likes, comments and votes are only allowed on published posts
+const assertPostPublished = async (postId: string) => {
+  const post = await GetPostStatusById(postId)
+  if (post?.status !== PostStatus.PUBLISHED) {
+    throw new Error("Post is not published")
+  }
+}
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -50,23 +90,21 @@ export const CreatePostAction = CreateServerAction(
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
+        const { moderationFields, held, aiTags, message } =
+          await checkPostModeration(content)
+
         const postData = await CreatePost({
           content,
           type,
           user_id: userId,
           category,
           entity_type: entityType,
-          entity_id: entityId
+          entity_id: entityId,
+          ai_tags: aiTags,
+          ...moderationFields
         })
-        const { proof_url, communityId } = await getPostUrl(
-          postData[0].id,
-          entityId
-        )
-
-        await AddRewardAction(ActivityTypes.SocialPost, userId, proof_url, {
-          community_id: communityId
-        })
-        return { success: true, data: postData }
+        if (!held) await rewardPublishedPost(postData[0].id, userId, entityId)
+        return { success: true, data: postData, message }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
       }
@@ -83,8 +121,16 @@ export const UpdatePostAction = CreateServerAction(
   true,
   async (postId: string, content: string) => {
     try {
-      const updatedPost = await UpdatePost(postId, content)
-      return { success: true, data: updatedPost }
+      const { moderationFields, held, aiTags, message } =
+        await checkPostModeration(content)
+
+      // a held edit sends the post back to review; a pending post stays pending until an admin
+      // reviews it, since only the text is checked here and its images may be what held it
+      const updatedPost = await UpdatePost(postId, content, {
+        ai_tags: aiTags,
+        ...(held ? moderationFields : {})
+      })
+      return { success: true, data: updatedPost, message }
     } catch (error: any) {
       return {
         success: false,
@@ -122,6 +168,14 @@ export const UpdatePollOptionsAction = CreateServerAction(
 
       if (hasVotes) {
         throw new Error("Cannot edit poll options after voting has started")
+      }
+
+      const { moderationFields, held, message } = await checkPostModeration(
+        post.content,
+        options.map((opt) => opt.text)
+      )
+      if (held) {
+        await HoldPostForReview(postId, moderationFields.moderation_result!)
       }
 
       const existingOptions = post.options || []
@@ -168,7 +222,7 @@ export const UpdatePollOptionsAction = CreateServerAction(
 
       // Fetch updated post
       const updatedPost = await GetPostById(postId)
-      return { success: true, data: updatedPost }
+      return { success: true, data: updatedPost, message }
     } catch (error: any) {
       return {
         success: false,
@@ -204,6 +258,10 @@ export const CreateFilesPostAction = CreateServerAction(
         throw new Error("No files provided")
       }
 
+      // held files are still uploaded, so the admin can see them when reviewing the post
+      const { moderationFields, held, aiTags, message } =
+        await checkPostModeration(content, undefined, files)
+
       // If there are multiple files, treat it as an image post (existing behavior)
       if (files.length > 1) {
         // Create a single post for all images
@@ -213,7 +271,9 @@ export const CreateFilesPostAction = CreateServerAction(
           content,
           category,
           entity_type: entityType,
-          entity_id: entityId
+          entity_id: entityId,
+          ai_tags: aiTags,
+          ...moderationFields
         })
 
         if (!postData || postData.length === 0) {
@@ -235,13 +295,7 @@ export const CreateFilesPostAction = CreateServerAction(
           await AddPostFileLink(postId, fileRecord.id)
           fileRecords.push({ ...fileRecord, url: fileUrl })
         }
-        const { proof_url, communityId } = await getPostUrl(
-          postData[0].id,
-          entityId
-        )
-        await AddRewardAction(ActivityTypes.SocialPost, userId, proof_url, {
-          community_id: communityId
-        })
+        if (!held) await rewardPublishedPost(postId, userId, entityId)
 
         return {
           success: true,
@@ -250,7 +304,8 @@ export const CreateFilesPostAction = CreateServerAction(
             files: fileRecords,
             file:
               fileRecords && fileRecords.length > 0 ? fileRecords[0] : undefined
-          }
+          },
+          message
         }
       }
 
@@ -266,7 +321,9 @@ export const CreateFilesPostAction = CreateServerAction(
         content,
         category,
         entity_type: entityType,
-        entity_id: entityId
+        entity_id: entityId,
+        ai_tags: aiTags,
+        ...moderationFields
       })
 
       if (!postData || postData.length === 0) {
@@ -290,7 +347,8 @@ export const CreateFilesPostAction = CreateServerAction(
           file: fileRecord,
           files: [fileRecord],
           url: fileUrl
-        }
+        },
+        message
       }
     } catch (error: any) {
       return {
@@ -309,83 +367,63 @@ export const CreatePollPostAction = CreateServerAction(
     options: string[],
     category?: string,
     entityType?: string,
-    entityId?: string
+    entityId?: string,
+    files?: Array<{
+      fileName: string
+      fileSize: number
+      fileType: string
+      fileBase64: string
+    }>,
+    folderPath?: string
   ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
+        // text, options and images are checked together, so the poll is saved with the right
+        // status and only rewarded when it is published. Held images are still uploaded for the admin.
+        const { moderationFields, held, aiTags, message } =
+          await checkPostModeration(content, options, files)
+
         const postData = await CreatePost({
           content,
           type,
           user_id: userId,
           category,
           entity_type: entityType,
-          entity_id: entityId
+          entity_id: entityId,
+          ai_tags: aiTags,
+          ...moderationFields
         })
         if (postData[0]) {
+          const postId = postData[0].id
           const pollOptions = options.map((option) => {
-            return { option_text: option, post_id: postData[0].id }
+            return { option_text: option, post_id: postId }
           })
           const pollOptionsData = await AddPollOptions(pollOptions)
-          const data = { ...postData[0], options: [...pollOptionsData] }
-          const { proof_url, communityId } = await getPostUrl(
-            postData[0].id,
-            entityId
-          )
 
-          await AddRewardAction(ActivityTypes.SocialPost, userId, proof_url, {
-            community_id: communityId
-          })
-          return { success: true, data }
+          const fileRecords: any[] = []
+          for (const file of files ?? []) {
+            const fileBuffer = base64ToBuffer(file.fileBase64)
+            const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+              fileBuffer,
+              file.fileName,
+              file.fileType,
+              folderPath == "spaces" ? "spaces" : "posts"
+            )
+            await AddPostFileLink(postId, fileRecord.id)
+            fileRecords.push({ ...fileRecord, url: fileUrl })
+          }
+
+          const data = {
+            ...postData[0],
+            options: [...pollOptionsData],
+            files: fileRecords
+          }
+          if (!held) await rewardPublishedPost(postId, userId, entityId)
+          return { success: true, data, message }
         } else {
           throw new Error("Failed to create post")
         }
-      }
-    } catch (error: any) {
-      return { success: false, error }
-    }
-  }
-)
-
-export const AttachImagesToPostAction = CreateServerAction(
-  true,
-  async (args: {
-    postId: string
-    files: Array<{
-      fileName: string
-      fileSize: number
-      fileType: string
-      fileBase64: string
-    }>
-    folderPath?: string
-  }) => {
-    const { postId, files, folderPath } = args
-    try {
-      const userId = (await AuthUserAction())?.unique_id
-      if (!userId) throw new Error("Unauthorized", { cause: 401 })
-
-      if (!files || files.length === 0) {
-        throw new Error("No files provided")
-      }
-
-      const fileRecords: any[] = []
-
-      for (const file of files) {
-        const fileBuffer = base64ToBuffer(file.fileBase64)
-        const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
-          fileBuffer,
-          file.fileName,
-          file.fileType,
-          folderPath == "spaces" ? "spaces" : "posts"
-        )
-
-        await AddPostFileLink(postId, fileRecord.id)
-        fileRecords.push({ ...fileRecord, url: fileUrl })
-      }
-
-      return {
-        success: true,
-        data: fileRecords
       }
     } catch (error: any) {
       return { success: false, error }
@@ -404,6 +442,7 @@ export const ToggleLikeAction = CreateServerAction(
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
+        await assertPostPublished(postId)
         if (isLiked) {
           const data = await UnlikePost(postId, userId, likes)
           return { success: true, data }
@@ -456,6 +495,7 @@ export const CreateCommentAction = CreateServerAction(
     try {
       const user = await AuthUserAction()
       if (user?.unique_id) {
+        await assertPostPublished(postId)
         const commentData = await CreateComment(
           {
             content,
@@ -519,6 +559,7 @@ export const VotePollAction = CreateServerAction(
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
+        await assertPostPublished(postId)
         const voteData = await VotePoll(
           {
             user_id: userId,
@@ -544,7 +585,8 @@ export const GetPostsAction = CreateServerAction(
   true,
   async (offset?: number) => {
     try {
-      const posts = await GetPosts({ offset, globalPostsOnly: true })
+      const viewerId = (await AuthUserAction())?.unique_id
+      const posts = await GetPosts({ offset, globalPostsOnly: true, viewerId })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
@@ -597,11 +639,13 @@ export const GetSpacePostsAction = CreateServerAction(
     limit?: number
   ) => {
     try {
+      const viewerId = (await AuthUserAction())?.unique_id
       const posts = await GetPosts({
         entityId: spaceId,
         category: category,
         offset,
-        limit
+        limit,
+        viewerId
       })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
@@ -726,12 +770,24 @@ export const DeletePostAction = CreateServerAction(
   }
 )
 
+// Published posts are public; a pending post is seen by its author and admins, a rejected one by admins
+const canViewPost = async (post: { status: string; user_id: string }) => {
+  if (post.status === PostStatus.PUBLISHED) return true
+  const viewer = await AuthUserAction().catch(() => undefined)
+  if (!viewer) return false
+  if (await isSuperAdmin(viewer)) return true
+  return (
+    post.status === PostStatus.PENDING_REVIEW &&
+    post.user_id === viewer.unique_id
+  )
+}
+
 export const GetPostByIdAction = CreateServerAction(
   false,
   async (postId: string) => {
     try {
       const post = await GetPostById(postId)
-      if (post) {
+      if (post && (await canViewPost(post))) {
         const sanitizedPost = {
           ...post,
           hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),

@@ -19,6 +19,9 @@ import {
 import { eq, and, desc, inArray, or, isNull, SQL } from "drizzle-orm"
 import { like } from "drizzle-orm"
 import { Tag } from "@/src/components/TagsInput/tags-input-types"
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import { MODERATION_PAGE_SIZE } from "@/src/services/ai/constants"
+import { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
 
 interface PostQueryFilters {
   isPrivate?: boolean
@@ -30,17 +33,25 @@ interface PostQueryFilters {
   orderDirection?: "asc" | "desc"
   category?: string
   globalPostsOnly?: boolean
+  // the author also sees their own posts that are waiting for review
+  viewerId?: string
 }
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
 
-export const UpdatePost = async (postId: string, content: string) => {
+export const UpdatePost = async (
+  postId: string,
+  content: string,
+  fields: Partial<
+    Pick<InsertPost, "ai_tags" | "status" | "moderation_result">
+  > = {}
+) => {
   try {
     const updatedPost = await db
       .update(postsTable)
-      .set({ content })
+      .set({ content, ...fields })
       .where(eq(postsTable.id, postId))
       .returning()
 
@@ -66,6 +77,44 @@ export const GetPostById = async (postId: string) => {
         postLikes: true
       }
     })
+  } catch (error: any) {
+    throw new Error(error)
+  }
+}
+
+// Just the fields needed to decide what can be done with a post
+export const GetPostStatusById = async (postId: string) => {
+  try {
+    return await db.query.postsTable.findFirst({
+      where: eq(postsTable.id, postId),
+      columns: {
+        id: true,
+        user_id: true,
+        entity_id: true,
+        status: true,
+        moderation_result: true
+      }
+    })
+  } catch (error: any) {
+    throw new Error(error)
+  }
+}
+
+// Moves a post to pending review, e.g. when poll options or images added later are held
+export const HoldPostForReview = async (
+  postId: string,
+  moderationResult: PostModerationResult
+) => {
+  try {
+    const updatedPost = await db
+      .update(postsTable)
+      .set({
+        status: PostStatus.PENDING_REVIEW,
+        moderation_result: moderationResult
+      })
+      .where(eq(postsTable.id, postId))
+      .returning()
+    return updatedPost[0]
   } catch (error: any) {
     throw new Error(error)
   }
@@ -208,9 +257,20 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       orderDirection = "desc",
       entityId = "",
       category = "",
-      globalPostsOnly = false
+      globalPostsOnly = false,
+      viewerId
     } = filters
     const whereClauses = [
+      // published posts, plus the viewer's own posts waiting for review
+      (viewerId
+        ? or(
+            eq(postsTable.status, PostStatus.PUBLISHED),
+            and(
+              eq(postsTable.status, PostStatus.PENDING_REVIEW),
+              eq(postsTable.user_id, viewerId)
+            )
+          )
+        : eq(postsTable.status, PostStatus.PUBLISHED)) as SQL<unknown>,
       ...(userIds.length ? [inArray(postsTable.user_id, userIds)] : []),
       ...(category ? [eq(postsTable.category, category)] : [])
     ]
@@ -424,4 +484,72 @@ export const DeletePost = async (postId: string) => {
 
     return deletedPost[0]
   })
+}
+
+export type ModerationPostFilters = {
+  status: PostStatus.PENDING_REVIEW | PostStatus.REJECTED
+  page?: number
+  limit?: number
+}
+
+// Posts held by the AI check (pending) or rejected by an admin, newest first
+export const GetModerationPosts = async (filters: ModerationPostFilters) => {
+  const { status, page = 1, limit = MODERATION_PAGE_SIZE } = filters
+  const where = eq(postsTable.status, status)
+
+  const posts = await db.query.postsTable.findMany({
+    limit,
+    offset: (page - 1) * limit,
+    where,
+    with: {
+      author: true,
+      options: { orderBy: [pollOptionsTable.id] },
+      files: { with: { postFile: true } }
+    },
+    orderBy: [desc(postsTable.created_at)]
+  })
+  const totalCount = await db.$count(postsTable, where)
+
+  return {
+    posts,
+    pagination: {
+      total: Number(totalCount),
+      page,
+      limit,
+      totalPages: Math.ceil(Number(totalCount) / limit) || 1
+    }
+  }
+}
+
+// Approves or rejects a pending post; returns undefined when the post is no longer pending
+export const ReviewPost = async (
+  postId: string,
+  status: PostStatus.PUBLISHED | PostStatus.REJECTED,
+  adminId: string
+) => {
+  const post = await GetPostStatusById(postId)
+  if (!post || post.status !== PostStatus.PENDING_REVIEW) return undefined
+
+  const reviewedPost = await db
+    .update(postsTable)
+    .set({
+      status,
+      reviewed_by: adminId,
+      moderation_result: post.moderation_result && {
+        ...post.moderation_result,
+        review: {
+          action: status === PostStatus.PUBLISHED ? "approved" : "rejected",
+          reviewed_at: new Date().toISOString()
+        }
+      }
+    })
+    // only a pending post can be reviewed, so two admins can't review it at once
+    .where(
+      and(
+        eq(postsTable.id, postId),
+        eq(postsTable.status, PostStatus.PENDING_REVIEW)
+      )
+    )
+    .returning()
+  return reviewedPost[0]
 }

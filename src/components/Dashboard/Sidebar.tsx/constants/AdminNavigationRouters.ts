@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Settings2,
   Shield,
+  ShieldAlert,
   ShieldCheck
 } from "lucide-react"
 
@@ -49,6 +50,11 @@ export const adminSiteRoutes: SiteRoutes = {
       title: "Community Requests",
       url: "/admin/community-requests",
       icon: ShieldCheck
+    },
+    {
+      title: "Post Moderation",
+      url: "/admin/post-moderation",
+      icon: ShieldAlert
     }
   ]
 }

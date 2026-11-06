@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { Progress } from "@/src/components/ui/progress"
 import { CommunitiesReport } from "@/src/types/Reporting/Reporting.schema"
+import { SnapshotUnavailable } from "./AnalyticsPage"
 import { toPercent } from "./format"
 
 interface TopCommunitiesCardProps {
@@ -62,30 +63,37 @@ export function TopCommunitiesCard({
         </Tabs>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {rows.map((c, i) => (
-          <div key={c.id} className="flex flex-col gap-1">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="text-sm text-muted-foreground w-4 flex-shrink-0">
-                  {i + 1}
-                </span>
-                <span className="text-sm font-medium truncate" title={c.title}>
-                  {c.title}
+      {rows.length === 0 ? (
+        <SnapshotUnavailable />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {rows.map((c, i) => (
+            <div key={c.id} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="text-sm text-muted-foreground w-4 flex-shrink-0">
+                    {i + 1}
+                  </span>
+                  <span
+                    className="text-sm font-medium truncate"
+                    title={c.title}
+                  >
+                    {c.title}
+                  </span>
+                </div>
+                <span className="text-sm font-semibold flex-shrink-0 tabular-nums">
+                  {c.value.toLocaleString()}
                 </span>
               </div>
-              <span className="text-sm font-semibold flex-shrink-0 tabular-nums">
-                {c.value.toLocaleString()}
-              </span>
+              <Progress
+                value={toPercent(c.value, topValue) ?? 0}
+                className="h-1.5 bg-muted"
+                indicatorClassName="rounded-full duration-500"
+              />
             </div>
-            <Progress
-              value={toPercent(c.value, topValue) ?? 0}
-              className="h-1.5 bg-muted"
-              indicatorClassName="rounded-full duration-500"
-            />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {showLink && (
         <Link
