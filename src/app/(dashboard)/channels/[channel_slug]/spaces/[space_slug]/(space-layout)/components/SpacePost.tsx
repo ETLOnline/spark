@@ -34,9 +34,11 @@ const SpacePostComponent: React.FC = () => {
   const router = useRouter()
 
   const spaceSlug = params.space_slug as string
-  const channelSlug = params.channel_slug as string
+  const channelSlug = params.channel_slug as string | undefined
 
-  const decodedChannelSlug = decodeURIComponent(channelSlug)
+  const decodedChannelSlug = channelSlug
+    ? decodeURIComponent(channelSlug)
+    : undefined
   const decodedSpaceSlug = decodeURIComponent(spaceSlug)
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
