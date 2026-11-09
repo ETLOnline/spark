@@ -88,13 +88,29 @@ export type RawCategoryRow = { category_name: string } & RawNumeric<
   CommunitiesReport["categories"][string]
 >
 
+/** Raw community-detail columns joined onto each ranking row — `type` is the raw communities.type value, mapped to the contract's visibility enum. */
+export interface RawCommunityRankingDetails {
+  slug: string
+  type: string
+  admin_names: string[] | null
+  fyp_enabled: boolean
+}
+
 export type RawMemberRankingRow = RawNumeric<
-  CommunitiesReport["ranking"]["by_members"][number]
->
+  Pick<
+    CommunitiesReport["ranking"]["by_members"][number],
+    "community_id" | "title" | "total_members"
+  >
+> &
+  RawCommunityRankingDetails
 
 export type RawPostRankingRow = RawNumeric<
-  CommunitiesReport["ranking"]["by_posts"][number]
->
+  Pick<
+    CommunitiesReport["ranking"]["by_posts"][number],
+    "community_id" | "title" | "total_posts"
+  >
+> &
+  RawCommunityRankingDetails
 
 /** Flattened/prefixed version of CommunityStat's nested memberships/channels/posts — not 1:1 derivable. */
 export interface RawCommunityStatRow {

@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Download, Network, MessageSquare } from "lucide-react"
+import { CommunitiesReport } from "@/src/types/Reporting/Reporting.schema"
 import { useAtomValue } from "jotai"
 import {
   AnalyticsPage,
@@ -16,6 +18,12 @@ import { Badge } from "@/src/components/ui/badge"
 import { cn } from "@/src/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
+import {
   Card,
   CardContent,
   CardDescription,
@@ -29,6 +37,102 @@ import { formatCount, getInitials, toPercent } from "./format"
 const TOP_LIST_SIZE = 10
 type RankMode = "members" | "posts"
 
+type CommunityRankingEntry = Pick<
+  CommunitiesReport["ranking"]["by_members"][number],
+  | "community_id"
+  | "title"
+  | "slug"
+  | "visibility"
+  | "admin_names"
+  | "fyp_enabled"
+>
+
+interface CommunityRankingRow {
+  id: string
+  title: string
+  value: number
+  slug?: string
+  visibility?: "public" | "private"
+  adminNames?: string[]
+  fypEnabled?: boolean
+}
+
+const VISIBILITY_LABEL = { public: "Public", private: "Private" } as const
+
+/** Shown when a field is missing — e.g. a snapshot built before these columns existed. */
+function EmptyCell() {
+  return <span className="text-muted-foreground">—</span>
+}
+
+/**
+ * First admin (the creator, when they still hold the role — the backend
+ * orders it that way) plus a "+N" badge whose tooltip lists every admin.
+ */
+function AdminNames({ names }: { names?: string[] }) {
+  if (!names || names.length === 0) return <EmptyCell />
+
+  const [first, ...rest] = names
+  if (rest.length === 0) return <span>{first}</span>
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span>{first}</span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Show all ${names.length} admins`}
+              className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Badge
+                variant="outline"
+                className="border-transparent bg-muted text-muted-foreground font-medium px-1.5 cursor-default"
+              >
+                +{rest.length}
+              </Badge>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64">
+            <p className="text-xs font-semibold mb-1">
+              {names.length} community admins
+            </p>
+            <ul className="text-xs space-y-0.5">
+              {names.map((name, i) => (
+                <li key={`${name}-${i}`}>{name}</li>
+              ))}
+            </ul>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  )
+}
+
+function CommunityName({ title, slug }: { title: string; slug?: string }) {
+  const content = (
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="w-8 h-8 rounded-lg bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center flex-shrink-0">
+        {getInitials(title)}
+      </span>
+      <p className="font-medium break-words min-w-0 max-w-[14rem] sm:max-w-none">
+        {title}
+      </p>
+    </div>
+  )
+
+  if (!slug) return content
+
+  return (
+    <Link
+      href={`/communities/${slug}`}
+      className="block rounded-md hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {content}
+    </Link>
+  )
+}
+
 export default function CommunitiesAnalyticsView() {
   const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
   const isLoading = useAtomValue(adminAnalyticsStore.LoadingSnapshot)
@@ -40,18 +144,27 @@ export default function CommunitiesAnalyticsView() {
   // Backend orders by value desc but has no secondary sort, so ties can come
   // back in any order — re-sort here with an alphabetical tiebreak to satisfy
   // "ties share the same rank, ordered alphabetically".
+  const toRow = (
+    c: CommunityRankingEntry,
+    value: number
+  ): CommunityRankingRow => ({
+    id: c.community_id,
+    title: c.title,
+    value,
+    slug: c.slug,
+    visibility: c.visibility,
+    adminNames: c.admin_names,
+    fypEnabled: c.fyp_enabled
+  })
+
   const ranking = (
     mode === "members"
-      ? (communities?.ranking.by_members ?? []).map((c) => ({
-          id: c.community_id,
-          title: c.title,
-          value: c.total_members
-        }))
-      : (communities?.ranking.by_posts ?? []).map((c) => ({
-          id: c.community_id,
-          title: c.title,
-          value: c.total_posts
-        }))
+      ? (communities?.ranking.by_members ?? []).map((c) =>
+          toRow(c, c.total_members)
+        )
+      : (communities?.ranking.by_posts ?? []).map((c) =>
+          toRow(c, c.total_posts)
+        )
   ).sort((a, b) => b.value - a.value || a.title.localeCompare(b.title))
 
   const total = ranking.length
@@ -70,15 +183,29 @@ export default function CommunitiesAnalyticsView() {
 
   const subtitle =
     mode === "members"
-      ? "Ranked by total members in the community"
-      : "Ranked by total posts in the community"
+      ? "Ranked by total members. Click a community to open its page."
+      : "Ranked by total posts. Click a community to open its page."
   const valueCol = mode === "members" ? "Members" : "Total posts"
 
   const exportTopCommunitiesCsv = () => {
     downloadCsv(
       `top-communities-${mode}-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Rank", "Community", valueCol],
-      pageData.map((c) => [c.rank, c.title, c.value])
+      [
+        "Rank",
+        "Community",
+        "Visibility",
+        "Community admin",
+        "FYP enabled",
+        valueCol
+      ],
+      pageData.map((c) => [
+        c.rank,
+        c.title,
+        c.visibility ? VISIBILITY_LABEL[c.visibility] : "",
+        c.adminNames?.join("; ") ?? "",
+        c.fypEnabled === undefined ? "" : c.fypEnabled ? "Yes" : "No",
+        c.value
+      ])
     )
   }
 
@@ -153,7 +280,7 @@ export default function CommunitiesAnalyticsView() {
               ) : (
                 <>
                   <div className="w-full flex-1 overflow-x-auto">
-                    <table className="w-full min-w-[32rem] text-sm">
+                    <table className="w-full min-w-[56rem] text-sm">
                       <thead>
                         <tr className="text-xs text-muted-foreground border-b">
                           <th className="text-left px-3 sm:px-5 py-3 font-medium w-14 sm:w-16">
@@ -161,6 +288,15 @@ export default function CommunitiesAnalyticsView() {
                           </th>
                           <th className="text-left px-3 sm:px-5 py-3 font-medium">
                             Community
+                          </th>
+                          <th className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                            Visibility
+                          </th>
+                          <th className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                            Community admin
+                          </th>
+                          <th className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                            FYP enabled
                           </th>
                           <th className="text-right px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                             {valueCol}
@@ -190,14 +326,44 @@ export default function CommunitiesAnalyticsView() {
                                 </Badge>
                               </td>
                               <td className="px-3 sm:px-5 py-3">
-                                <div className="flex min-w-0 items-center gap-3">
-                                  <span className="w-8 h-8 rounded-lg bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center flex-shrink-0">
-                                    {getInitials(c.title)}
-                                  </span>
-                                  <p className="font-medium break-words min-w-0 max-w-[14rem] sm:max-w-none">
-                                    {c.title}
-                                  </p>
-                                </div>
+                                <CommunityName title={c.title} slug={c.slug} />
+                              </td>
+                              <td className="px-3 sm:px-5 py-3">
+                                {c.visibility ? (
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "border-transparent font-medium",
+                                      c.visibility === "public"
+                                        ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+                                        : "bg-muted text-muted-foreground"
+                                    )}
+                                  >
+                                    {VISIBILITY_LABEL[c.visibility]}
+                                  </Badge>
+                                ) : (
+                                  <EmptyCell />
+                                )}
+                              </td>
+                              <td className="px-3 sm:px-5 py-3 whitespace-nowrap">
+                                <AdminNames names={c.adminNames} />
+                              </td>
+                              <td className="px-3 sm:px-5 py-3">
+                                {c.fypEnabled === undefined ? (
+                                  <EmptyCell />
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "border-transparent font-medium",
+                                      c.fypEnabled
+                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                        : "bg-muted text-muted-foreground"
+                                    )}
+                                  >
+                                    {c.fypEnabled ? "Yes" : "No"}
+                                  </Badge>
+                                )}
                               </td>
                               <td className="px-3 sm:px-5 py-3 text-right font-semibold tabular-nums">
                                 {c.value.toLocaleString()}
