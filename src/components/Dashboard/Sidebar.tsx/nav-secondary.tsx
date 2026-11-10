@@ -23,7 +23,7 @@ export default function NavSecondary({
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {(items ?? []).map((item) => (
             <SidebarMenuItem key={item.url + item.title}>
               <SidebarMenuButton asChild size="sm">
                 <Link href={item.url} onClick={() => setOpenMobile(false)}>
