@@ -44,8 +44,9 @@ export async function GetCommunityTotalsRaw(): Promise<RawCommunityTotalsRow> {
 
 export async function GetCommunityMembershipTotalsRaw(): Promise<RawCountActive> {
   const rows = await db.execute(sql`
-    select count(*) as total, count(*) filter (where status = 'active') as active
-    from community_users
+    select count(*) as total, count(*) filter (where cu.status = 'active') as active
+    from community_users cu
+    inner join users u on u.unique_id = cu.user_id and u.disabled = false
   `)
   return rows[0] as unknown as RawCountActive
 }
@@ -63,6 +64,7 @@ export async function GetCommunityChannelUserTotalsRaw(): Promise<RawCountActive
   const rows = await db.execute(sql`
     select count(*) as total, count(*) filter (where cu.status = 'active') as active
     from channel_users cu
+    inner join users u on u.unique_id = cu.user_id and u.disabled = false
     inner join channels ch on ch.channel_id = cu.channel_id
     where ch.community_id is not null
   `)
@@ -83,6 +85,7 @@ export async function GetCommunitySpaceUserTotalsRaw(): Promise<RawCountActive> 
   const rows = await db.execute(sql`
     select count(*) as total, count(*) filter (where su.status = 'active') as active
     from space_users su
+    inner join users u on u.unique_id = su.user_id and u.disabled = false
     inner join spaces sp on sp.id = su.space_id
     inner join channels ch on ch.channel_id = sp.channel_id
     where ch.community_id is not null
@@ -145,7 +148,10 @@ export async function GetCommunityMemberRankingRaw(): Promise<
   const rows = await db.execute(sql`
     select c.id as community_id, c.title, count(cu.id) as total_members
     from communities c
-    left join community_users cu on cu.community_id = c.id
+    left join (
+      community_users cu
+      inner join users u on u.unique_id = cu.user_id and u.disabled = false
+    ) on cu.community_id = c.id
     group by c.id, c.title
     order by total_members desc
     limit ${RANKING_LIMIT}
@@ -172,8 +178,10 @@ export async function GetCommunityStatsRaw(): Promise<RawCommunityStatRow[]> {
   const rows = await db.execute(sql`
     with ${scopedCommunityPostsCte},
     membership_totals as (
-      select community_id, count(*) as total, count(*) filter (where status = 'active') as active
-      from community_users group by community_id
+      select cu.community_id, count(*) as total, count(*) filter (where cu.status = 'active') as active
+      from community_users cu
+      inner join users u on u.unique_id = cu.user_id and u.disabled = false
+      group by cu.community_id
     ),
     channel_totals as (
       select community_id, count(*) as total from channels where community_id is not null group by community_id
