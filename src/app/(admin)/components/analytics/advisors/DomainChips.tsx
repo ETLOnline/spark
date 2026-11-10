@@ -1,6 +1,7 @@
 "use client"
 
 import { Badge } from "@/src/components/ui/badge"
+import { Button } from "@/src/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
@@ -38,13 +39,14 @@ export function DomainChips({ domains }: { domains: string[] }) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 aria-label={`${hidden.length} more domains: ${hidden.join(", ")}`}
-                className="rounded-md border bg-muted/60 px-2 py-0.5 text-xs font-semibold text-muted-foreground whitespace-nowrap hover:text-foreground"
+                className="h-auto rounded-md border bg-muted/60 px-2 py-0.5 text-xs font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               >
                 +{hidden.length}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent className="max-w-64">
               {hidden.join(", ")}
