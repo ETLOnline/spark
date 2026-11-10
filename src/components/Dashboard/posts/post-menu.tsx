@@ -15,6 +15,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { SelectPost } from "@/src/db/schema"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import UpdatePostModal from "./updatePostModal"
+import { PostStatus } from "@/src/types/Post/PostStatus"
 import { useState } from "react"
 
 interface PostMenuProps {
@@ -41,7 +42,9 @@ const PostMenu = ({ post, spaceId }: PostMenuProps) => {
     : false
 
   const isPostOwner = user?.unique_id === post.user_id
-  const shouldShowDeleteButton = canDelete || isPostOwner
+  // edit/delete only on published posts (not under review or rejected)
+  const shouldShowDeleteButton =
+    post.status === PostStatus.PUBLISHED && (canDelete || isPostOwner)
 
   const { toast } = useToast()
 

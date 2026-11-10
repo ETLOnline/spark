@@ -33,8 +33,8 @@ interface PostQueryFilters {
   orderDirection?: "asc" | "desc"
   category?: string
   globalPostsOnly?: boolean
-  // the author also sees their own posts that are waiting for review
-  viewerId?: string
+  // only posts with these statuses; published posts only by default
+  statuses?: PostStatus[]
 }
 
 export const CreatePost = async (post: InsertPost) => {
@@ -258,19 +258,10 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       entityId = "",
       category = "",
       globalPostsOnly = false,
-      viewerId
+      statuses = [PostStatus.PUBLISHED]
     } = filters
     const whereClauses = [
-      // published posts, plus the viewer's own posts waiting for review
-      (viewerId
-        ? or(
-            eq(postsTable.status, PostStatus.PUBLISHED),
-            and(
-              eq(postsTable.status, PostStatus.PENDING_REVIEW),
-              eq(postsTable.user_id, viewerId)
-            )
-          )
-        : eq(postsTable.status, PostStatus.PUBLISHED)) as SQL<unknown>,
+      inArray(postsTable.status, statuses),
       ...(userIds.length ? [inArray(postsTable.user_id, userIds)] : []),
       ...(category ? [eq(postsTable.category, category)] : [])
     ]

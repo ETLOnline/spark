@@ -1,7 +1,7 @@
 "use client"
 
 import CreatePostForm from "@/src/components/Dashboard/posts/create-post-form"
-import PostFeed from "@/src/components/Dashboard/posts/post-feed"
+import PostFeedTabs from "@/src/components/Dashboard/posts/post-feed-tabs"
 import {
   Card,
   CardHeader,
@@ -134,8 +134,8 @@ const SpacePostComponent: React.FC = () => {
         ) : (
           posts?.data &&
           canViewPost && (
-            <PostFeed
-              fetchedPosts={
+            <PostFeedTabs
+              publicPosts={
                 posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
               }
               spaceId={space?.id}

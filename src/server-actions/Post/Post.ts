@@ -585,8 +585,7 @@ export const GetPostsAction = CreateServerAction(
   true,
   async (offset?: number) => {
     try {
-      const viewerId = (await AuthUserAction())?.unique_id
-      const posts = await GetPosts({ offset, globalPostsOnly: true, viewerId })
+      const posts = await GetPosts({ offset, globalPostsOnly: true })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
@@ -639,13 +638,11 @@ export const GetSpacePostsAction = CreateServerAction(
     limit?: number
   ) => {
     try {
-      const viewerId = (await AuthUserAction())?.unique_id
       const posts = await GetPosts({
         entityId: spaceId,
         category: category,
         offset,
-        limit,
-        viewerId
+        limit
       })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
@@ -685,6 +682,44 @@ export const GetSpacePostsAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to fetch user posts"
+      }
+    }
+  }
+)
+
+// My Posts: the signed-in user's posts in every status (published, under review, rejected),
+// either their global posts or their posts in one space
+export const GetMyPostsAction = CreateServerAction(
+  true,
+  async (offset?: number, spaceId?: string, category: string = "") => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) throw new Error("Unauthorized", { cause: 401 })
+
+      const posts = await GetPosts({
+        offset,
+        userIds: [user.unique_id],
+        statuses: Object.values(PostStatus),
+        ...(spaceId
+          ? { entityId: spaceId, category }
+          : { globalPostsOnly: true })
+      })
+      // any[], like the other feed actions, so the post cards accept it
+      const sanitizedPosts: any[] = posts.map((post) => ({
+        ...post,
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+        files: post.files?.map((f: any) => f.postFile) || [],
+        file:
+          post.files && post.files.length > 0
+            ? post.files[0].postFile
+            : undefined
+      }))
+
+      return { success: true, data: sanitizedPosts }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch your posts"
       }
     }
   }
@@ -770,16 +805,13 @@ export const DeletePostAction = CreateServerAction(
   }
 )
 
-// Published posts are public; a pending post is seen by its author and admins, a rejected one by admins
+// Published posts are public; any other post is seen only by its author (My Posts) and admins
 const canViewPost = async (post: { status: string; user_id: string }) => {
   if (post.status === PostStatus.PUBLISHED) return true
   const viewer = await AuthUserAction().catch(() => undefined)
   if (!viewer) return false
-  if (await isSuperAdmin(viewer)) return true
-  return (
-    post.status === PostStatus.PENDING_REVIEW &&
-    post.user_id === viewer.unique_id
-  )
+  if (post.user_id === viewer.unique_id) return true
+  return await isSuperAdmin(viewer)
 }
 
 export const GetPostByIdAction = CreateServerAction(
