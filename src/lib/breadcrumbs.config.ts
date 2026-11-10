@@ -5,6 +5,7 @@ import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/pro
 import { GetMilestoneByIdAction } from "@/src/server-actions/Milestone/Milestone"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
+import { GetSessionDetailsAction } from "@/src/server-actions/Mentor/MentorActions"
 
 /**
  * Defines the structure for a single breadcrumb configuration item.
@@ -323,7 +324,30 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
         children: [
           { path: "/users", label: "Users" },
           { path: "/communities", label: "Communities" },
-          { path: "/mentorship", label: "Mentorship" },
+          {
+            path: "/mentorship",
+            label: "Mentorship",
+            children: [
+              { path: "/mentors", label: "Mentors" },
+              {
+                path: "/sessions",
+                label: "Sessions",
+                children: [
+                  {
+                    path: "/[id]",
+                    dynamicLabelFetcher: async (id: string) => {
+                      try {
+                        const res = await GetSessionDetailsAction(Number(id))
+                        return res?.data?.topic || `Session ${id}`
+                      } catch {
+                        return `Session ${id}`
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           { path: "/leaderboards", label: "Leaderboards" }
         ]
       }
