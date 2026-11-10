@@ -80,10 +80,11 @@ function AdminNames({ names }: { names?: string[] }) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               aria-label={`Show all ${names.length} admins`}
-              className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-auto p-0 rounded-full hover:bg-transparent focus-visible:ring-2"
             >
               <Badge
                 variant="outline"
@@ -91,7 +92,7 @@ function AdminNames({ names }: { names?: string[] }) {
               >
                 +{rest.length}
               </Badge>
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent className="max-w-64">
             <p className="text-xs font-semibold mb-1">
