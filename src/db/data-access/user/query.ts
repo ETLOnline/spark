@@ -29,6 +29,7 @@ export async function SelectUserByExternalId(id: string) {
       cover_image: true,
       unique_id: true,
       role: true,
+      disabled: true,
       meta_profile: true
     },
     where: eq(usersTable.external_auth_id, id),
