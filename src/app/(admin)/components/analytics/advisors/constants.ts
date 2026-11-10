@@ -5,11 +5,19 @@ import {
 
 export const ADVISOR_PAGE_SIZE = 10
 
-/** An empty page of results (used until the drill-down queries are wired in). */
+/** An empty page of results, shown while the first page loads or after an error. */
 export const emptyPage = <T>(page: number): PaginatedResult<T> => ({
   rows: [],
   pagination: { total: 0, page, limit: ADVISOR_PAGE_SIZE, totalPages: 0 }
 })
+
+/** Makes a stored URL safe to use as an external href ("linkedin.com/in/x" → "https://linkedin.com/in/x"). */
+export const toExternalUrl = (url: string) =>
+  /^https?:\/\//i.test(url) ? url : `https://${url}`
+
+/** URL without protocol/www, for display. */
+export const displayUrl = (url: string) =>
+  url.replace(/^https?:\/\/(www\.)?/i, "")
 
 const BASE = "/admin/analytics/advisors"
 

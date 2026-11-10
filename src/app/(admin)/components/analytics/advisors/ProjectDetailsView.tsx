@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
 import { format } from "date-fns"
 import { FileText, Image as ImageIcon, Link2, Star } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
@@ -11,23 +11,27 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { MilestoneStatusBadge } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/MilestoneStatusBadge"
-import { SnapshotUnavailable } from "../AnalyticsPage"
+import { SnapshotLoading, SnapshotUnavailable } from "../AnalyticsPage"
 import { DrillDownHeader } from "./DrillDownHeader"
-import { DRILLDOWN_LINK_CLASS, DRILLDOWN_PAGE_CLASS } from "./constants"
+import {
+  displayUrl,
+  DRILLDOWN_LINK_CLASS,
+  DRILLDOWN_PAGE_CLASS,
+  toExternalUrl
+} from "./constants"
+import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AdminClosureRating,
-  AdminFypProjectDetails,
   AdminProjectMilestone
 } from "@/src/types/Advisors/AdminAdvisors"
+import { GetAdminFypProjectDetailsAction } from "@/src/server-actions/Advisors/AdminAdvisors"
 
-// TODO(phase 3): load with GetAdminFypProjectDetailsAction(spaceId).
-const loadProjectDetails = (spaceId: string): AdminFypProjectDetails | null => {
-  void spaceId
-  return null
+/** Formats an ISO / date string; null for empty or unparseable values. */
+const formatDate = (value: string | null) => {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : format(date, "MMM d, yyyy")
 }
-
-const formatDate = (iso: string | null) =>
-  iso ? format(new Date(iso), "MMM d, yyyy") : null
 
 const FILE_ICONS = { file: FileText, image: ImageIcon, link: Link2 } as const
 
@@ -66,28 +70,15 @@ function Rating({ value }: { value: number }) {
   )
 }
 
-function RatingRow({
-  name,
-  feedback
-}: {
-  name: string
-  feedback: AdminClosureRating | null
-}) {
-  if (!feedback) {
-    return (
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2.5">
-        <span className="text-sm font-medium">{name}</span>
-        <NotSubmitted />
-      </div>
-    )
-  }
+function RatingRow({ feedback }: { feedback: AdminClosureRating }) {
+  const submitted = formatDate(feedback.submittedAt)
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2.5">
       <div className="min-w-0">
-        <p className="text-sm font-medium">{name}</p>
+        <p className="text-sm font-medium">{feedback.submittedBy}</p>
         <p className="text-xs text-muted-foreground">
-          Submitted via FYP Program Feedback ·{" "}
-          {formatDate(feedback.submittedAt)}
+          Submitted via FYP Program Feedback
+          {submitted ? ` · ${submitted}` : ""}
         </p>
       </div>
       <Rating value={feedback.rating} />
@@ -118,7 +109,7 @@ function MilestoneColumn({ milestone }: { milestone: AdminProjectMilestone }) {
             return (
               <a
                 key={f.id}
-                href={f.url}
+                href={f.type === "link" ? toExternalUrl(f.url) : f.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex max-w-full items-center gap-1 rounded-md border bg-muted/40 px-2 py-1 text-xs hover:border-teal-500 transition-colors"
@@ -135,22 +126,41 @@ function MilestoneColumn({ milestone }: { milestone: AdminProjectMilestone }) {
 }
 
 export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
-  const project = loadProjectDetails(spaceId)
+  const [isFetching, result, fetchError, getProject] = useServerAction(
+    GetAdminFypProjectDetailsAction
+  )
 
-  if (!project) {
+  useEffect(() => {
+    getProject(spaceId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceId])
+
+  // `result` is null until the first response arrives.
+  const loading = isFetching || (!result && !fetchError)
+  const error =
+    fetchError?.message ?? (result && !result.success ? result.error : null)
+  const project = result?.success ? result.data : null
+
+  if (loading) return <SnapshotLoading />
+
+  if (error || !project) {
     return (
       <div className={DRILLDOWN_PAGE_CLASS}>
         <DrillDownHeader title="Project details" />
-        <SnapshotUnavailable />
+        {error ? (
+          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-destructive">
+            {error}
+          </p>
+        ) : (
+          <SnapshotUnavailable />
+        )}
       </div>
     )
   }
 
-  const path = [
-    project.communityName,
-    project.channelName,
-    project.spaceName
-  ].join(" / ")
+  const path = [project.communityName, project.channelName, project.spaceName]
+    .filter(Boolean)
+    .join(" / ")
   const completed = formatDate(project.completedAt)
 
   return (
@@ -159,12 +169,21 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
         title={
           <span className="flex flex-wrap items-center gap-2">
             {project.title}
-            <Badge
-              variant="outline"
-              className="border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-            >
-              Completed
-            </Badge>
+            {project.completedAt ? (
+              <Badge
+                variant="outline"
+                className="border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+              >
+                Completed
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400"
+              >
+                In progress
+              </Badge>
+            )}
           </span>
         }
         description={[
@@ -183,7 +202,7 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
             <>
               {project.advisor.linkedinUrl ? (
                 <a
-                  href={project.advisor.linkedinUrl}
+                  href={toExternalUrl(project.advisor.linkedinUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`text-base ${DRILLDOWN_LINK_CLASS}`}
@@ -198,15 +217,12 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
               <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
                 <dt className="text-muted-foreground">Email</dt>
                 <dd className="[overflow-wrap:anywhere]">
-                  {project.advisor.email}
+                  {project.advisor.email || "—"}
                 </dd>
                 <dt className="text-muted-foreground">LinkedIn</dt>
                 <dd className="[overflow-wrap:anywhere]">
                   {project.advisor.linkedinUrl ? (
-                    project.advisor.linkedinUrl.replace(
-                      /^https?:\/\/(www\.)?/,
-                      ""
-                    )
+                    displayUrl(project.advisor.linkedinUrl)
                   ) : (
                     <span className="text-muted-foreground">Not added</span>
                   )}
@@ -226,8 +242,8 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
             <p className="text-sm text-muted-foreground">No students listed</p>
           ) : (
             <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 text-sm">
-              {project.students.map((s) => (
-                <div key={s.registrationNumber + s.name} className="contents">
+              {project.students.map((s, i) => (
+                <div key={`${i}-${s.registrationNumber}`} className="contents">
                   <dt className="font-medium">{s.name}</dt>
                   <dd className="text-muted-foreground tabular-nums">
                     {s.registrationNumber}
@@ -268,10 +284,7 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
           </CardHeader>
           <CardContent className="p-4 sm:p-5">
             {project.advisorFeedback ? (
-              <RatingRow
-                name={project.advisorFeedback.submittedBy}
-                feedback={project.advisorFeedback}
-              />
+              <RatingRow feedback={project.advisorFeedback} />
             ) : (
               <NotSubmitted />
             )}
@@ -288,15 +301,11 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
             </p>
           </CardHeader>
           <CardContent className="p-4 sm:p-5 flex flex-col gap-2">
-            {project.studentFeedback.every((s) => !s.feedback) ? (
+            {project.studentFeedback.length === 0 ? (
               <NotSubmitted />
             ) : (
-              project.studentFeedback.map((s) => (
-                <RatingRow
-                  key={s.studentName}
-                  name={s.studentName}
-                  feedback={s.feedback}
-                />
+              project.studentFeedback.map((f, i) => (
+                <RatingRow key={`${i}-${f.submittedBy}`} feedback={f} />
               ))
             )}
           </CardContent>

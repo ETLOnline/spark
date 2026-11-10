@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import {
   Card,
   CardDescription,
@@ -8,13 +9,19 @@ import {
 } from "@/src/components/ui/card"
 import { DomainChips } from "./DomainChips"
 import { TableFooter } from "./TableFooter"
+import { TableStatusRow } from "./TableStatusRow"
+import { useServerAction } from "@/src/hooks/useServerAction"
 import { UrlSearchInput } from "./UrlSearchInput"
 import {
   ADVISOR_FILTER_DESCRIPTIONS,
   ADVISOR_FILTER_TITLES,
+  ADVISOR_PAGE_SIZE,
+  displayUrl,
   DRILLDOWN_LINK_CLASS,
-  emptyPage
+  emptyPage,
+  toExternalUrl
 } from "./constants"
+import { GetAdminAdvisorsListAction } from "@/src/server-actions/Advisors/AdminAdvisors"
 import {
   AdminAdvisorRow,
   AdvisorFilter
@@ -38,9 +45,21 @@ interface AdvisorsTableProps {
 
 /** Paginated, searchable advisors table shown under the advisor KPI cards. */
 export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
-  // TODO(phase 3): load rows with GetAdminAdvisorsListAction(filter, search, page).
-  void search
-  const { rows, pagination } = emptyPage<AdminAdvisorRow>(page)
+  const [isFetching, result, fetchError, getAdvisors] = useServerAction(
+    GetAdminAdvisorsListAction
+  )
+
+  useEffect(() => {
+    getAdvisors({ filter, search, page, limit: ADVISOR_PAGE_SIZE })
+  }, [filter, search, page])
+
+  // `result` is null until the first response arrives.
+  const loading = isFetching || (!result && !fetchError)
+  const error =
+    fetchError?.message ?? (result && !result.success ? result.error : null)
+  const { rows, pagination } = result?.success
+    ? result.data
+    : emptyPage<AdminAdvisorRow>(page)
 
   return (
     <Card className="min-w-0 overflow-hidden">
@@ -74,16 +93,14 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={COLUMNS.length}
-                  className="px-4 py-10 text-center text-muted-foreground"
-                >
-                  No advisors found
-                </td>
-              </tr>
-            ) : (
+            <TableStatusRow
+              colSpan={COLUMNS.length}
+              loading={loading}
+              error={error}
+              isEmpty={rows.length === 0}
+              emptyText="No advisors found"
+            />
+            {!loading &&
               rows.map((a) => (
                 <tr
                   key={a.id}
@@ -96,13 +113,13 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
                   <td className="px-4 py-3 text-xs max-w-[14rem]">
                     {a.linkedinUrl ? (
                       <a
-                        href={a.linkedinUrl}
+                        href={toExternalUrl(a.linkedinUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={a.linkedinUrl}
                         className={`block truncate ${DRILLDOWN_LINK_CLASS}`}
                       >
-                        {a.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "")}
+                        {displayUrl(a.linkedinUrl)}
                       </a>
                     ) : (
                       <span className="text-muted-foreground">Not added</span>
@@ -118,12 +135,11 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
                     {a.completedProjects}
                   </td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
         </table>
       </div>
-      <TableFooter pagination={pagination} />
+      {!loading && !error && <TableFooter pagination={pagination} />}
     </Card>
   )
 }

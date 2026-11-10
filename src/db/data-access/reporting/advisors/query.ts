@@ -35,7 +35,7 @@ export const advisorUsersCte = sql`
 // (GetFypDashboardProjects) doesn't filter on it either.
 
 /**
- * Each FYP space's last milestone → (space_id, status, updated_at). "Last" is
+ * Each FYP space's last milestone → (space_id, status, updated_at, created_at). "Last" is
  * the highest order_index, the same order the milestone list uses (newest
  * created breaks ties). A space with no milestones has no row here.
  */
@@ -43,7 +43,8 @@ export const lastMilestoneCte = sql`
   select distinct on (m.space_id)
     m.space_id,
     m.status,
-    m.updated_at
+    m.updated_at,
+    m.created_at
   from fyp_milestones m
   order by m.space_id, m.order_index desc, m.created_at desc
 `

@@ -35,8 +35,8 @@ export type AdminCompletedProjectRow = {
   title: string
   advisorName: string | null
   students: string[]
-  communityName: string
-  channelName: string
+  communityName: string | null
+  channelName: string | null
   spaceName: string
   /** ISO date the project's last milestone was verified. */
   completedAt: string
@@ -48,7 +48,8 @@ export type PaginatedResult<T> = {
 }
 
 export type AdminProjectMilestone = {
-  id: number
+  /** fyp_milestones.id is a UUID. */
+  id: string
   name: string
   status: MilestoneStatus
   startDate: string | null
@@ -75,8 +76,8 @@ export type AdminFypProjectDetails = {
   spaceId: string
   title: string
   domain: string | null
-  communityName: string
-  channelName: string
+  communityName: string | null
+  channelName: string | null
   spaceName: string
   completedAt: string | null
   advisor: {
@@ -90,9 +91,10 @@ export type AdminFypProjectDetails = {
   milestones: AdminProjectMilestone[]
   /** Rating the advisor gave the student group; null when not submitted. */
   advisorFeedback: AdminClosureRating | null
-  /** One entry per group member; rating is null when they have not submitted. */
-  studentFeedback: {
-    studentName: string
-    feedback: AdminClosureRating | null
-  }[]
+  /**
+   * Ratings from students in the group, one per submitter. Empty when no
+   * student has submitted. (group_members only stores names, not user ids,
+   * so a submission can't be matched back to a listed member.)
+   */
+  studentFeedback: AdminClosureRating[]
 }

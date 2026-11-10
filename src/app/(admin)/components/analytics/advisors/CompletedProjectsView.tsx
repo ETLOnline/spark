@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { format } from "date-fns"
@@ -7,13 +8,24 @@ import { Card } from "@/src/components/ui/card"
 import { DrillDownHeader } from "./DrillDownHeader"
 import { UrlSearchInput } from "./UrlSearchInput"
 import { TableFooter } from "./TableFooter"
+import { TableStatusRow } from "./TableStatusRow"
+import { useServerAction } from "@/src/hooks/useServerAction"
 import {
+  ADVISOR_PAGE_SIZE,
   ADVISOR_ROUTES,
   DRILLDOWN_LINK_CLASS,
   DRILLDOWN_PAGE_CLASS,
   emptyPage
 } from "./constants"
 import { AdminCompletedProjectRow } from "@/src/types/Advisors/AdminAdvisors"
+import { GetAdminCompletedProjectsAction } from "@/src/server-actions/Advisors/AdminAdvisors"
+
+const formatDate = (iso: string) => {
+  const date = new Date(iso)
+  return iso && !Number.isNaN(date.getTime())
+    ? format(date, "MMM d, yyyy")
+    : "—"
+}
 
 const COLUMNS = [
   "Project title",
@@ -28,14 +40,31 @@ export default function CompletedProjectsView() {
   const search = searchParams.get("search") ?? ""
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
 
-  // TODO(phase 3): load rows with GetAdminCompletedProjectsAction(search, page).
-  void search
-  const { rows, pagination } = emptyPage<AdminCompletedProjectRow>(page)
+  const [isFetching, result, fetchError, getProjects] = useServerAction(
+    GetAdminCompletedProjectsAction
+  )
+
+  useEffect(() => {
+    getProjects({ search, page, limit: ADVISOR_PAGE_SIZE })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, page])
+
+  // `result` is null until the first response arrives.
+  const loading = isFetching || (!result && !fetchError)
+  const error =
+    fetchError?.message ?? (result && !result.success ? result.error : null)
+  const { rows, pagination } = result?.success
+    ? result.data
+    : emptyPage<AdminCompletedProjectRow>(page)
 
   return (
     <div className={DRILLDOWN_PAGE_CLASS}>
       <DrillDownHeader
-        title={`Projects Completed (${pagination.total.toLocaleString()})`}
+        title={
+          loading
+            ? "Projects Completed"
+            : `Projects Completed (${pagination.total.toLocaleString()})`
+        }
         description="Projects whose last milestone is done and verified, with or without closure feedback."
       />
 
@@ -60,16 +89,14 @@ export default function CompletedProjectsView() {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={COLUMNS.length}
-                    className="px-4 py-10 text-center text-muted-foreground"
-                  >
-                    No completed projects found
-                  </td>
-                </tr>
-              ) : (
+              <TableStatusRow
+                colSpan={COLUMNS.length}
+                loading={loading}
+                error={error}
+                isEmpty={rows.length === 0}
+                emptyText="No completed projects found"
+              />
+              {!loading &&
                 rows.map((p) => (
                   <tr
                     key={p.spaceId}
@@ -92,20 +119,19 @@ export default function CompletedProjectsView() {
                       {p.students.join(", ") || "—"}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {[p.communityName, p.channelName, p.spaceName].join(
-                        " / "
-                      )}
+                      {[p.communityName, p.channelName, p.spaceName]
+                        .filter(Boolean)
+                        .join(" / ")}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                      {format(new Date(p.completedAt), "MMM d, yyyy")}
+                      {formatDate(p.completedAt)}
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
         </div>
-        <TableFooter pagination={pagination} />
+        {!loading && !error && <TableFooter pagination={pagination} />}
       </Card>
     </div>
   )
