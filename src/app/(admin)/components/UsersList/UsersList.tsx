@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import moment from "moment"
 import { useDebounce } from "use-debounce"
-import { Loader2, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Badge } from "@/src/components/ui/badge"
 import { Input } from "@/src/components/ui/input"
@@ -34,6 +34,8 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import PaginationComponent from "@/src/components/common/Pagination"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { useToast } from "@/src/hooks/use-toast"
 import {
   FormatUserName,
@@ -196,10 +198,12 @@ export function UsersList({ role }: UsersListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && users.length === 0 ? (
+              {loading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center">
-                    <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
+                    <div className="flex justify-center">
+                      <Loader size={LoaderSizes.lg} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
@@ -342,13 +346,13 @@ export function UsersList({ role }: UsersListProps) {
                 confirmToggle()
               }}
               disabled={toggling}
+              loading={toggling}
               className={
                 userToToggle?.disabled
                   ? undefined
                   : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
               }
             >
-              {toggling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {userToToggle?.disabled ? "Enable" : "Disable"}
             </AlertDialogAction>
           </AlertDialogFooter>
