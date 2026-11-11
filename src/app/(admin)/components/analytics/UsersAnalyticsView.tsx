@@ -22,6 +22,7 @@ import { downloadCsv } from "./csv"
 import { KpiCard } from "./KpiCard"
 import { TrendBarChart, TrendPoint } from "./TrendBarChart"
 import { UserSegmentCard } from "./UserSegmentCard"
+import { UsersList } from "../UsersList/UsersList"
 import {
   formatCount,
   formatPercent,
@@ -181,6 +182,8 @@ export default function UsersAnalyticsView() {
       </div>
 
       <KpiCard items={statCards} variant="compact" />
+
+      <UsersList role={selected ? selectedRole : undefined} />
 
       <UserSegmentCard users={users} error={false} showLink={false} />
 
