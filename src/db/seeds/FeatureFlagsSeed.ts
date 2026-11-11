@@ -32,7 +32,7 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
     label: "Post Moderation",
     is_enabled: false,
     description:
-      "Check new and edited posts with AI and hold flagged ones for admin review. When OFF, posts are published straight away without the AI check or AI tags."
+      "Check new and edited posts with AI and hold flagged ones for admin review. When OFF, the AI check is skipped and every post is held for an admin to review manually."
   }
 ]
 
