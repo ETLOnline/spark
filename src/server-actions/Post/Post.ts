@@ -46,6 +46,11 @@ import { isSuperAdmin } from "@/src/utils/helpers"
 import { rewardPublishedPost } from "@/src/services/post/postReview"
 import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
 import { AI_POST_MODERATION_ENABLED } from "@/src/utils/constants"
+import { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
+import {
+  MANUAL_REVIEW_REASON,
+  POST_UNDER_REVIEW_MESSAGE
+} from "@/src/services/ai/post/postCheck.messages"
 
 // Moderation stays on unless the flag exists and is switched off
 const isPostModerationEnabled = async () => {
@@ -56,21 +61,27 @@ const isPostModerationEnabled = async () => {
 // Checks post text, poll options and images with AI before the post is saved.
 // Held posts are still saved, as pending review with the AI result, until an admin approves or rejects them.
 // `moderationFields` go on the post, `aiTags` are the tags to save on it, `message` is for the author when held.
-// With the Post_Moderation_Enabled flag off, the AI is skipped: the post is published and its tags are left as they are.
+// With the AI moderation flag off, the AI is skipped and every post is held for an admin to review by hand;
+// its tags are left as they are.
 const checkPostModeration = async (
   content?: string | null,
   pollOptions?: string[],
   images?: UploadedImage[]
 ) => {
   if (!(await isPostModerationEnabled())) {
+    const moderation_result: PostModerationResult = {
+      outcome: "manual_review",
+      reason: MANUAL_REVIEW_REASON,
+      checked_at: new Date().toISOString()
+    }
     return {
       moderationFields: {
-        status: PostStatus.PUBLISHED,
-        moderation_result: null
+        status: PostStatus.PENDING_REVIEW,
+        moderation_result
       },
-      held: false,
+      held: true,
       aiTags: undefined,
-      message: undefined
+      message: POST_UNDER_REVIEW_MESSAGE
     }
   }
 
