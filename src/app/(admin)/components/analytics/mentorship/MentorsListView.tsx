@@ -5,9 +5,9 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useDebouncedCallback } from "use-debounce"
 import { ArrowLeft, Linkedin, Search } from "lucide-react"
-import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import {
   Table,
   TableBody,
@@ -93,22 +93,19 @@ export default function MentorsListView() {
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-          <div className="flex flex-wrap items-center gap-2 flex-1">
-            {STATUS_TABS.map((tab) => (
-              <Button
-                key={tab.value}
-                type="button"
-                variant="outline"
-                onClick={() => setStatus(tab.value)}
-                className={`h-auto gap-1 px-3 py-1.5 rounded-full text-sm font-normal shadow-none transition-colors ${
-                  status === tab.value
-                    ? "bg-foreground text-background border-foreground font-medium hover:bg-foreground hover:text-background"
-                    : "border-border bg-card hover:bg-muted text-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-              </Button>
-            ))}
+          <div className="flex-1">
+            <Tabs
+              value={status}
+              onValueChange={(v) => setStatus(v as MentorListStatusFilter)}
+            >
+              <TabsList>
+                {STATUS_TABS.map((tab) => (
+                  <TabsTrigger key={tab.value} value={tab.value}>
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
           <div className="relative sm:w-64 flex-shrink-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

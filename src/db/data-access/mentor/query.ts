@@ -133,6 +133,7 @@ const buildSearchCondition = (searchedItem?: string) => {
       sql`trim(${usersTable.first_name}) || ' ' || trim(${usersTable.last_name})`,
       q
     ),
+    ilike(usersTable.email, q),
     ilike(profileTable.professional_title, q),
     ilike(profileTable.company, q),
     ilike(profileTable.bio, q),
