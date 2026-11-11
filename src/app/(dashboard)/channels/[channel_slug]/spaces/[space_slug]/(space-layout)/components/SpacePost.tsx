@@ -1,7 +1,7 @@
 "use client"
 
 import CreatePostForm from "@/src/components/Dashboard/posts/create-post-form"
-import PostFeed from "@/src/components/Dashboard/posts/post-feed"
+import PostFeedTabs from "@/src/components/Dashboard/posts/post-feed-tabs"
 import {
   Card,
   CardHeader,
@@ -34,9 +34,11 @@ const SpacePostComponent: React.FC = () => {
   const router = useRouter()
 
   const spaceSlug = params.space_slug as string
-  const channelSlug = params.channel_slug as string
+  const channelSlug = params.channel_slug as string | undefined
 
-  const decodedChannelSlug = decodeURIComponent(channelSlug)
+  const decodedChannelSlug = channelSlug
+    ? decodeURIComponent(channelSlug)
+    : undefined
   const decodedSpaceSlug = decodeURIComponent(spaceSlug)
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
@@ -132,8 +134,8 @@ const SpacePostComponent: React.FC = () => {
         ) : (
           posts?.data &&
           canViewPost && (
-            <PostFeed
-              fetchedPosts={
+            <PostFeedTabs
+              publicPosts={
                 posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
               }
               spaceId={space?.id}

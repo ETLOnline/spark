@@ -1,25 +1,20 @@
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import PostAiTags from "./post-ai-tags"
+import PostFooter from "./post-footer"
 import { RadioGroup } from "../../ui/radio-group"
 import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
 import { Button } from "../../ui/button"
-import { SelectComment, SelectPollPost } from "@/src/db/schema"
-import {
-  VotePollAction,
-  UpdateCommentAction
-} from "@/src/server-actions/Post/Post"
+import { SelectPollPost } from "@/src/db/schema"
+import { VotePollAction } from "@/src/server-actions/Post/Post"
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import { userStore } from "@/src/store/user/userStore"
-import { CardContent, CardFooter } from "../../ui/card"
+import { CardContent } from "../../ui/card"
 import { Badge } from "../../ui/badge"
-import PostInteractions from "./post-interactions"
-import { Separator } from "@/src/components/ui/separator"
-import PostComments from "./post-comments"
-import PostCommentForm from "./post-comment-form"
-import PostCommentsSection from "./post-comments-section"
 import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 import Image from "next/image"
 
@@ -32,24 +27,13 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [selectedOption, setSelectedOption] = useState<string>("")
   const [tempSelectedOption, setTempSelectedOption] = useState<string>("")
   const [hasVoted, setHasVoted] = useState<boolean>(false)
-  const [editingComment, setEditingComment] = useState<SelectComment | null>(
-    null
-  )
   const { navigateToPost } = usePostNavigation()
-  const [iscCommetsVisible, setIsCommentsVisible] = useState(false)
 
   const setPosts = useSetAtom(postStore.posts)
   const userId = useAtomValue(userStore.AuthUser)?.unique_id
 
   const [votePollLoading, votePollData, votePollError, votePoll] =
     useServerAction(VotePollAction)
-
-  const [
-    updateCommentLoading,
-    updatedComment,
-    updateCommentError,
-    updateComment
-  ] = useServerAction(UpdateCommentAction)
 
   const { toast } = useToast()
 
@@ -128,52 +112,11 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
     }
   }
 
-  const handleEditComment = (comment: SelectComment) => {
-    setEditingComment(comment)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingComment(null)
-  }
-
-  const handleUpdateComment = async (commentId: number, newContent: string) => {
-    try {
-      const response = await updateComment(commentId, newContent)
-      if (response?.data) {
-        setPosts((posts) =>
-          posts.map((p) =>
-            p.id === post.id
-              ? {
-                  ...p,
-                  postComments: (p.postComments as SelectComment[]).map((c) =>
-                    c.id === commentId ? { ...c, content: newContent } : c
-                  )
-                }
-              : p
-          )
-        )
-        toast({
-          title: "Comment updated",
-          description: "Your comment has been updated successfully"
-        })
-        setEditingComment(null)
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Error updating comment please try again!"
-        })
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Error updating comment please try again!"
-      })
-    }
-  }
-
   const isSingle = post.files?.length === 1
+  // only published polls can be voted on (not under review or rejected)
+  const isPublished = post.status === PostStatus.PUBLISHED
+  const isPending = post.status === PostStatus.PENDING_REVIEW
+  const votingDisabled = votePollLoading || hasVoted || !isPublished
   return (
     <>
       <CardContent
@@ -218,7 +161,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
         <div onClick={(e) => e.stopPropagation()}>
           <RadioGroup
             onValueChange={handleOptionChange}
-            disabled={votePollLoading || hasVoted}
+            disabled={votingDisabled}
             value={tempSelectedOption}
           >
             {post.options?.map((option) => (
@@ -229,7 +172,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
                 <RadioGroupItem
                   value={option.option_text}
                   id={option.option_text}
-                  disabled={votePollLoading || hasVoted}
+                  disabled={votingDisabled}
                 />
                 <Label htmlFor={option.option_text}>
                   {option.option_text}
@@ -243,7 +186,12 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
               </div>
             ))}
           </RadioGroup>
-          {!hasVoted && tempSelectedOption && (
+          {isPending && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Voting opens once the post is approved.
+            </p>
+          )}
+          {!hasVoted && isPublished && tempSelectedOption && (
             <Button
               onClick={handleSubmitVote}
               disabled={votePollLoading}
@@ -254,6 +202,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
           )}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
+          <PostAiTags tags={post.ai_tags} />
           {post.hashtags &&
             post.hashtags.map((tag) => (
               <Badge key={tag.id} variant="secondary">
@@ -262,34 +211,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4 p-0">
-        <PostInteractions
-          postId={post.id}
-          likes={post.likes}
-          comments={post.comments}
-          likers={post.postLikes}
-          spaceId={spaceId}
-          isCommentsVisible={iscCommetsVisible}
-          setIsCommentsVisible={setIsCommentsVisible}
-        />
-        <Separator />
-        {iscCommetsVisible ? (
-          <>
-            <PostCommentsSection
-              comments={post.postComments || []}
-              onEditComment={handleEditComment}
-            />
-          </>
-        ) : null}
-        <PostCommentForm
-          postId={post.id}
-          comments={post.comments}
-          spaceId={spaceId}
-          editingComment={editingComment}
-          onCancelEdit={handleCancelEdit}
-          onUpdateComment={handleUpdateComment}
-        />
-      </CardFooter>
+      <PostFooter post={post} spaceId={spaceId} />
     </>
   )
 }

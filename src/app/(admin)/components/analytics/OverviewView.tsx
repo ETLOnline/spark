@@ -87,48 +87,43 @@ export default function OverviewView() {
   const totalRP = formatCompactCount(rewards?.types.rp_points.total)
   const totalSC = formatCompactCount(rewards?.types.sc_points.total)
 
-  // A null module means its collection failed when the snapshot was built —
-  // that's the "Couldn't load this metric" case, distinct from a real zero.
+  // No error state — a null module (collection failed when the snapshot was
+  // built) just shows "0" like a real zero would, same as everything else.
   const kpis = [
     {
       label: "Total Users",
       value: totalUsers?.compact ?? "0",
       fullValue: totalUsers?.full,
       description: "Cumulative registered users across all roles.",
-      icon: Users,
-      error: users === null
+      icon: Users
     },
     {
       label: "Communities",
       value: totalCommunities?.compact ?? "0",
       fullValue: totalCommunities?.full,
       description: "Total Communities live on the platform.",
-      icon: Network,
-      error: communities === null
+      icon: Network
     },
     {
       label: "Active Mentors",
       value: activeMentors?.compact ?? "0",
       fullValue: activeMentors?.full,
       description: "Mentors currently available or engaged on the marketplace.",
-      icon: GraduationCap,
-      error: mentorship === null
+      icon: GraduationCap
     },
     {
       label: "Total RP Issued",
       value: totalRP?.compact ?? "0",
       fullValue: totalRP?.full,
-      description: "Cumulative Reward Points issued platform-wide.",
-      icon: Medal,
-      error: rewards === null
+      description: "Cumulative Reputation Points issued platform-wide.",
+      icon: Medal
     },
     {
-      label: "Total SC Circulation",
+      label: "SC in Circulation",
       value: totalSC?.compact ?? "0",
       fullValue: totalSC?.full,
-      description: "Spark Coins currently in circulation across users.",
-      icon: Coins,
-      error: rewards === null
+      description: "Spark Credits currently in circulation across users.",
+      icon: Coins
     }
   ]
 
@@ -167,11 +162,9 @@ export default function OverviewView() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 [&>*]:min-w-0">
         <UserSegmentCard users={users} error={users === null} />
-        {communities ? (
-          <TopCommunitiesCard ranking={communities.ranking} />
-        ) : (
-          <SnapshotUnavailable />
-        )}
+        <TopCommunitiesCard
+          ranking={communities?.ranking ?? { by_members: [], by_posts: [] }}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 [&>*]:min-w-0">
@@ -189,7 +182,7 @@ export default function OverviewView() {
             title="Most engaged"
             subtitle="Current SC balance"
             items={mostEngaged}
-            valueLabel="SC held"
+            valueLabel="Current SC Balance"
             linkHref="/admin/analytics/leaderboards"
             linkLabel="View leaderboards →"
             className="w-full"
