@@ -27,17 +27,37 @@ export const FileTypeBlockSchema = z.object({
   count: z.number()
 })
 
-export const CommunityMemberRankingEntrySchema = z.object({
-  community_id: z.string(),
-  title: z.string(),
-  total_members: z.number()
+/**
+ * Per-community details shown alongside each ranking row (visibility, admin,
+ * FYP flag) and the slug used to link to the community page.
+ *
+ * Optional because snapshots are persisted and read back with a cast, not
+ * re-parsed — a snapshot built before these fields existed won't have them
+ * until the next rebuild, and the UI must render a placeholder in that case.
+ */
+export const CommunityRankingDetailsSchema = z.object({
+  slug: z.string().optional(),
+  visibility: z.enum(["public", "private"]).optional(),
+  /** Display names of every community admin — creator first, then alphabetical; empty when none is assigned. */
+  admin_names: z.array(z.string()).optional(),
+  fyp_enabled: z.boolean().optional()
 })
 
-export const CommunityPostRankingEntrySchema = z.object({
-  community_id: z.string(),
-  title: z.string(),
-  total_posts: z.number()
-})
+export const CommunityMemberRankingEntrySchema = z
+  .object({
+    community_id: z.string(),
+    title: z.string(),
+    total_members: z.number()
+  })
+  .merge(CommunityRankingDetailsSchema)
+
+export const CommunityPostRankingEntrySchema = z
+  .object({
+    community_id: z.string(),
+    title: z.string(),
+    total_posts: z.number()
+  })
+  .merge(CommunityRankingDetailsSchema)
 
 export const CommunityStatSchema = z.object({
   community_id: z.string(),

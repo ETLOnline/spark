@@ -69,6 +69,7 @@ import {
   EventsReport
 } from "@/src/types/Reporting/Reporting.schema"
 import { FormatUserName } from "@/src/utils/helpers"
+import { RawCommunityRankingDetails } from "@/src/types/Reporting/raw-rows.reporting-types"
 
 /**
  * One server action per report module. Only ever called from
@@ -221,6 +222,20 @@ export const GetUsersReportModuleAction = CreateServerAction(
 
 // ─── Communities ─────────────────────────────────────────────────────────────
 
+/** Matches GetCommunityTotalsRaw: anything other than 'public' counts as private. */
+function mapCommunityRankingDetails(row: RawCommunityRankingDetails) {
+  return {
+    slug: row.slug,
+    visibility: (row.type === "public" ? "public" : "private") as
+      | "public"
+      | "private",
+    admin_names: (row.admin_names ?? [])
+      .map((name) => name.trim())
+      .filter(Boolean),
+    fyp_enabled: Boolean(row.fyp_enabled)
+  }
+}
+
 export const GetCommunitiesReportModuleAction = CreateServerAction(
   false,
   async () => {
@@ -315,12 +330,14 @@ export const GetCommunitiesReportModuleAction = CreateServerAction(
           by_members: memberRankingRows.map((row) => ({
             community_id: row.community_id,
             title: row.title,
-            total_members: Number(row.total_members)
+            total_members: Number(row.total_members),
+            ...mapCommunityRankingDetails(row)
           })),
           by_posts: postRankingRows.map((row) => ({
             community_id: row.community_id,
             title: row.title,
-            total_posts: Number(row.total_posts)
+            total_posts: Number(row.total_posts),
+            ...mapCommunityRankingDetails(row)
           }))
         },
         community_stats: communityStatRows.map((row) => ({
