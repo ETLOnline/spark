@@ -8,11 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-
-/** Two short domains fit side by side in the column; longer names show one. */
-const MAX_CHARS_FOR_TWO = 28
-
-const CHIP_CLASS = "font-normal max-w-[11rem] truncate"
+import { CHIP_CLASS, MAX_CHARS_FOR_TWO } from "./constants"
 
 /** Shows the first one or two domains as chips and the rest as "+n" with a tooltip. */
 export function DomainChips({ domains }: { domains: string[] }) {

@@ -1,8 +1,8 @@
 "use client"
 
 import { ReactNode, useEffect } from "react"
-import { format } from "date-fns"
-import { FileText, Image as ImageIcon, Link2, Star } from "lucide-react"
+import Link from "next/link"
+import { Linkedin, Star } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
 import {
   Card,
@@ -13,10 +13,11 @@ import {
 import { MilestoneStatusBadge } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/MilestoneStatusBadge"
 import { SnapshotLoading, SnapshotUnavailable } from "../AnalyticsPage"
 import { DrillDownHeader } from "./DrillDownHeader"
+import { formatDate } from "../format"
 import {
-  displayUrl,
   DRILLDOWN_LINK_CLASS,
   DRILLDOWN_PAGE_CLASS,
+  FILE_ICONS,
   toExternalUrl
 } from "./constants"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -25,15 +26,6 @@ import {
   AdminProjectMilestone
 } from "@/src/types/Advisors/AdminAdvisors"
 import { GetAdminFypProjectDetailsAction } from "@/src/server-actions/Advisors/AdminAdvisors"
-
-/** Formats an ISO / date string; null for empty or unparseable values. */
-const formatDate = (value: string | null) => {
-  if (!value) return null
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : format(date, "MMM d, yyyy")
-}
-
-const FILE_ICONS = { file: FileText, image: ImageIcon, link: Link2 } as const
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
@@ -107,7 +99,7 @@ function MilestoneColumn({ milestone }: { milestone: AdminProjectMilestone }) {
           milestone.files.map((f) => {
             const Icon = FILE_ICONS[f.type]
             return (
-              <a
+              <Link
                 key={f.id}
                 href={f.type === "link" ? toExternalUrl(f.url) : f.url}
                 target="_blank"
@@ -116,7 +108,7 @@ function MilestoneColumn({ milestone }: { milestone: AdminProjectMilestone }) {
               >
                 <Icon aria-hidden="true" className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate">{f.name}</span>
-              </a>
+              </Link>
             )
           })
         )}
@@ -200,20 +192,7 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
           <SectionLabel>Advisor</SectionLabel>
           {project.advisor ? (
             <>
-              {project.advisor.linkedinUrl ? (
-                <a
-                  href={toExternalUrl(project.advisor.linkedinUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-base ${DRILLDOWN_LINK_CLASS}`}
-                >
-                  {project.advisor.name}
-                </a>
-              ) : (
-                <p className="text-base font-semibold">
-                  {project.advisor.name}
-                </p>
-              )}
+              <p className="text-base font-semibold">{project.advisor.name}</p>
               <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
                 <dt className="text-muted-foreground">Email</dt>
                 <dd className="[overflow-wrap:anywhere]">
@@ -222,7 +201,16 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
                 <dt className="text-muted-foreground">LinkedIn</dt>
                 <dd className="[overflow-wrap:anywhere]">
                   {project.advisor.linkedinUrl ? (
-                    displayUrl(project.advisor.linkedinUrl)
+                    <Link
+                      href={toExternalUrl(project.advisor.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={project.advisor.linkedinUrl}
+                      className={`inline-flex items-center gap-1 ${DRILLDOWN_LINK_CLASS}`}
+                    >
+                      <Linkedin aria-hidden="true" className="w-3.5 h-3.5" />
+                      View Profile
+                    </Link>
                   ) : (
                     <span className="text-muted-foreground">Not added</span>
                   )}

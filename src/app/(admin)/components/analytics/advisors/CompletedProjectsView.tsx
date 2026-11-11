@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { format } from "date-fns"
 import { Card } from "@/src/components/ui/card"
 import {
   Table,
@@ -18,30 +17,17 @@ import { UrlSearchInput } from "./UrlSearchInput"
 import { TableFooter } from "./TableFooter"
 import { TableStatusRow } from "./TableStatusRow"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { formatDate } from "../format"
 import {
   ADVISOR_PAGE_SIZE,
   ADVISOR_ROUTES,
+  COMPLETED_PROJECT_COLUMNS,
   DRILLDOWN_LINK_CLASS,
   DRILLDOWN_PAGE_CLASS,
   emptyPage
 } from "./constants"
 import { AdminCompletedProjectRow } from "@/src/types/Advisors/AdminAdvisors"
 import { GetAdminCompletedProjectsAction } from "@/src/server-actions/Advisors/AdminAdvisors"
-
-const formatDate = (iso: string) => {
-  const date = new Date(iso)
-  return iso && !Number.isNaN(date.getTime())
-    ? format(date, "MMM d, yyyy")
-    : "—"
-}
-
-const COLUMNS = [
-  "Project title",
-  "Advisor",
-  "Students",
-  "Community / Channel / Space",
-  "Completion date ↓"
-]
 
 export default function CompletedProjectsView() {
   const searchParams = useSearchParams()
@@ -85,7 +71,7 @@ export default function CompletedProjectsView() {
         <Table className="min-w-[60rem]">
           <TableHeader>
             <TableRow className="text-xs bg-muted/40 hover:bg-muted/40">
-              {COLUMNS.map((c) => (
+              {COMPLETED_PROJECT_COLUMNS.map((c) => (
                 <TableHead
                   key={c}
                   className="h-auto px-4 py-3 whitespace-nowrap"
@@ -97,7 +83,7 @@ export default function CompletedProjectsView() {
           </TableHeader>
           <TableBody>
             <TableStatusRow
-              colSpan={COLUMNS.length}
+              colSpan={COMPLETED_PROJECT_COLUMNS.length}
               loading={loading}
               error={error}
               isEmpty={rows.length === 0}
@@ -128,7 +114,7 @@ export default function CompletedProjectsView() {
                       .join(" / ")}
                   </TableCell>
                   <TableCell className="px-4 py-3 whitespace-nowrap tabular-nums">
-                    {formatDate(p.completedAt)}
+                    {formatDate(p.completedAt) ?? "—"}
                   </TableCell>
                 </TableRow>
               ))}

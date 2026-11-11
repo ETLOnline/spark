@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
+import Link from "next/link"
+import { Linkedin } from "lucide-react"
 import {
   Card,
   CardDescription,
@@ -24,7 +26,7 @@ import {
   ADVISOR_FILTER_DESCRIPTIONS,
   ADVISOR_FILTER_TITLES,
   ADVISOR_PAGE_SIZE,
-  displayUrl,
+  ADVISOR_TABLE_COLUMNS,
   DRILLDOWN_LINK_CLASS,
   emptyPage,
   toExternalUrl
@@ -34,15 +36,6 @@ import {
   AdminAdvisorRow,
   AdvisorFilter
 } from "@/src/types/Advisors/AdminAdvisors"
-
-const COLUMNS = [
-  { label: "Name" },
-  { label: "Email" },
-  { label: "LinkedIn URL" },
-  { label: "Domain" },
-  { label: "Active projects", numeric: true },
-  { label: "Completed projects", numeric: true }
-]
 
 interface AdvisorsTableProps {
   /** Selected by the Total / Active / Verified KPI card above. */
@@ -89,7 +82,7 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
       <Table className="min-w-[56rem]">
         <TableHeader>
           <TableRow className="text-xs bg-muted/40 hover:bg-muted/40">
-            {COLUMNS.map((c) => (
+            {ADVISOR_TABLE_COLUMNS.map((c) => (
               <TableHead
                 key={c.label}
                 className={`h-auto px-4 py-3 whitespace-nowrap ${c.numeric ? "text-right" : "text-left"}`}
@@ -101,7 +94,7 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
         </TableHeader>
         <TableBody>
           <TableStatusRow
-            colSpan={COLUMNS.length}
+            colSpan={ADVISOR_TABLE_COLUMNS.length}
             loading={loading}
             error={error}
             isEmpty={rows.length === 0}
@@ -116,17 +109,18 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
                 <TableCell className="px-4 py-3 text-muted-foreground">
                   {a.email}
                 </TableCell>
-                <TableCell className="px-4 py-3 text-xs max-w-[14rem]">
+                <TableCell className="px-4 py-3 text-xs whitespace-nowrap">
                   {a.linkedinUrl ? (
-                    <a
+                    <Link
                       href={toExternalUrl(a.linkedinUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       title={a.linkedinUrl}
-                      className={`block truncate ${DRILLDOWN_LINK_CLASS}`}
+                      className={`inline-flex items-center gap-1 ${DRILLDOWN_LINK_CLASS}`}
                     >
-                      {displayUrl(a.linkedinUrl)}
-                    </a>
+                      <Linkedin aria-hidden="true" className="w-3.5 h-3.5" />
+                      View Profile
+                    </Link>
                   ) : (
                     <span className="text-muted-foreground">Not added</span>
                   )}

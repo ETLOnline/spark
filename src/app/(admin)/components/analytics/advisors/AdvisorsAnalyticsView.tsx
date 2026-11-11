@@ -7,13 +7,19 @@ import {
   SnapshotLoading,
   SnapshotUnavailable
 } from "../AnalyticsPage"
-import { AdvisorKpiCards } from "./AdvisorKpiCards"
-import { AdvisorsTable } from "./AdvisorsTable"
-import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
 import {
-  AdvisorFilter,
-  isAdvisorFilter
-} from "@/src/types/Advisors/AdminAdvisors"
+  CheckCircle2,
+  GraduationCap,
+  ShieldCheck,
+  UserCheck
+} from "lucide-react"
+import { KpiCard } from "../KpiCard"
+import { formatPercent } from "../format"
+import { AdvisorsTable } from "./AdvisorsTable"
+import { ADVISOR_ROUTES } from "./constants"
+import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
+import { AdvisorFilter } from "@/src/types/Advisors/AdminAdvisors"
+import { isAdvisorFilter } from "@/src/utils/adminAdvisors"
 
 export default function AdvisorsAnalyticsView() {
   const snapshot = useAtomValue(adminAnalyticsStore.snapshot)
@@ -37,14 +43,45 @@ export default function AdvisorsAnalyticsView() {
       description="FYP industry advisors and the projects they supervise. Pick a card to filter the advisors below."
     >
       {advisors ? (
-        <AdvisorKpiCards
-          active={filter}
-          counts={{
-            total: advisors.total,
-            active: advisors.active,
-            verified: advisors.verified,
-            projectsCompleted: advisors.projects.completed
-          }}
+        <KpiCard
+          columns={4}
+          items={[
+            {
+              label: "Total Advisors",
+              value: advisors.total.toLocaleString(),
+              sub: "Registered as FYP advisors",
+              icon: GraduationCap,
+              href: ADVISOR_ROUTES.filtered("all"),
+              active: filter === "all"
+            },
+            {
+              label: "Active Advisors",
+              value: advisors.active.toLocaleString(),
+              sub: `${formatPercent(advisors.active, advisors.total)} of advisors`,
+              description: "Advisors on at least one ongoing project.",
+              icon: UserCheck,
+              href: ADVISOR_ROUTES.filtered("active"),
+              active: filter === "active"
+            },
+            {
+              label: "Verified Advisors",
+              value: advisors.verified.toLocaleString(),
+              sub: `${formatPercent(advisors.verified, advisors.total)} of advisors`,
+              description: "Advisors with a verified profile.",
+              icon: ShieldCheck,
+              href: ADVISOR_ROUTES.filtered("verified"),
+              active: filter === "verified"
+            },
+            {
+              label: "Projects Completed",
+              value: advisors.projects.completed.toLocaleString(),
+              sub: "Last milestone done and verified",
+              description:
+                "FYP projects whose last milestone is completed and verified.",
+              icon: CheckCircle2,
+              href: ADVISOR_ROUTES.projects
+            }
+          ]}
         />
       ) : (
         <SnapshotUnavailable />

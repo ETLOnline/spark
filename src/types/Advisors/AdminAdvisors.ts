@@ -5,18 +5,6 @@ import { PaginationType } from "@/src/components/common/types/pagination.type"
 export const ADVISOR_FILTERS = ["all", "active", "verified"] as const
 export type AdvisorFilter = (typeof ADVISOR_FILTERS)[number]
 
-export const isAdvisorFilter = (value: unknown): value is AdvisorFilter =>
-  typeof value === "string" &&
-  (ADVISOR_FILTERS as readonly string[]).includes(value)
-
-/** Headline counts behind the four advisor KPI cards. */
-export type AdvisorCounts = {
-  total: number
-  active: number
-  verified: number
-  projectsCompleted: number
-}
-
 /** One row of the admin Advisors list. */
 export type AdminAdvisorRow = {
   id: string

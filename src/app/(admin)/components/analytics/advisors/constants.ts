@@ -1,3 +1,4 @@
+import { FileText, Image as ImageIcon, Link2 } from "lucide-react"
 import {
   AdvisorFilter,
   PaginatedResult
@@ -14,10 +15,6 @@ export const emptyPage = <T>(page: number): PaginatedResult<T> => ({
 /** Makes a stored URL safe to use as an external href ("linkedin.com/in/x" → "https://linkedin.com/in/x"). */
 export const toExternalUrl = (url: string) =>
   /^https?:\/\//i.test(url) ? url : `https://${url}`
-
-/** URL without protocol/www, for display. */
-export const displayUrl = (url: string) =>
-  url.replace(/^https?:\/\/(www\.)?/i, "")
 
 const BASE = "/admin/analytics/advisors"
 
@@ -48,3 +45,35 @@ export const ADVISOR_FILTER_TITLES: Record<AdvisorFilter, string> = {
   active: "Active Advisors",
   verified: "Verified Advisors"
 }
+
+/** Columns of the advisors table (AdvisorsTable). */
+export const ADVISOR_TABLE_COLUMNS = [
+  { label: "Name" },
+  { label: "Email" },
+  { label: "LinkedIn URL" },
+  { label: "Domain" },
+  { label: "Active projects", numeric: true },
+  { label: "Completed projects", numeric: true }
+]
+
+/** Columns of the Projects Completed table (CompletedProjectsView). */
+export const COMPLETED_PROJECT_COLUMNS = [
+  "Project title",
+  "Advisor",
+  "Students",
+  "Community / Channel / Space",
+  "Completion date ↓"
+]
+
+/** DomainChips: two short domains fit side by side in the column; longer names show one. */
+export const MAX_CHARS_FOR_TWO = 28
+
+/** DomainChips: class for each domain chip. */
+export const CHIP_CLASS = "font-normal max-w-[11rem] truncate"
+
+/** Icon per milestone file type (ProjectDetailsView). */
+export const FILE_ICONS = {
+  file: FileText,
+  image: ImageIcon,
+  link: Link2
+} as const

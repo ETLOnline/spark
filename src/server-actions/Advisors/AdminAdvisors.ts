@@ -17,13 +17,15 @@ import {
   AdminFypProjectDetails,
   AdminProjectMilestone,
   AdvisorFilter,
-  isAdvisorFilter,
   PaginatedResult
 } from "@/src/types/Advisors/AdminAdvisors"
 import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import { isAdvisorFilter } from "@/src/utils/adminAdvisors"
 
 // Read-only data behind the advisor KPI cards on /admin/analytics/advisors.
 
+/** Standard page size for the admin advisor lists. */
+const DEFAULT_PAGE_SIZE = 10
 const PAGE_SIZE_MAX = 50
 
 type ActionResult<T> =
@@ -49,12 +51,12 @@ const toIso = (value: Date | string | null | undefined) => {
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
-const normalizePaging = (page: number, limit: number) => ({
+const normalizePaging = (page: number, limit = DEFAULT_PAGE_SIZE) => ({
   page: Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1,
   limit:
     Number.isFinite(limit) && limit >= 1
       ? Math.min(Math.floor(limit), PAGE_SIZE_MAX)
-      : 10
+      : DEFAULT_PAGE_SIZE
 })
 
 const errorMessage = (error: unknown, fallback: string) =>
@@ -68,7 +70,7 @@ export const GetAdminAdvisorsListAction = CreateServerAction(
     filter: AdvisorFilter
     search?: string
     page: number
-    limit: number
+    limit?: number
   }): Promise<ActionResult<PaginatedResult<AdminAdvisorRow>>> => {
     try {
       await getSuperAdmin()
@@ -114,7 +116,7 @@ export const GetAdminCompletedProjectsAction = CreateServerAction(
   async (input: {
     search?: string
     page: number
-    limit: number
+    limit?: number
   }): Promise<ActionResult<PaginatedResult<AdminCompletedProjectRow>>> => {
     try {
       await getSuperAdmin()
@@ -149,6 +151,23 @@ export const GetAdminCompletedProjectsAction = CreateServerAction(
         success: false,
         error: errorMessage(error, "Failed to fetch completed projects")
       }
+    }
+  }
+)
+
+// ─── Project title (breadcrumbs) ─────────────────────────────────────────────
+
+/** The project's display title, or null when it can't be loaded. */
+export const GetAdminFypProjectTitleAction = CreateServerAction(
+  true,
+  async (spaceId: string): Promise<string | null> => {
+    try {
+      await getSuperAdmin()
+      const project = await GetAdminFypProject(spaceId)
+      return project ? (project.requestTitle ?? project.spaceName) : null
+    } catch (error) {
+      console.error("Error in GetAdminFypProjectTitleAction:", error)
+      return null
     }
   }
 )
