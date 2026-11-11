@@ -2,6 +2,7 @@
 
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { TableCell, TableRow } from "@/src/components/ui/table"
 
 interface TableStatusRowProps {
   colSpan: number
@@ -25,8 +26,8 @@ export function TableStatusRow({
   if (!loading && !error && !isEmpty) return null
 
   return (
-    <tr>
-      <td colSpan={colSpan} className="px-4 py-10 text-center">
+    <TableRow className="hover:bg-transparent">
+      <TableCell colSpan={colSpan} className="px-4 py-10 text-center">
         {loading ? (
           <div className="flex justify-center">
             <Loader size={LoaderSizes.lg} />
@@ -36,7 +37,7 @@ export function TableStatusRow({
         ) : (
           <span className="text-muted-foreground">{emptyText}</span>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   )
 }

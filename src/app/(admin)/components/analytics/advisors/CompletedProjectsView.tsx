@@ -5,6 +5,14 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { Card } from "@/src/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/src/components/ui/table"
 import { DrillDownHeader } from "./DrillDownHeader"
 import { UrlSearchInput } from "./UrlSearchInput"
 import { TableFooter } from "./TableFooter"
@@ -74,63 +82,58 @@ export default function CompletedProjectsView() {
       />
 
       <Card className="min-w-0 overflow-hidden">
-        <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[60rem] text-sm">
-            <thead>
-              <tr className="text-xs text-muted-foreground border-b bg-muted/40">
-                {COLUMNS.map((c) => (
-                  <th
-                    key={c}
-                    className="px-4 py-3 font-medium text-left whitespace-nowrap"
-                  >
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <TableStatusRow
-                colSpan={COLUMNS.length}
-                loading={loading}
-                error={error}
-                isEmpty={rows.length === 0}
-                emptyText="No completed projects found"
-              />
-              {!loading &&
-                rows.map((p) => (
-                  <tr
-                    key={p.spaceId}
-                    className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <Link
-                        href={ADVISOR_ROUTES.project(p.spaceId)}
-                        className={DRILLDOWN_LINK_CLASS}
-                      >
-                        {p.title}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {p.advisorName ?? (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {p.students.join(", ") || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {[p.communityName, p.channelName, p.spaceName]
-                        .filter(Boolean)
-                        .join(" / ")}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                      {formatDate(p.completedAt)}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+        <Table className="min-w-[60rem]">
+          <TableHeader>
+            <TableRow className="text-xs bg-muted/40 hover:bg-muted/40">
+              {COLUMNS.map((c) => (
+                <TableHead
+                  key={c}
+                  className="h-auto px-4 py-3 whitespace-nowrap"
+                >
+                  {c}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableStatusRow
+              colSpan={COLUMNS.length}
+              loading={loading}
+              error={error}
+              isEmpty={rows.length === 0}
+              emptyText="No completed projects found"
+            />
+            {!loading &&
+              rows.map((p) => (
+                <TableRow key={p.spaceId} className="hover:bg-muted/30">
+                  <TableCell className="px-4 py-3">
+                    <Link
+                      href={ADVISOR_ROUTES.project(p.spaceId)}
+                      className={DRILLDOWN_LINK_CLASS}
+                    >
+                      {p.title}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    {p.advisorName ?? (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-muted-foreground">
+                    {p.students.join(", ") || "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-xs text-muted-foreground">
+                    {[p.communityName, p.channelName, p.spaceName]
+                      .filter(Boolean)
+                      .join(" / ")}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 whitespace-nowrap tabular-nums">
+                    {formatDate(p.completedAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
         {!loading && !error && <TableFooter pagination={pagination} />}
       </Card>
     </div>

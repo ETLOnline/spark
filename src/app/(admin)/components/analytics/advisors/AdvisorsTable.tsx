@@ -7,6 +7,14 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/src/components/ui/table"
 import { DomainChips } from "./DomainChips"
 import { TableFooter } from "./TableFooter"
 import { TableStatusRow } from "./TableStatusRow"
@@ -78,67 +86,64 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
         />
       </CardHeader>
 
-      <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[56rem] text-sm">
-          <thead>
-            <tr className="text-xs text-muted-foreground border-b bg-muted/40">
-              {COLUMNS.map((c) => (
-                <th
-                  key={c.label}
-                  className={`px-4 py-3 font-medium whitespace-nowrap ${c.numeric ? "text-right" : "text-left"}`}
-                >
-                  {c.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <TableStatusRow
-              colSpan={COLUMNS.length}
-              loading={loading}
-              error={error}
-              isEmpty={rows.length === 0}
-              emptyText="No advisors found"
-            />
-            {!loading &&
-              rows.map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                >
-                  <td className="px-4 py-3 whitespace-nowrap font-medium">
-                    {a.name}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
-                  <td className="px-4 py-3 text-xs max-w-[14rem]">
-                    {a.linkedinUrl ? (
-                      <a
-                        href={toExternalUrl(a.linkedinUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={a.linkedinUrl}
-                        className={`block truncate ${DRILLDOWN_LINK_CLASS}`}
-                      >
-                        {displayUrl(a.linkedinUrl)}
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground">Not added</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <DomainChips domains={a.domains} />
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums">
-                    {a.activeProjects}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums">
-                    {a.completedProjects}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
+      <Table className="min-w-[56rem]">
+        <TableHeader>
+          <TableRow className="text-xs bg-muted/40 hover:bg-muted/40">
+            {COLUMNS.map((c) => (
+              <TableHead
+                key={c.label}
+                className={`h-auto px-4 py-3 whitespace-nowrap ${c.numeric ? "text-right" : "text-left"}`}
+              >
+                {c.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableStatusRow
+            colSpan={COLUMNS.length}
+            loading={loading}
+            error={error}
+            isEmpty={rows.length === 0}
+            emptyText="No advisors found"
+          />
+          {!loading &&
+            rows.map((a) => (
+              <TableRow key={a.id} className="hover:bg-muted/30">
+                <TableCell className="px-4 py-3 whitespace-nowrap font-medium">
+                  {a.name}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-muted-foreground">
+                  {a.email}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-xs max-w-[14rem]">
+                  {a.linkedinUrl ? (
+                    <a
+                      href={toExternalUrl(a.linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={a.linkedinUrl}
+                      className={`block truncate ${DRILLDOWN_LINK_CLASS}`}
+                    >
+                      {displayUrl(a.linkedinUrl)}
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground">Not added</span>
+                  )}
+                </TableCell>
+                <TableCell className="px-4 py-3">
+                  <DomainChips domains={a.domains} />
+                </TableCell>
+                <TableCell className="px-4 py-3 text-right tabular-nums">
+                  {a.activeProjects}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-right tabular-nums">
+                  {a.completedProjects}
+                </TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
       {!loading && !error && <TableFooter pagination={pagination} />}
     </Card>
   )
