@@ -4,7 +4,8 @@ import {
   GetMentorshipReportModuleAction,
   GetPostsReportModuleAction,
   GetRewardsReportModuleAction,
-  GetEventsReportModuleAction
+  GetEventsReportModuleAction,
+  GetAdvisorsReportModuleAction
 } from "@/src/server-actions/Reporting/ReportModules"
 import {
   PersistedReportSnapshot,
@@ -25,13 +26,14 @@ const MODULE_ACTIONS = {
   mentorship: GetMentorshipReportModuleAction,
   posts: GetPostsReportModuleAction,
   rewards: GetRewardsReportModuleAction,
-  events: GetEventsReportModuleAction
+  events: GetEventsReportModuleAction,
+  advisors: GetAdvisorsReportModuleAction
 } as const
 
 type ModuleKey = keyof typeof MODULE_ACTIONS
 
 /**
- * Assembles the full admin report by running all 6 module actions
+ * Assembles the full admin report by running every module action
  * independently.
  *
  * Uses Promise.all, not Promise.allSettled — each module action is itself a
@@ -81,7 +83,8 @@ export async function BuildAdminReportSnapshot(): Promise<BuildAdminReportSnapsh
         mentorship: null,
         posts: null,
         rewards: null,
-        events: null
+        events: null,
+        advisors: null
       },
       moduleErrors
     }

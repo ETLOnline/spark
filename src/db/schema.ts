@@ -1648,6 +1648,12 @@ export const advisorRequestsRelations = relations(
       fields: [advisorRequestsTable.requested_by],
       references: [usersTable.unique_id]
     }),
+    // The advisor who accepted the request (null until accepted).
+    advisor: one(usersTable, {
+      fields: [advisorRequestsTable.accepted_by],
+      references: [usersTable.unique_id],
+      relationName: "advisorRequestToAdvisor"
+    }),
     domain: one(tagsTable, {
       fields: [advisorRequestsTable.domain_tag_id],
       references: [tagsTable.id]

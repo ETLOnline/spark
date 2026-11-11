@@ -60,13 +60,18 @@ import {
   GetEventTagRankingRaw
 } from "@/src/db/data-access/reporting/events/query"
 import {
+  GetAdvisorTotalsRaw,
+  GetFypProjectTotalsRaw
+} from "@/src/db/data-access/reporting/advisors/query"
+import {
   UsersReport,
   CommunitiesReport,
   MentorshipReport,
   PostsReport,
   RewardsReport,
   RewardTypeBlock,
-  EventsReport
+  EventsReport,
+  AdvisorsReport
 } from "@/src/types/Reporting/Reporting.schema"
 import { FormatUserName } from "@/src/utils/helpers"
 
@@ -403,6 +408,36 @@ export const GetMentorshipReportModuleAction = CreateServerAction(
       return { success: true, data }
     } catch (error) {
       console.error("Error building mentorship report module:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+// ─── Advisors ────────────────────────────────────────────────────────────────
+// Counts only (the four advisor KPI cards). The advisor and project rows
+// behind each card are queried live by the drill-down pages, not snapshotted.
+
+export const GetAdvisorsReportModuleAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const [totals, projects] = await Promise.all([
+        GetAdvisorTotalsRaw(),
+        GetFypProjectTotalsRaw()
+      ])
+
+      const data: AdvisorsReport = {
+        total: Number(totals.total),
+        active: Number(totals.active),
+        verified: Number(totals.verified),
+        projects: {
+          completed: Number(projects.completed)
+        }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error("Error building advisors report module:", error)
       return { success: false, error }
     }
   }
