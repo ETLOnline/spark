@@ -44,15 +44,36 @@ import { UploadedImage } from "@/src/services/ai/types/interface"
 import { PostStatus } from "@/src/types/Post/PostStatus"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { rewardPublishedPost } from "@/src/services/post/postReview"
+import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
+import { AI_POST_MODERATION_ENABLED } from "@/src/utils/constants"
+
+// Moderation stays on unless the flag exists and is switched off
+const isPostModerationEnabled = async () => {
+  const flag = await getFeatureFlag([AI_POST_MODERATION_ENABLED])
+  return flag?.is_enabled ?? true
+}
 
 // Checks post text, poll options and images with AI before the post is saved.
 // Held posts are still saved, as pending review with the AI result, until an admin approves or rejects them.
 // `moderationFields` go on the post, `aiTags` are the tags to save on it, `message` is for the author when held.
+// With the Post_Moderation_Enabled flag off, the AI is skipped: the post is published and its tags are left as they are.
 const checkPostModeration = async (
   content?: string | null,
   pollOptions?: string[],
   images?: UploadedImage[]
 ) => {
+  if (!(await isPostModerationEnabled())) {
+    return {
+      moderationFields: {
+        status: PostStatus.PUBLISHED,
+        moderation_result: null
+      },
+      held: false,
+      aiTags: undefined,
+      message: undefined
+    }
+  }
+
   const moderation = await checkPost({ content, pollOptions, images })
 
   const moderationFields =
@@ -339,6 +360,7 @@ export const CreateFilesPostAction = CreateServerAction(
       )
 
       await AddPostFileLink(postData[0].id, fileRecord.id)
+      if (!held) await rewardPublishedPost(postData[0].id, userId, entityId)
 
       return {
         success: true,
