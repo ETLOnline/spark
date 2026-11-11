@@ -500,3 +500,17 @@ export async function GetFypProjectDetail(
 
   return (rows[0] as unknown as RawFypProjectDetail) ?? null
 }
+
+/** Just the title, for the per-community FYP directory page's header. */
+export async function GetFypCommunityTitle(
+  communityId: string
+): Promise<string | null> {
+  const rows = await db.execute(sql`
+    select title
+    from communities
+    where id = ${communityId}
+    limit 1
+  `)
+
+  return (rows[0] as unknown as { title: string } | undefined)?.title ?? null
+}

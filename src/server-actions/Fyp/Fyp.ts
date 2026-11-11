@@ -3,6 +3,7 @@
 import { CreateServerAction } from ".."
 import {
   GetFypAcademicYears,
+  GetFypCommunityTitle,
   GetFypDashboardProjects,
   GetFypDashboardStats,
   GetFypDirectory,
@@ -266,6 +267,19 @@ export const GetFypProjectDetailAction = CreateServerAction(
       return { success: true, data: detail }
     } catch (error) {
       console.error("Error fetching FYP project detail:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetFypCommunityTitleAction = CreateServerAction(
+  true,
+  async (communityId: string) => {
+    try {
+      const title = await GetFypCommunityTitle(communityId)
+      return { success: true, data: title }
+    } catch (error) {
+      console.error("Error fetching FYP community title:", error)
       return { success: false, error }
     }
   }
