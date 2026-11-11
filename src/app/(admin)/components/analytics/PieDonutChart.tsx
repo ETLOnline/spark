@@ -27,6 +27,8 @@ interface PieDonutChartProps {
   /** Caption under the centre number */
   centerLabel: string
   className?: string
+  /** When set, slices become clickable and call back with that segment's label. */
+  onSegmentClick?: (label: string) => void
 }
 
 /** shadcn "Pie Chart – Donut with Text": a donut with a centred total and a hover tooltip per slice. */
@@ -34,7 +36,8 @@ export function PieDonutChart({
   segments,
   centerValue,
   centerLabel,
-  className
+  className,
+  onSegmentClick
 }: PieDonutChartProps) {
   // CSS-safe keys for ChartContainer; the readable name lives in `label`
   const data = segments.map((s, i) => ({ ...s, key: `segment-${i}` }))
@@ -83,7 +86,14 @@ export function PieDonutChart({
             <Cell
               key={d.key}
               fill="currentColor"
-              className={`${d.text} stroke-background`}
+              className={cn(
+                d.text,
+                "stroke-background",
+                onSegmentClick && "cursor-pointer"
+              )}
+              onClick={
+                onSegmentClick ? () => onSegmentClick(d.label) : undefined
+              }
             />
           ))}
           <Label
