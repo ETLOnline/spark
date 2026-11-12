@@ -27,6 +27,7 @@ export const adminSiteRoutes: SiteRoutes = {
         { title: "Users", url: "/admin/analytics/users" },
         { title: "Communities", url: "/admin/analytics/communities" },
         { title: "Mentorship", url: "/admin/analytics/mentorship" },
+        { title: "FYP", url: "/admin/analytics/fyp" },
         { title: "Leaderboards", url: "/admin/analytics/leaderboards" }
       ]
     },

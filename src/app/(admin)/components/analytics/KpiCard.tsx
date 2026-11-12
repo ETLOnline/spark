@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Info, type LucideIcon } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { Card } from "@/src/components/ui/card"
@@ -19,6 +20,8 @@ export interface KpiItem {
   description?: string
   /** Full, uncompacted number shown in a hover tooltip over a compacted value (e.g. 12.4K → 12,412). */
   fullValue?: string
+  /** Makes the card a link (drill-down) when present. */
+  href?: string
 }
 
 const COLUMN_CLASSES = {
@@ -67,71 +70,86 @@ export function KpiCard({
       className={cn("grid gap-3 sm:gap-4", COLUMN_CLASSES[columns], className)}
     >
       {items.map(
-        ({ label, value, sub, icon: Icon, description, fullValue }, idx) => (
-          <Card
-            key={label}
-            className={
-              compact
-                ? "min-w-0 p-4 flex flex-col gap-2"
-                : "min-w-0 rounded-xl border bg-card p-4 sm:p-5 shadow-sm flex flex-col gap-1"
-            }
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span
-                className={cn(
-                  "min-w-0 flex items-center gap-1 text-muted-foreground [overflow-wrap:anywhere]",
-                  compact
-                    ? "text-sm"
-                    : "text-xs font-medium uppercase tracking-wide"
-                )}
-              >
-                {label}
-                {description && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="w-3 h-3 flex-shrink-0 cursor-help normal-case font-normal" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-56 normal-case font-normal">
-                        {description}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </span>
-              {Icon && (
-                <span
-                  className={cn(
-                    "rounded-lg flex items-center justify-center flex-shrink-0",
-                    compact ? "w-8 h-8" : "w-7 h-7",
-                    ICON_PALETTE[idx % ICON_PALETTE.length]
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                </span>
-              )}
-            </div>
-            <span
-              title={fullValue}
+        (
+          { label, value, sub, icon: Icon, description, fullValue, href },
+          idx
+        ) => {
+          const card = (
+            <Card
+              key={href ? undefined : label}
               className={cn(
-                "font-bold tracking-tight [overflow-wrap:anywhere]",
-                compact ? "text-2xl" : "text-2xl sm:text-3xl"
+                compact
+                  ? "min-w-0 p-4 flex flex-col gap-2"
+                  : "min-w-0 rounded-xl border bg-card p-4 sm:p-5 shadow-sm flex flex-col gap-1",
+                href &&
+                  "transition-colors hover:border-primary/40 hover:bg-muted/40 cursor-pointer"
               )}
             >
-              {value}
-            </span>
-            {sub && (
+              <div className="flex items-start justify-between gap-2">
+                <span
+                  className={cn(
+                    "min-w-0 flex items-center gap-1 text-muted-foreground [overflow-wrap:anywhere]",
+                    compact
+                      ? "text-sm"
+                      : "text-xs font-medium uppercase tracking-wide"
+                  )}
+                >
+                  {label}
+                  {description && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="w-3 h-3 flex-shrink-0 cursor-help normal-case font-normal" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-56 normal-case font-normal">
+                          {description}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
+                {Icon && (
+                  <span
+                    className={cn(
+                      "rounded-lg flex items-center justify-center flex-shrink-0",
+                      compact ? "w-8 h-8" : "w-7 h-7",
+                      ICON_PALETTE[idx % ICON_PALETTE.length]
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </span>
+                )}
+              </div>
               <span
+                title={fullValue}
                 className={cn(
-                  "text-xs text-muted-foreground",
-                  !compact && "[overflow-wrap:anywhere]"
+                  "font-bold tracking-tight [overflow-wrap:anywhere]",
+                  compact ? "text-2xl" : "text-2xl sm:text-3xl"
                 )}
               >
-                {sub}
+                {value}
               </span>
-            )}
-          </Card>
-        )
+              {sub && (
+                <span
+                  className={cn(
+                    "text-xs text-muted-foreground",
+                    !compact && "[overflow-wrap:anywhere]"
+                  )}
+                >
+                  {sub}
+                </span>
+              )}
+            </Card>
+          )
+
+          return href ? (
+            <Link key={label} href={href} className="block">
+              {card}
+            </Link>
+          ) : (
+            card
+          )
+        }
       )}
     </div>
   )
