@@ -66,7 +66,9 @@ export interface FypDashboardStats {
 /**
  * Neither value is a stored DB status — both are derived from the latest
  * advisor_requests row per space: "completed" = accepted AND every milestone
- * complete (and at least one exists); "running" = accepted and not completed.
+ * is specifically VERIFIED (at least one must exist) — a milestone that's
+ * merely "completed_pending_verification" doesn't count, since nobody has
+ * actually signed off on it yet. "running" = accepted and not completed.
  * Pending/rejected/expired/awaiting-approval requests fall into neither bucket.
  */
 export type FypBucket = "running" | "completed"

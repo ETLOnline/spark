@@ -216,7 +216,7 @@ const fypEnrichedCte = sql`
       coalesce(ms.completed, 0) as milestones_completed,
       case
         when r.status = ${AdvisorRequestStatus.ACCEPTED}
-          and coalesce(ms.total, 0) > 0 and ms.total = ms.completed
+          and coalesce(ms.total, 0) > 0 and ms.total = ms.verified
           then 'completed'
         when r.status = ${AdvisorRequestStatus.ACCEPTED} then 'running'
         else null
@@ -236,7 +236,13 @@ const fypEnrichedCte = sql`
             COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
             sql`, `
           )})
-        ) as completed
+        ) as completed,
+        -- The project only counts as "completed" once every milestone is
+        -- actually VERIFIED — "completed_pending_verification" means
+        -- submitted but not yet signed off, so it's still "running".
+        count(*) filter (
+          where fm.status = ${MilestoneStatus.VERIFIED}
+        ) as verified
       from fyp_milestones fm
       where fm.space_id = r.space_id
     ) ms on true
@@ -465,7 +471,7 @@ export async function GetFypProjectDetail(
       coalesce(ms.completed, 0) as milestones_completed,
       case
         when r.status = ${AdvisorRequestStatus.ACCEPTED}
-          and coalesce(ms.total, 0) > 0 and ms.total = ms.completed
+          and coalesce(ms.total, 0) > 0 and ms.total = ms.verified
           then 'completed'
         when r.status = ${AdvisorRequestStatus.ACCEPTED} then 'running'
         else null
@@ -492,7 +498,10 @@ export async function GetFypProjectDetail(
             COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
             sql`, `
           )})
-        ) as completed
+        ) as completed,
+        count(*) filter (
+          where fm.status = ${MilestoneStatus.VERIFIED}
+        ) as verified
       from fyp_milestones fm
       where fm.space_id = r.space_id
     ) ms on true
