@@ -5,6 +5,7 @@ import { MentorshipReportSchema } from "./mentorship.reporting-schema"
 import { PostsReportSchema } from "./posts.reporting-schema"
 import { RewardsReportSchema } from "./rewards.reporting-schema"
 import { EventsReportSchema } from "./events.reporting-schema"
+import { AdvisorsReportSchema } from "./advisors.reporting-schema"
 
 /**
  * Source of truth for the admin reporting contract (dashboard_schema.json).
@@ -20,6 +21,7 @@ export * from "./mentorship.reporting-schema"
 export * from "./posts.reporting-schema"
 export * from "./rewards.reporting-schema"
 export * from "./events.reporting-schema"
+export * from "./advisors.reporting-schema"
 
 /** A fully-successful report, every module populated. Used to validate a single module's own output before it's merged into a snapshot. */
 export const AdminReportSnapshotSchema = z.object({
@@ -28,7 +30,8 @@ export const AdminReportSnapshotSchema = z.object({
   mentorship: MentorshipReportSchema,
   posts: PostsReportSchema,
   rewards: RewardsReportSchema,
-  events: EventsReportSchema
+  events: EventsReportSchema,
+  advisors: AdvisorsReportSchema
 })
 
 /**
@@ -43,7 +46,8 @@ export const PersistedReportSnapshotSchema = z.object({
   mentorship: MentorshipReportSchema.nullable(),
   posts: PostsReportSchema.nullable(),
   rewards: RewardsReportSchema.nullable(),
-  events: EventsReportSchema.nullable()
+  events: EventsReportSchema.nullable(),
+  advisors: AdvisorsReportSchema.nullable()
 })
 
 export type AdminReportSnapshot = z.infer<typeof AdminReportSnapshotSchema>

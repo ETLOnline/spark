@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Info, type LucideIcon } from "lucide-react"
+import { ArrowRight, Info, type LucideIcon } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { Card } from "@/src/components/ui/card"
 import {
@@ -20,8 +20,10 @@ export interface KpiItem {
   description?: string
   /** Full, uncompacted number shown in a hover tooltip over a compacted value (e.g. 12.4K → 12,412). */
   fullValue?: string
-  /** Makes the card a link (drill-down) when present. */
+  /** Makes the card a link (drill-down) and shows an arrow affordance. */
   href?: string
+  /** Highlights the card as the current selection (e.g. the open drill-down). */
+  active?: boolean
 }
 
 const COLUMN_CLASSES = {
@@ -71,7 +73,16 @@ export function KpiCard({
     >
       {items.map(
         (
-          { label, value, sub, icon: Icon, description, fullValue, href },
+          {
+            label,
+            value,
+            sub,
+            icon: Icon,
+            description,
+            fullValue,
+            href,
+            active
+          },
           idx
         ) => {
           const card = (
@@ -82,7 +93,8 @@ export function KpiCard({
                   ? "min-w-0 p-4 flex flex-col gap-2"
                   : "min-w-0 rounded-xl border bg-card p-4 sm:p-5 shadow-sm flex flex-col gap-1",
                 href &&
-                  "transition-colors hover:border-primary/40 hover:bg-muted/40 cursor-pointer"
+                  "h-full transition-colors group-hover:border-primary group-focus-visible:ring-2 group-focus-visible:ring-primary",
+                active && "border-primary ring-1 ring-primary"
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -139,15 +151,29 @@ export function KpiCard({
                   {sub}
                 </span>
               )}
+              {href && (
+                <ArrowRight
+                  aria-hidden="true"
+                  className="w-4 h-4 self-end text-primary transition-transform group-hover:translate-x-0.5"
+                />
+              )}
             </Card>
           )
 
-          return href ? (
-            <Link key={label} href={href} className="block">
+          if (!href) return card
+
+          return (
+            <Link
+              key={label}
+              href={href}
+              // Cards often only change a query param (a filter) on the same
+              // page; keep the reader's scroll position.
+              scroll={false}
+              aria-current={active ? "true" : undefined}
+              className="group min-w-0 rounded-xl focus-visible:outline-none"
+            >
               {card}
             </Link>
-          ) : (
-            card
           )
         }
       )}

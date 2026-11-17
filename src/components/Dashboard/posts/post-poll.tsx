@@ -113,9 +113,10 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   }
 
   const isSingle = post.files?.length === 1
-  // a poll under review can't be voted on until an admin approves it
+  // only published polls can be voted on (not under review or rejected)
+  const isPublished = post.status === PostStatus.PUBLISHED
   const isPending = post.status === PostStatus.PENDING_REVIEW
-  const votingDisabled = votePollLoading || hasVoted || isPending
+  const votingDisabled = votePollLoading || hasVoted || !isPublished
   return (
     <>
       <CardContent
@@ -190,7 +191,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
               Voting opens once the post is approved.
             </p>
           )}
-          {!hasVoted && !isPending && tempSelectedOption && (
+          {!hasVoted && isPublished && tempSelectedOption && (
             <Button
               onClick={handleSubmitVote}
               disabled={votePollLoading}

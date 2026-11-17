@@ -6,6 +6,8 @@ import { GetMilestoneByIdAction } from "@/src/server-actions/Milestone/Milestone
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
 import { GetFypProjectDetailAction } from "@/src/server-actions/Fyp/Fyp"
+import { GetSessionDetailsAction } from "@/src/server-actions/Mentor/MentorActions"
+import { GetAdminFypProjectTitleAction } from "@/src/server-actions/Advisors/AdminAdvisors"
 
 /**
  * Defines the structure for a single breadcrumb configuration item.
@@ -324,7 +326,30 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
         children: [
           { path: "/users", label: "Users" },
           { path: "/communities", label: "Communities" },
-          { path: "/mentorship", label: "Mentorship" },
+          {
+            path: "/mentorship",
+            label: "Mentorship",
+            children: [
+              { path: "/mentors", label: "Mentors" },
+              {
+                path: "/sessions",
+                label: "Sessions",
+                children: [
+                  {
+                    path: "/[id]",
+                    dynamicLabelFetcher: async (id: string) => {
+                      try {
+                        const res = await GetSessionDetailsAction(Number(id))
+                        return res?.data?.topic || `Session ${id}`
+                      } catch {
+                        return `Session ${id}`
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           {
             path: "/fyp",
             label: "FYP",
@@ -348,7 +373,25 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
               }
             ]
           },
-          { path: "/leaderboards", label: "Leaderboards" }
+          { path: "/leaderboards", label: "Leaderboards" },
+          {
+            path: "/advisors",
+            label: "Advisors",
+            children: [
+              {
+                path: "/projects",
+                label: "Projects Completed",
+                children: [
+                  {
+                    path: "/[spaceId]",
+                    dynamicLabelFetcher: async (spaceId: string) =>
+                      (await GetAdminFypProjectTitleAction(spaceId)) ??
+                      "Project details"
+                  }
+                ]
+              }
+            ]
+          }
         ]
       }
     ]

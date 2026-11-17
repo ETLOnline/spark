@@ -44,15 +44,47 @@ import { UploadedImage } from "@/src/services/ai/types/interface"
 import { PostStatus } from "@/src/types/Post/PostStatus"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { rewardPublishedPost } from "@/src/services/post/postReview"
+import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
+import { AI_POST_MODERATION_ENABLED } from "@/src/utils/constants"
+import { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
+import {
+  MANUAL_REVIEW_REASON,
+  POST_UNDER_REVIEW_MESSAGE
+} from "@/src/services/ai/post/postCheck.messages"
+
+// Moderation stays on unless the flag exists and is switched off
+const isPostModerationEnabled = async () => {
+  const flag = await getFeatureFlag([AI_POST_MODERATION_ENABLED])
+  return flag?.is_enabled ?? true
+}
 
 // Checks post text, poll options and images with AI before the post is saved.
 // Held posts are still saved, as pending review with the AI result, until an admin approves or rejects them.
 // `moderationFields` go on the post, `aiTags` are the tags to save on it, `message` is for the author when held.
+// With the AI moderation flag off, the AI is skipped and every post is held for an admin to review by hand;
+// its tags are left as they are.
 const checkPostModeration = async (
   content?: string | null,
   pollOptions?: string[],
   images?: UploadedImage[]
 ) => {
+  if (!(await isPostModerationEnabled())) {
+    const moderation_result: PostModerationResult = {
+      outcome: "manual_review",
+      reason: MANUAL_REVIEW_REASON,
+      checked_at: new Date().toISOString()
+    }
+    return {
+      moderationFields: {
+        status: PostStatus.PENDING_REVIEW,
+        moderation_result
+      },
+      held: true,
+      aiTags: undefined,
+      message: POST_UNDER_REVIEW_MESSAGE
+    }
+  }
+
   const moderation = await checkPost({ content, pollOptions, images })
 
   const moderationFields =
@@ -339,6 +371,7 @@ export const CreateFilesPostAction = CreateServerAction(
       )
 
       await AddPostFileLink(postData[0].id, fileRecord.id)
+      if (!held) await rewardPublishedPost(postData[0].id, userId, entityId)
 
       return {
         success: true,
@@ -585,8 +618,7 @@ export const GetPostsAction = CreateServerAction(
   true,
   async (offset?: number) => {
     try {
-      const viewerId = (await AuthUserAction())?.unique_id
-      const posts = await GetPosts({ offset, globalPostsOnly: true, viewerId })
+      const posts = await GetPosts({ offset, globalPostsOnly: true })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
@@ -639,13 +671,11 @@ export const GetSpacePostsAction = CreateServerAction(
     limit?: number
   ) => {
     try {
-      const viewerId = (await AuthUserAction())?.unique_id
       const posts = await GetPosts({
         entityId: spaceId,
         category: category,
         offset,
-        limit,
-        viewerId
+        limit
       })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
@@ -685,6 +715,44 @@ export const GetSpacePostsAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to fetch user posts"
+      }
+    }
+  }
+)
+
+// My Posts: the signed-in user's posts in every status (published, under review, rejected),
+// either their global posts or their posts in one space
+export const GetMyPostsAction = CreateServerAction(
+  true,
+  async (offset?: number, spaceId?: string, category: string = "") => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) throw new Error("Unauthorized", { cause: 401 })
+
+      const posts = await GetPosts({
+        offset,
+        userIds: [user.unique_id],
+        statuses: Object.values(PostStatus),
+        ...(spaceId
+          ? { entityId: spaceId, category }
+          : { globalPostsOnly: true })
+      })
+      // any[], like the other feed actions, so the post cards accept it
+      const sanitizedPosts: any[] = posts.map((post) => ({
+        ...post,
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+        files: post.files?.map((f: any) => f.postFile) || [],
+        file:
+          post.files && post.files.length > 0
+            ? post.files[0].postFile
+            : undefined
+      }))
+
+      return { success: true, data: sanitizedPosts }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch your posts"
       }
     }
   }
@@ -770,16 +838,13 @@ export const DeletePostAction = CreateServerAction(
   }
 )
 
-// Published posts are public; a pending post is seen by its author and admins, a rejected one by admins
+// Published posts are public; any other post is seen only by its author (My Posts) and admins
 const canViewPost = async (post: { status: string; user_id: string }) => {
   if (post.status === PostStatus.PUBLISHED) return true
   const viewer = await AuthUserAction().catch(() => undefined)
   if (!viewer) return false
-  if (await isSuperAdmin(viewer)) return true
-  return (
-    post.status === PostStatus.PENDING_REVIEW &&
-    post.user_id === viewer.unique_id
-  )
+  if (post.user_id === viewer.unique_id) return true
+  return await isSuperAdmin(viewer)
 }
 
 export const GetPostByIdAction = CreateServerAction(
