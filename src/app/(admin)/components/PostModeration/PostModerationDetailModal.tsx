@@ -149,7 +149,8 @@ function PostModerationDetailModal({
               ))}
             </section>
 
-            {result?.outcome === "error" ? (
+            {result?.outcome === "error" ||
+            result?.outcome === "manual_review" ? (
               <section className="flex gap-3 rounded-md border  p-4 text-sm text-blue-500">
                 <Info className="h-5 w-5 shrink-0" />
                 <div className="space-y-1">

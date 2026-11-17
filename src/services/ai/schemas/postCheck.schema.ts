@@ -156,8 +156,9 @@ export type ModerationDetails = z.infer<typeof moderationDetailsSchema>
 // Saved on a held post (posts.moderation_result). Each answer is stored once, in `details`;
 // the overall verdict and top checks the admin sees are worked out from it (getModerationSummary).
 export const postModerationResultSchema = z.object({
-  // blocked / needs_review from the AI, error -> the AI is not configured or the call failed
-  outcome: z.enum(["needs_review", "blocked", "error"]),
+  // blocked / needs_review from the AI, error -> the AI is not configured or the call failed,
+  // manual_review -> AI moderation is switched off, so every post waits for an admin
+  outcome: z.enum(["needs_review", "blocked", "error", "manual_review"]),
   // one readable line for the admin, e.g. "This post may contain hate speech, nudity."
   reason: z.string(),
   // every answer for the text and each image (verdict, severity, every check, decision);
