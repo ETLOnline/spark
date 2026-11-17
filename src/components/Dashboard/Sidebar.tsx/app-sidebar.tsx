@@ -15,6 +15,7 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useAtom, useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import useSideBarHook from "./hooks/useSideBarHook"
@@ -34,7 +35,16 @@ export default function AppSidebar({
 }: AppSidebarProps) {
   const [baseRoutes, setRoutes] = useAtom(navStore.routes)
   const isNavLoading = useAtomValue(navStore.isNavLoading)
-  const routes = isSuperAdmin ? adminSiteRoutes : baseRoutes
+  // Never write adminSiteRoutes back into the shared atom: it has no
+  // navSecondary, and the (dashboard) layout would crash after client-side
+  // navigation from /admin.
+  // Also key off the URL, not just the prop: after a client-side navigation
+  // from /admin to a public page the admin menu must not stick around.
+  // Public shortcuts are not shown in the admin sidebar.
+  const pathname = usePathname()
+  const showAdminRoutes =
+    isSuperAdmin && (pathname === "/admin" || pathname.startsWith("/admin/"))
+  const routes = showAdminRoutes ? adminSiteRoutes : baseRoutes
   const _ = useSideBarHook()
   const { shortcutMap, shortcutList, getShortcuts, loadingShortcuts } =
     useShortcut()
@@ -64,10 +74,10 @@ export default function AppSidebar({
   }, [shortcutList])
 
   useEffect(() => {
-    setRoutes({
-      ...routes,
+    setRoutes((prev) => ({
+      ...prev,
       shortcuts: sidebarShortcutList
-    })
+    }))
   }, [sidebarShortcutList])
 
   return (
@@ -110,11 +120,12 @@ export default function AppSidebar({
           <NavMain items={routes.navMain} label="Platform" />
         )}
         {/* <NavMain items={routes.testNav} label="Test" /> */}
-        <NavMain items={routes.shortcuts} label="Shortcuts" />
-        {!isSuperAdmin && (
-          <>
-            <NavSecondary items={routes.navSecondary} className="mt-auto" />
-          </>
+        <NavMain
+          items={showAdminRoutes ? [] : routes.shortcuts}
+          label="Shortcuts"
+        />
+        {!showAdminRoutes && (
+          <NavSecondary items={routes.navSecondary} className="mt-auto" />
         )}
       </SidebarContent>
       <SidebarFooter>
