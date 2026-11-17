@@ -5,6 +5,7 @@ import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/pro
 import { GetMilestoneByIdAction } from "@/src/server-actions/Milestone/Milestone"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
+import { GetFypProjectDetailAction } from "@/src/server-actions/Fyp/Fyp"
 import { GetSessionDetailsAction } from "@/src/server-actions/Mentor/MentorActions"
 import { GetAdminFypProjectTitleAction } from "@/src/server-actions/Advisors/AdminAdvisors"
 
@@ -342,6 +343,29 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
                         return res?.data?.topic || `Session ${id}`
                       } catch {
                         return `Session ${id}`
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            path: "/fyp",
+            label: "FYP",
+            children: [
+              {
+                path: "/completed",
+                label: "Completed FYPs",
+                children: [
+                  {
+                    path: "/[id]",
+                    dynamicLabelFetcher: async (spaceId: string) => {
+                      try {
+                        const res = await GetFypProjectDetailAction(spaceId)
+                        return res?.data?.projectName || `FYP ${spaceId}`
+                      } catch {
+                        return `FYP ${spaceId}`
                       }
                     }
                   }
