@@ -3,6 +3,7 @@ import { featureFlagsTable, InsertFeatureFlag } from "../schema"
 import {
   MENTORSHIP_RP_THRESHOLD_ENABLED,
   AI_POST_MODERATION_ENABLED,
+  PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED,
   RP_THRESHOLD
 } from "@/src/utils/constants"
 
@@ -29,10 +30,17 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
   },
   {
     key: AI_POST_MODERATION_ENABLED,
-    label: "Post Moderation",
+    label: "AI Post Moderation",
     is_enabled: false,
     description:
       "Check new and edited posts with AI and hold flagged ones for admin review. When OFF, the AI check is skipped and every post is held for an admin to review manually."
+  },
+  {
+    key: PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED,
+    label: "Private Community AI Moderation",
+    is_enabled: true,
+    description:
+      "Check posts made in private communities with AI and hold flagged ones for admin review. Only applies while Post Moderation is ON. When OFF, the AI check is skipped and every private community post is held for an admin to review manually."
   }
 ]
 
