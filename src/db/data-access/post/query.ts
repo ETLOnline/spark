@@ -495,7 +495,19 @@ export const GetModerationPosts = async (filters: ModerationPostFilters) => {
     with: {
       author: true,
       options: { orderBy: [pollOptionsTable.id] },
-      files: { with: { postFile: true } }
+      files: { with: { postFile: true } },
+      // where the post appears: a space (mentorship or inside a channel), or the main feed when null
+      space: {
+        columns: {
+          id: true,
+          space_name: true,
+          space_slug: true,
+          channel_id: true
+        },
+        with: {
+          channel: { columns: { channel_name: true, channel_slug: true } }
+        }
+      }
     },
     orderBy: [desc(postsTable.created_at)]
   })

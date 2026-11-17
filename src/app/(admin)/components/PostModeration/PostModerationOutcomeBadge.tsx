@@ -38,7 +38,7 @@ function PostModerationOutcomeBadge({
   return (
     <Badge
       variant="outline"
-      className={`text-sm font-medium flex w-fit items-center gap-2 ${outcome.className}`}
+      className={`text-sm font-medium flex w-fit items-center gap-2 whitespace-nowrap ${outcome.className}`}
     >
       <Icon className="w-4 h-4" />
       {outcome.label}
