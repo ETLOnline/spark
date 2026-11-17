@@ -21,6 +21,7 @@ import { TOP_CHECKS_COUNT } from "@/src/services/ai/constants"
 import { formatRelativeTime } from "@/src/utils/helpers"
 import { Check, Info, X } from "lucide-react"
 import React from "react"
+import PostLocation from "./PostLocation"
 import PostModerationOutcomeBadge from "./PostModerationOutcomeBadge"
 import { ModerationPost } from "./types"
 
@@ -104,6 +105,8 @@ function PostModerationDetailModal({
 
         <ScrollArea className="max-h-[calc(100vh-12rem)] w-full overflow-y-auto pr-3">
           <div className="space-y-6">
+            {post && <PostLocation post={post} variant="detailed" />}
+
             {/* What readers would see */}
             <section className="space-y-3 rounded-md border p-4">
               <h3 className="text-sm font-semibold text-muted-foreground">
