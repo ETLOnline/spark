@@ -198,7 +198,11 @@ export async function GetCommunityMemberRankingRaw(): Promise<
       count(cu.id) as total_members,
       ${communityRankingDetailColumns}
     from communities c
-    left join community_users cu on cu.community_id = c.id
+    -- members whose user is disabled are not counted
+    left join (
+      community_users cu
+      inner join users mu on mu.unique_id = cu.user_id and mu.disabled = false
+    ) on cu.community_id = c.id
     ${communityAdminLateral}
     group by c.id, c.title, ${communityRankingDetailGroupBy}
     order by total_members desc
