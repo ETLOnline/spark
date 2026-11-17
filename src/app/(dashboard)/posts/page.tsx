@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import PostFeed from "@/src/components/Dashboard/posts/post-feed"
+import PostFeedTabs from "@/src/components/Dashboard/posts/post-feed-tabs"
 import CreatePostForm from "@/src/components/Dashboard/posts/create-post-form"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import { GetPostsAction } from "@/src/server-actions/Post/Post"
@@ -47,7 +47,7 @@ const PostsPage = () => {
           <Loader size={LoaderSizes.xl} />
         </div>
       ) : canViewPost ? (
-        <PostFeed fetchedPosts={posts} />
+        <PostFeedTabs publicPosts={posts} />
       ) : null}
     </div>
   )

@@ -3,6 +3,7 @@
  * as "0" — no separate placeholder/error text for "no data" here.
  */
 
+import moment from "moment"
 import {
   MONTH_LABELS,
   TrendGranularity,
@@ -90,6 +91,13 @@ export function humanizeKey(key: string) {
   return spaced === spaced.toLowerCase()
     ? spaced.charAt(0).toUpperCase() + spaced.slice(1)
     : spaced
+}
+
+/** Formats an ISO / date string as "Sep 17, 2026"; null for empty or unparseable values. */
+export function formatDate(value: string | null | undefined) {
+  if (!value) return null
+  const date = moment(value)
+  return date.isValid() ? date.format("MMM D, YYYY") : null
 }
 
 /** date is always "YYYY-MM-DD" (see GetUsersReportModuleAction). Parsed with
