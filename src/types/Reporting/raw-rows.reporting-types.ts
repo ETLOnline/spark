@@ -4,7 +4,8 @@ import {
   MentorshipReport,
   PostsReport,
   RewardsReport,
-  EventsReport
+  EventsReport,
+  AdvisorsReport
 } from "./Reporting.schema"
 
 /**
@@ -222,3 +223,11 @@ export interface RawHostRankingRow {
 export type RawTagRankingRow = RawNumeric<
   EventsReport["tags"]["ranking"][number]
 >
+
+// ─── Advisors ────────────────────────────────────────────────────────────────
+
+export type RawAdvisorTotalsRow = RawNumeric<
+  Pick<AdvisorsReport, "total" | "active" | "verified">
+>
+
+export type RawFypProjectTotalsRow = RawNumeric<AdvisorsReport["projects"]>

@@ -5,6 +5,7 @@ import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/pro
 import { GetMilestoneByIdAction } from "@/src/server-actions/Milestone/Milestone"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
+import { GetAdminFypProjectTitleAction } from "@/src/server-actions/Advisors/AdminAdvisors"
 
 /**
  * Defines the structure for a single breadcrumb configuration item.
@@ -324,7 +325,25 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
           { path: "/users", label: "Users" },
           { path: "/communities", label: "Communities" },
           { path: "/mentorship", label: "Mentorship" },
-          { path: "/leaderboards", label: "Leaderboards" }
+          { path: "/leaderboards", label: "Leaderboards" },
+          {
+            path: "/advisors",
+            label: "Advisors",
+            children: [
+              {
+                path: "/projects",
+                label: "Projects Completed",
+                children: [
+                  {
+                    path: "/[spaceId]",
+                    dynamicLabelFetcher: async (spaceId: string) =>
+                      (await GetAdminFypProjectTitleAction(spaceId)) ??
+                      "Project details"
+                  }
+                ]
+              }
+            ]
+          }
         ]
       }
     ]
