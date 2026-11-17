@@ -1,15 +1,10 @@
-import {
-  ExternalLink,
-  Globe,
-  GraduationCap,
-  Hash,
-  LucideIcon
-} from "lucide-react"
+import { Badge } from "@/src/components/ui/badge"
+import { cn } from "@/src/lib/utils"
+import { ExternalLink } from "lucide-react"
 import Link from "next/link"
 import React from "react"
-import { ModerationPost } from "./types"
-
-type LocationKind = "feed" | "mentorship" | "channel"
+import { KIND_STYLES } from "./constants"
+import { LocationKind, ModerationPost } from "./types"
 
 interface PostLocationInfo {
   kind: LocationKind
@@ -17,27 +12,6 @@ interface PostLocationInfo {
   spaceName?: string
   channelName?: string
   href?: string
-}
-
-const KIND_STYLES: Record<
-  LocationKind,
-  { icon: LucideIcon; className: string }
-> = {
-  feed: {
-    icon: Globe,
-    className:
-      "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800"
-  },
-  mentorship: {
-    icon: GraduationCap,
-    className:
-      "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800"
-  },
-  channel: {
-    icon: Hash,
-    className:
-      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
-  }
 }
 
 // A post with no space is on the main feed; a space with no channel is a mentorship space
@@ -80,32 +54,40 @@ function PostLocation({ post, variant = "inline" }: PostLocationProps) {
       .filter(Boolean)
       .join(" · ")
     return (
-      <span
+      <div
         className="inline-flex min-w-0 max-w-full items-center gap-1.5"
         title={where ? `${location.label}: ${where}` : location.label}
       >
-        <span
-          className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-1.5 text-[11px] font-medium leading-4 ${className}`}
+        <Badge
+          variant="outline"
+          className={cn(
+            "shrink-0 gap-1 whitespace-nowrap rounded-full px-1.5 py-0 text-[11px] font-medium leading-4",
+            className
+          )}
         >
           <Icon className="h-2.5 w-2.5 shrink-0" />
           {location.label}
-        </span>
+        </Badge>
         {where && (
           <span className="truncate text-xs text-muted-foreground">
             {where}
           </span>
         )}
-      </span>
+      </div>
     )
   }
 
   const badge = (
-    <span
-      className={`inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${className}`}
+    <Badge
+      variant="outline"
+      className={cn(
+        "w-fit gap-1 whitespace-nowrap rounded-full px-2 py-0.5 font-medium",
+        className
+      )}
     >
       <Icon className="h-3 w-3 shrink-0" />
       {location.label}
-    </span>
+    </Badge>
   )
 
   return (

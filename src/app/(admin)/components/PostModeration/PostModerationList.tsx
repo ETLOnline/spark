@@ -24,12 +24,7 @@ import PostLocation from "./PostLocation"
 import PostModerationDetailModal from "./PostModerationDetailModal"
 import PostModerationOutcomeBadge from "./PostModerationOutcomeBadge"
 import { ModerationPost } from "./types"
-
-// Author | Post (with where it was posted) | AI outcome | Reason | Held | Action
-// Text columns shrink to fit (and truncate); badge, time and button columns are fixed so the
-// header lines up with every row. No min width, so the table never scrolls sideways.
-const GRID_COLS =
-  "grid-cols-[minmax(0,1fr)_minmax(0,2fr)_200px_minmax(0,1.6fr)_110px_130px]"
+import { GRID_COLS } from "./constants"
 
 function PostAuthor({ post }: { post: ModerationPost }) {
   return (

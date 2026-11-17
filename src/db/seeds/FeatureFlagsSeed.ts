@@ -1,9 +1,11 @@
+import { sql } from "drizzle-orm"
 import { db } from ".."
 import { featureFlagsTable, InsertFeatureFlag } from "../schema"
 import {
   MENTORSHIP_RP_THRESHOLD_ENABLED,
   AI_POST_MODERATION_ENABLED,
   PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED,
+  POST_MODERATION_FLAG_DEFINITIONS,
   RP_THRESHOLD
 } from "@/src/utils/constants"
 
@@ -30,17 +32,15 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
   },
   {
     key: AI_POST_MODERATION_ENABLED,
-    label: "AI Post Moderation",
-    is_enabled: false,
-    description:
-      "Check new and edited posts with AI and hold flagged ones for admin review. When OFF, the AI check is skipped and every post is held for an admin to review manually."
+    ...POST_MODERATION_FLAG_DEFINITIONS[AI_POST_MODERATION_ENABLED],
+    is_enabled: false
   },
   {
     key: PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED,
-    label: "Private Community AI Moderation",
-    is_enabled: true,
-    description:
-      "Check posts made in private communities with AI and hold flagged ones for admin review. Only applies while Post Moderation is ON. When OFF, the AI check is skipped and every private community post is held for an admin to review manually."
+    ...POST_MODERATION_FLAG_DEFINITIONS[
+      PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED
+    ],
+    is_enabled: false
   }
 ]
 
@@ -50,7 +50,14 @@ export const FeatureFlagsSeed = async () => {
       await tx
         .insert(featureFlagsTable)
         .values(featureFlagsSeedList)
-        .onConflictDoNothing({ target: featureFlagsTable.key })
+        // An existing flag keeps its state, value and label; only a missing description is
+        // filled in (e.g. a flag the admin settings created before the seed ran)
+        .onConflictDoUpdate({
+          target: featureFlagsTable.key,
+          set: {
+            description: sql`coalesce(${featureFlagsTable.description}, excluded.description)`
+          }
+        })
 
       console.log("✅ Feature flags seeded successfully")
     } catch (e) {

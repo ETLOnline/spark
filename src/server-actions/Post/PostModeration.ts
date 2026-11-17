@@ -18,10 +18,7 @@ import {
   getFeatureFlag,
   updateFeatureFlag
 } from "@/src/db/data-access/feature-flags/query"
-import {
-  AI_POST_MODERATION_ENABLED,
-  PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED
-} from "@/src/utils/constants"
+import { POST_MODERATION_FLAG_DEFINITIONS } from "@/src/utils/constants"
 
 // Only super admins can see and review held posts
 const getSuperAdmin = async () => {
@@ -88,11 +85,7 @@ export const ReviewPostAction = CreateServerAction(
 
 // Feature flags an admin can switch from the Post Moderation settings.
 // Both stay on unless the flag exists and is switched off (same rule as post creation).
-const POST_MODERATION_SETTINGS = {
-  [AI_POST_MODERATION_ENABLED]: "Post Moderation",
-  [PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED]:
-    "Private Community AI Moderation"
-} as const
+const POST_MODERATION_SETTINGS = POST_MODERATION_FLAG_DEFINITIONS
 
 export type PostModerationSettingKey = keyof typeof POST_MODERATION_SETTINGS
 
@@ -133,7 +126,7 @@ export const UpdatePostModerationSettingAction = CreateServerAction(
         ? await updateFeatureFlag(key, { is_enabled })
         : await createFeatureFlag({
             key,
-            label: POST_MODERATION_SETTINGS[key],
+            ...POST_MODERATION_SETTINGS[key],
             is_enabled
           })
       return { success: true, data: { is_enabled: !!flag?.is_enabled } }
