@@ -505,6 +505,13 @@
       "when": 1793704058240,
       "tag": "0071_2026_11_03_160735__add_status_and_moderation_result_inpost_table",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794293654892,
+      "tag": "0072_2026_11_10_115408__disable_user",
+      "breakpoints": true
     }
   ]
 }

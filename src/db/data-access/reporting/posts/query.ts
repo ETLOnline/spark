@@ -96,7 +96,7 @@ export async function GetTopPostsRaw(): Promise<RawTopPostRow[]> {
       coalesce(l.total, 0) as likes_total,
       coalesce(c.total, 0) as comments_total
     from posts p
-    inner join users u on u.unique_id = p.user_id
+    inner join users u on u.unique_id = p.user_id and u.disabled = false
     left join lateral (
       select count(*) as total from likes lk where lk.post_id = p.id
     ) l on true
@@ -114,7 +114,7 @@ export async function GetTopCreatorsRaw(): Promise<RawTopCreatorRow[]> {
   const rows = await db.execute(sql`
     select p.user_id, u.first_name, u.last_name, u.email, count(*) as total_posts
     from posts p
-    inner join users u on u.unique_id = p.user_id
+    inner join users u on u.unique_id = p.user_id and u.disabled = false
     where p.status = 'published'
     group by p.user_id, u.first_name, u.last_name, u.email
     order by total_posts desc

@@ -24,6 +24,7 @@ export async function GetMentorTotalsRaw(): Promise<RawMentorTotalsRow> {
       count(*) filter (where p.verified = true) as verified
     from user_roles ur
     inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
+    inner join users u on u.unique_id = ur.user_id and u.disabled = false
     left join profile p on p.user_id = ur.user_id
   `)
   return rows[0] as unknown as RawMentorTotalsRow
@@ -65,6 +66,7 @@ export async function GetMentorSessionTotalsRaw(): Promise<RawSessionsRow> {
       select coalesce(sum(p.total_completed_sessions), 0) as completed
       from user_roles ur
       inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
+      inner join users u on u.unique_id = ur.user_id and u.disabled = false
       inner join profile p on p.user_id = ur.user_id
     ) c
   `)
@@ -101,7 +103,7 @@ export async function GetMentorRankingRaw(): Promise<RawMentorRankingRow[]> {
       coalesce(f.total, 0) as feedback_total
     from user_roles ur
     inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
-    inner join users u on u.unique_id = ur.user_id
+    inner join users u on u.unique_id = ur.user_id and u.disabled = false
     left join profile p on p.user_id = u.unique_id
     left join lateral (
       select
