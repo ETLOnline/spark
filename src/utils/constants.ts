@@ -383,6 +383,27 @@ export const MENTORSHIP_RP_THRESHOLD_ENABLED = "Mentorship_RP_Threshold_Enabled"
 /** Feature flag key — toggles the AI check (moderation and AI tags) on posts. */
 export const AI_POST_MODERATION_ENABLED = "ai_Post_Moderation_Enabled"
 
+/** Feature flag key — whether posts in private communities go through post moderation. */
+export const PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED =
+  "Private_Community_AI_Post_Moderation_Enabled"
+
+/**
+ * Label and description of each post moderation flag. Used by the seed and by the admin
+ * Post Moderation settings, which create the flag if it was never seeded.
+ */
+export const POST_MODERATION_FLAG_DEFINITIONS = {
+  [AI_POST_MODERATION_ENABLED]: {
+    label: "AI Post Moderation",
+    description:
+      "Check new and edited posts with AI and hold flagged ones for admin review. When OFF, the AI check is skipped and every post is held for an admin to review manually."
+  },
+  [PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED]: {
+    label: "Private Community AI Moderation",
+    description:
+      "Check posts made in private communities with AI and hold flagged ones for admin review. Only applies while Post Moderation is ON. When OFF, the AI check is skipped and every private community post is held for an admin to review manually."
+  }
+} as const
+
 /** Max length for a session request's Topic field. */
 export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
 

@@ -34,6 +34,8 @@ export const usersTable = pgTable("users", {
   cover_image: varchar(),
   meta: varchar(),
   role: varchar().notNull().default("user"),
+  // disabled by a super admin: banned in Clerk, so they can't sign in
+  disabled: boolean("disabled").notNull().default(false),
   meta_profile: json("meta_profile").default({
     bio_written: false,
     persona_selected: false,
@@ -145,8 +147,13 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
 }))
 
 export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
+export type SelectUser = Omit<
+  typeof usersTable.$inferSelect,
+  "meta" | "disabled"
+> & {
   // meta?: string
+  // optional: queries that pick their own columns may leave it out
+  disabled?: boolean
   chats?: SelectUserChat[]
   contacts?: SelectUserContact[]
   users?: SelectUserContact[]
@@ -1647,6 +1654,12 @@ export const advisorRequestsRelations = relations(
     requester: one(usersTable, {
       fields: [advisorRequestsTable.requested_by],
       references: [usersTable.unique_id]
+    }),
+    // The advisor who accepted the request (null until accepted).
+    advisor: one(usersTable, {
+      fields: [advisorRequestsTable.accepted_by],
+      references: [usersTable.unique_id],
+      relationName: "advisorRequestToAdvisor"
     }),
     domain: one(tagsTable, {
       fields: [advisorRequestsTable.domain_tag_id],

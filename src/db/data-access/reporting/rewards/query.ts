@@ -102,7 +102,7 @@ export async function GetRewardRankingRaw(
       coalesce(act.total, 0) as actions_total,
       coalesce(act.by_type, '[]') as actions_by_type
     from user_reward_balance urb
-    inner join users u on u.unique_id = urb.user_id
+    inner join users u on u.unique_id = urb.user_id and u.disabled = false
     -- reward_level.reward_id scopes this correctly regardless of whether
     -- a user has one or several rows in user_rewards_level.
     left join user_rewards_level url on url.user_id = urb.user_id

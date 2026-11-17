@@ -21,7 +21,8 @@ import {
   DeletePollOption,
   UpdateComment,
   GetPostStatusById,
-  HoldPostForReview
+  HoldPostForReview,
+  IsPrivateCommunitySpace
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -45,32 +46,56 @@ import { PostStatus } from "@/src/types/Post/PostStatus"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { rewardPublishedPost } from "@/src/services/post/postReview"
 import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
-import { AI_POST_MODERATION_ENABLED } from "@/src/utils/constants"
+import {
+  AI_POST_MODERATION_ENABLED,
+  PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED
+} from "@/src/utils/constants"
+import { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
+import {
+  MANUAL_REVIEW_REASON,
+  POST_UNDER_REVIEW_MESSAGE
+} from "@/src/services/ai/post/postCheck.messages"
 
-// Moderation stays on unless the flag exists and is switched off
-const isPostModerationEnabled = async () => {
-  const flag = await getFeatureFlag([AI_POST_MODERATION_ENABLED])
+// A flag stays on unless it exists and is switched off
+const isFlagEnabled = async (key: string) => {
+  const flag = await getFeatureFlag([key])
   return flag?.is_enabled ?? true
+}
+
+// The main AI flag covers every post: when it is off, nothing is checked by AI.
+// When it is on, posts in private communities are only checked by AI while their own flag is also on.
+const isAiPostModerationEnabled = async (spaceId?: string | null) => {
+  if (!(await isFlagEnabled(AI_POST_MODERATION_ENABLED))) return false
+  if (!(await IsPrivateCommunitySpace(spaceId))) return true
+  return await isFlagEnabled(PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED)
 }
 
 // Checks post text, poll options and images with AI before the post is saved.
 // Held posts are still saved, as pending review with the AI result, until an admin approves or rejects them.
 // `moderationFields` go on the post, `aiTags` are the tags to save on it, `message` is for the author when held.
-// With the Post_Moderation_Enabled flag off, the AI is skipped: the post is published and its tags are left as they are.
+// `spaceId` is the space the post is in. When AI moderation is off for the post (main flag off, or a
+// private community post with the private community flag off), the AI is skipped and the post is held
+// for an admin to review by hand; its tags are left as they are.
 const checkPostModeration = async (
   content?: string | null,
   pollOptions?: string[],
-  images?: UploadedImage[]
+  images?: UploadedImage[],
+  spaceId?: string | null
 ) => {
-  if (!(await isPostModerationEnabled())) {
+  if (!(await isAiPostModerationEnabled(spaceId))) {
+    const moderation_result: PostModerationResult = {
+      outcome: "manual_review",
+      reason: MANUAL_REVIEW_REASON,
+      checked_at: new Date().toISOString()
+    }
     return {
       moderationFields: {
-        status: PostStatus.PUBLISHED,
-        moderation_result: null
+        status: PostStatus.PENDING_REVIEW,
+        moderation_result
       },
-      held: false,
+      held: true,
       aiTags: undefined,
-      message: undefined
+      message: POST_UNDER_REVIEW_MESSAGE
     }
   }
 
@@ -112,7 +137,7 @@ export const CreatePostAction = CreateServerAction(
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         const { moderationFields, held, aiTags, message } =
-          await checkPostModeration(content)
+          await checkPostModeration(content, undefined, undefined, entityId)
 
         const postData = await CreatePost({
           content,
@@ -142,8 +167,14 @@ export const UpdatePostAction = CreateServerAction(
   true,
   async (postId: string, content: string) => {
     try {
+      const existing = await GetPostStatusById(postId)
       const { moderationFields, held, aiTags, message } =
-        await checkPostModeration(content)
+        await checkPostModeration(
+          content,
+          undefined,
+          undefined,
+          existing?.entity_id
+        )
 
       // a held edit sends the post back to review; a pending post stays pending until an admin
       // reviews it, since only the text is checked here and its images may be what held it
@@ -193,7 +224,9 @@ export const UpdatePollOptionsAction = CreateServerAction(
 
       const { moderationFields, held, message } = await checkPostModeration(
         post.content,
-        options.map((opt) => opt.text)
+        options.map((opt) => opt.text),
+        undefined,
+        post.entity_id
       )
       if (held) {
         await HoldPostForReview(postId, moderationFields.moderation_result!)
@@ -281,7 +314,7 @@ export const CreateFilesPostAction = CreateServerAction(
 
       // held files are still uploaded, so the admin can see them when reviewing the post
       const { moderationFields, held, aiTags, message } =
-        await checkPostModeration(content, undefined, files)
+        await checkPostModeration(content, undefined, files, entityId)
 
       // If there are multiple files, treat it as an image post (existing behavior)
       if (files.length > 1) {
@@ -404,7 +437,7 @@ export const CreatePollPostAction = CreateServerAction(
         // text, options and images are checked together, so the poll is saved with the right
         // status and only rewarded when it is published. Held images are still uploaded for the admin.
         const { moderationFields, held, aiTags, message } =
-          await checkPostModeration(content, options, files)
+          await checkPostModeration(content, options, files, entityId)
 
         const postData = await CreatePost({
           content,

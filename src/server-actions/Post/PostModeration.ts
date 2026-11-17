@@ -13,6 +13,12 @@ import {
   rewardPublishedPost,
   SendPostReviewedNotification
 } from "@/src/services/post/postReview"
+import {
+  createFeatureFlag,
+  getFeatureFlag,
+  updateFeatureFlag
+} from "@/src/db/data-access/feature-flags/query"
+import { POST_MODERATION_FLAG_DEFINITIONS } from "@/src/utils/constants"
 
 // Only super admins can see and review held posts
 const getSuperAdmin = async () => {
@@ -73,6 +79,63 @@ export const ReviewPostAction = CreateServerAction(
     } catch (error: any) {
       console.error("Error in ReviewPostAction:", error)
       return { success: false, error: error.message || "Failed to review post" }
+    }
+  }
+)
+
+// Feature flags an admin can switch from the Post Moderation settings.
+// Both stay on unless the flag exists and is switched off (same rule as post creation).
+const POST_MODERATION_SETTINGS = POST_MODERATION_FLAG_DEFINITIONS
+
+export type PostModerationSettingKey = keyof typeof POST_MODERATION_SETTINGS
+
+export const GetPostModerationSettingsAction = CreateServerAction(
+  true,
+  async () => {
+    try {
+      await getSuperAdmin()
+      const keys = Object.keys(
+        POST_MODERATION_SETTINGS
+      ) as PostModerationSettingKey[]
+      const flags = await Promise.all(keys.map((key) => getFeatureFlag([key])))
+      const data = Object.fromEntries(
+        keys.map((key, i) => [key, flags[i]?.is_enabled ?? true])
+      ) as Record<PostModerationSettingKey, boolean>
+      return { success: true, data }
+    } catch (error: any) {
+      console.error("Error in GetPostModerationSettingsAction:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to fetch post moderation settings"
+      }
+    }
+  }
+)
+
+// Switches one post moderation flag on or off, creating it if it was never seeded
+export const UpdatePostModerationSettingAction = CreateServerAction(
+  true,
+  async (key: PostModerationSettingKey, is_enabled: boolean) => {
+    try {
+      await getSuperAdmin()
+      if (!(key in POST_MODERATION_SETTINGS)) {
+        return { success: false, error: "Unknown setting" }
+      }
+      const existing = await getFeatureFlag([key])
+      const flag = existing
+        ? await updateFeatureFlag(key, { is_enabled })
+        : await createFeatureFlag({
+            key,
+            ...POST_MODERATION_SETTINGS[key],
+            is_enabled
+          })
+      return { success: true, data: { is_enabled: !!flag?.is_enabled } }
+    } catch (error: any) {
+      console.error("Error in UpdatePostModerationSettingAction:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to update post moderation setting"
+      }
     }
   }
 )

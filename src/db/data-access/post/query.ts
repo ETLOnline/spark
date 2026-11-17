@@ -495,7 +495,19 @@ export const GetModerationPosts = async (filters: ModerationPostFilters) => {
     with: {
       author: true,
       options: { orderBy: [pollOptionsTable.id] },
-      files: { with: { postFile: true } }
+      files: { with: { postFile: true } },
+      // where the post appears: a space (mentorship or inside a channel), or the main feed when null
+      space: {
+        columns: {
+          id: true,
+          space_name: true,
+          space_slug: true,
+          channel_id: true
+        },
+        with: {
+          channel: { columns: { channel_name: true, channel_slug: true } }
+        }
+      }
     },
     orderBy: [desc(postsTable.created_at)]
   })
@@ -543,4 +555,25 @@ export const ReviewPost = async (
     )
     .returning()
   return reviewedPost[0]
+}
+
+// True when the space a post lives in sits under a private community (space -> channel -> community).
+// Feed posts and mentorship spaces have no community, so they are never private-community posts.
+export const IsPrivateCommunitySpace = async (spaceId?: string | null) => {
+  if (!spaceId) return false
+  try {
+    const space = await db.query.spacesTable.findFirst({
+      where: eq(spacesTable.id, spaceId),
+      columns: { id: true },
+      with: {
+        channel: {
+          columns: { id: true },
+          with: { community: { columns: { type: true } } }
+        }
+      }
+    })
+    return space?.channel?.community?.type === "private"
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
 }

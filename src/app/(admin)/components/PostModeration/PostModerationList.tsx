@@ -20,9 +20,49 @@ import {
 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from "react"
+import PostLocation from "./PostLocation"
 import PostModerationDetailModal from "./PostModerationDetailModal"
 import PostModerationOutcomeBadge from "./PostModerationOutcomeBadge"
 import { ModerationPost } from "./types"
+import { GRID_COLS } from "./constants"
+
+function PostAuthor({ post }: { post: ModerationPost }) {
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <Avatar className="h-8 w-8 shrink-0">
+        <AvatarImage
+          src={post.author?.profile_url || undefined}
+          alt={post.author?.first_name}
+        />
+        <AvatarFallback className="text-xs">
+          {post.author?.first_name?.[0]}
+          {post.author?.last_name?.[0]}
+        </AvatarFallback>
+      </Avatar>
+      <span className="font-medium truncate">
+        {post.author?.first_name} {post.author?.last_name}
+      </span>
+    </div>
+  )
+}
+
+function PostPreview({ post }: { post: ModerationPost }) {
+  const text = htmlToPlainText(post.content ?? "")
+  return (
+    <div className="min-w-0">
+      <p className="line-clamp-2 break-words" title={text}>
+        {text || "No text"}
+      </p>
+      <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="shrink-0 text-xs text-muted-foreground capitalize">
+          {post.type}
+          {post.files.length ? ` · ${post.files.length} file(s)` : ""}
+        </span>
+        <PostLocation post={post} />
+      </div>
+    </div>
+  )
+}
 
 interface PostModerationListProps {
   status: PostStatus.PENDING_REVIEW | PostStatus.REJECTED
@@ -72,27 +112,30 @@ function PostModerationList({
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="rounded-md border min-w-[860px]">
-        <div className="grid grid-cols-12 gap-3 p-4 bg-muted/50 text-sm font-medium text-muted-foreground">
-          <div className="col-span-2 flex items-center gap-2">
+    <div className="w-full">
+      <div className="rounded-md border overflow-hidden">
+        {/* column headings only make sense for the table layout (xl and up) */}
+        <div
+          className={`${GRID_COLS} hidden xl:grid gap-4 p-4 bg-muted/50 text-sm font-medium text-muted-foreground`}
+        >
+          <div className="flex items-center gap-2">
             <User className="w-4 h-4" />
             <span>Author</span>
           </div>
-          <div className="col-span-3 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             <span>Post</span>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4" />
             <span>AI outcome</span>
           </div>
-          <div className="col-span-2">Reason</div>
-          <div className="col-span-1 flex items-center gap-2">
+          <div>Reason</div>
+          <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
             <span>Held</span>
           </div>
-          <div className="col-span-2 flex items-center justify-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <Gavel className="w-4 h-4" />
             Action
           </div>
@@ -107,46 +150,53 @@ function PostModerationList({
             {posts.map((post) => (
               <div
                 key={post.id}
-                className="grid grid-cols-12 gap-3 p-4 border-t items-center hover:bg-muted/50 transition delay-150 duration-300 text-sm"
+                className="border-t first:border-t-0 xl:first:border-t text-sm hover:bg-muted/50 transition delay-150 duration-300"
               >
-                <div className="col-span-2 flex items-center gap-2 min-w-0">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={post.author?.profile_url || undefined}
-                      alt={post.author?.first_name}
+                {/* Table row: xl and up */}
+                <div
+                  className={`${GRID_COLS} hidden xl:grid gap-4 p-4 items-center`}
+                >
+                  <PostAuthor post={post} />
+                  <PostPreview post={post} />
+                  <div className="min-w-0">
+                    <PostModerationOutcomeBadge
+                      result={post.moderation_result}
                     />
-                    <AvatarFallback className="text-xs">
-                      {post.author?.first_name?.[0]}
-                      {post.author?.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium truncate">
-                    {post.author?.first_name} {post.author?.last_name}
-                  </span>
+                  </div>
+                  <div className="min-w-0 text-muted-foreground line-clamp-2">
+                    {post.moderation_result?.reason}
+                  </div>
+                  <div className="whitespace-nowrap text-muted-foreground">
+                    {formatRelativeTime(post.created_at)}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={() => handleClick(post)}>
+                      Review
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="col-span-3">
-                  <p
-                    className="line-clamp-2 break-words"
-                    title={htmlToPlainText(post.content ?? "")}
-                  >
-                    {htmlToPlainText(post.content ?? "") || "No text"}
-                  </p>
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {post.type}
-                    {post.files.length ? ` · ${post.files.length} file(s)` : ""}
-                  </span>
-                </div>
-                <div className="col-span-2">
+
+                {/* Card: below xl */}
+                <div className="xl:hidden space-y-3 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <PostAuthor post={post} />
+                    <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-xs text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5" />
+                      {formatRelativeTime(post.created_at)}
+                    </span>
+                  </div>
+                  <PostPreview post={post} />
                   <PostModerationOutcomeBadge result={post.moderation_result} />
-                </div>
-                <div className="col-span-2 text-muted-foreground line-clamp-2">
-                  {post.moderation_result?.reason}
-                </div>
-                <div className="col-span-1 text-muted-foreground">
-                  {formatRelativeTime(post.created_at)}
-                </div>
-                <div className="col-span-2 text-center">
-                  <Button onClick={() => handleClick(post)}>
+                  {post.moderation_result?.reason && (
+                    <p className="text-muted-foreground line-clamp-2">
+                      {post.moderation_result.reason}
+                    </p>
+                  )}
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => handleClick(post)}
+                  >
                     Review
                     <ArrowRight className="w-4 h-4" />
                   </Button>

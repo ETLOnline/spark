@@ -3,7 +3,7 @@ import {
   getModerationSummary,
   PostModerationResult
 } from "@/src/services/ai/schemas/postCheck.schema"
-import { AlertTriangle, Ban, CircleHelp } from "lucide-react"
+import { AlertTriangle, Ban, CircleHelp, UserCheck } from "lucide-react"
 import React from "react"
 
 const OUTCOMES = {
@@ -13,7 +13,12 @@ const OUTCOMES = {
     icon: AlertTriangle,
     className: "text-amber-600"
   },
-  error: { label: "AI failed", icon: CircleHelp, className: "text-blue-600" }
+  error: { label: "AI failed", icon: CircleHelp, className: "text-blue-600" },
+  manual_review: {
+    label: "Manual review",
+    icon: UserCheck,
+    className: "text-slate-600"
+  }
 } as const
 
 // The AI's outcome for a held post
@@ -33,7 +38,7 @@ function PostModerationOutcomeBadge({
   return (
     <Badge
       variant="outline"
-      className={`text-sm font-medium flex w-fit items-center gap-2 ${outcome.className}`}
+      className={`text-sm font-medium flex w-fit items-center gap-2 whitespace-nowrap ${outcome.className}`}
     >
       <Icon className="w-4 h-4" />
       {outcome.label}

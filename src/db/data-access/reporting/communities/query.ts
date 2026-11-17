@@ -44,8 +44,9 @@ export async function GetCommunityTotalsRaw(): Promise<RawCommunityTotalsRow> {
 
 export async function GetCommunityMembershipTotalsRaw(): Promise<RawCountActive> {
   const rows = await db.execute(sql`
-    select count(*) as total, count(*) filter (where status = 'active') as active
-    from community_users
+    select count(*) as total, count(*) filter (where cu.status = 'active') as active
+    from community_users cu
+    inner join users u on u.unique_id = cu.user_id and u.disabled = false
   `)
   return rows[0] as unknown as RawCountActive
 }
@@ -63,6 +64,7 @@ export async function GetCommunityChannelUserTotalsRaw(): Promise<RawCountActive
   const rows = await db.execute(sql`
     select count(*) as total, count(*) filter (where cu.status = 'active') as active
     from channel_users cu
+    inner join users u on u.unique_id = cu.user_id and u.disabled = false
     inner join channels ch on ch.channel_id = cu.channel_id
     where ch.community_id is not null
   `)
@@ -83,6 +85,7 @@ export async function GetCommunitySpaceUserTotalsRaw(): Promise<RawCountActive> 
   const rows = await db.execute(sql`
     select count(*) as total, count(*) filter (where su.status = 'active') as active
     from space_users su
+    inner join users u on u.unique_id = su.user_id and u.disabled = false
     inner join spaces sp on sp.id = su.space_id
     inner join channels ch on ch.channel_id = sp.channel_id
     where ch.community_id is not null
@@ -139,14 +142,69 @@ export async function GetCommunityCategoriesRaw(): Promise<RawCategoryRow[]> {
   return rows as unknown as RawCategoryRow[]
 }
 
+/**
+ * A community's admins are everyone holding its scoped "community_admin" role
+ * (roles.entity_type = 'COMMUNITY', roles.entity_id = community id) — see
+ * createScopedCommunityRolesAndAssignAdmin. Returns all of them as one
+ * ordered array: the creator first (if they still hold the role), then the
+ * rest alphabetically; '{}' when there are none. The inner `distinct` guards
+ * against duplicate user_roles rows (no unique constraint on that table).
+ * Must be used where `c` is the communities alias.
+ */
+const communityAdminLateral = sql`
+  left join lateral (
+    select coalesce(
+      array_agg(
+        concat_ws(' ', a.first_name, a.last_name)
+        order by a.is_creator desc, a.first_name, a.last_name
+      ),
+      '{}'
+    ) as admin_names
+    from (
+      select distinct
+        ur.user_id,
+        u.first_name,
+        u.last_name,
+        (ur.user_id = c.created_by) as is_creator
+      from roles r
+      inner join user_roles ur on ur.role_id = r.id
+      inner join users u on u.unique_id = ur.user_id
+      where r.entity_type = 'COMMUNITY'
+        and r.entity_id = c.id
+        and r.slug = 'community_admin'
+    ) a
+  ) adm on true
+`
+
+/** Detail columns selected alongside every ranking row; pairs with communityAdminLateral. */
+const communityRankingDetailColumns = sql`
+  c.slug,
+  c.type,
+  c."is_FYP_enable" as fyp_enabled,
+  adm.admin_names
+`
+
+const communityRankingDetailGroupBy = sql`
+  c.slug, c.type, c."is_FYP_enable", adm.admin_names
+`
+
 export async function GetCommunityMemberRankingRaw(): Promise<
   RawMemberRankingRow[]
 > {
   const rows = await db.execute(sql`
-    select c.id as community_id, c.title, count(cu.id) as total_members
+    select
+      c.id as community_id,
+      c.title,
+      count(cu.id) as total_members,
+      ${communityRankingDetailColumns}
     from communities c
-    left join community_users cu on cu.community_id = c.id
-    group by c.id, c.title
+    -- members whose user is disabled are not counted
+    left join (
+      community_users cu
+      inner join users mu on mu.unique_id = cu.user_id and mu.disabled = false
+    ) on cu.community_id = c.id
+    ${communityAdminLateral}
+    group by c.id, c.title, ${communityRankingDetailGroupBy}
     order by total_members desc
     limit ${RANKING_LIMIT}
   `)
@@ -158,10 +216,15 @@ export async function GetCommunityPostRankingRaw(): Promise<
 > {
   const rows = await db.execute(sql`
     with ${scopedCommunityPostsCte}
-    select c.id as community_id, c.title, count(cp.post_id) as total_posts
+    select
+      c.id as community_id,
+      c.title,
+      count(cp.post_id) as total_posts,
+      ${communityRankingDetailColumns}
     from communities c
     left join community_posts cp on cp.community_id = c.id
-    group by c.id, c.title
+    ${communityAdminLateral}
+    group by c.id, c.title, ${communityRankingDetailGroupBy}
     order by total_posts desc
     limit ${RANKING_LIMIT}
   `)
@@ -172,8 +235,10 @@ export async function GetCommunityStatsRaw(): Promise<RawCommunityStatRow[]> {
   const rows = await db.execute(sql`
     with ${scopedCommunityPostsCte},
     membership_totals as (
-      select community_id, count(*) as total, count(*) filter (where status = 'active') as active
-      from community_users group by community_id
+      select cu.community_id, count(*) as total, count(*) filter (where cu.status = 'active') as active
+      from community_users cu
+      inner join users u on u.unique_id = cu.user_id and u.disabled = false
+      group by cu.community_id
     ),
     channel_totals as (
       select community_id, count(*) as total from channels where community_id is not null group by community_id
