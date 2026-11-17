@@ -64,8 +64,8 @@ const PostFooter: React.FC<Props> = ({ post, spaceId }) => {
     }
   }
 
-  // likes, comments and sharing open once the post is published
-  if (post.status === PostStatus.PENDING_REVIEW) return null
+  // likes, comments and sharing only on published posts (hidden for under review and rejected)
+  if (post.status !== PostStatus.PUBLISHED) return null
 
   return (
     <CardFooter className="flex flex-col items-start space-y-4 p-0">

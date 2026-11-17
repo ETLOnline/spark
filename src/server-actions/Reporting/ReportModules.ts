@@ -60,15 +60,21 @@ import {
   GetEventTagRankingRaw
 } from "@/src/db/data-access/reporting/events/query"
 import {
+  GetAdvisorTotalsRaw,
+  GetFypProjectTotalsRaw
+} from "@/src/db/data-access/reporting/advisors/query"
+import {
   UsersReport,
   CommunitiesReport,
   MentorshipReport,
   PostsReport,
   RewardsReport,
   RewardTypeBlock,
-  EventsReport
+  EventsReport,
+  AdvisorsReport
 } from "@/src/types/Reporting/Reporting.schema"
 import { FormatUserName } from "@/src/utils/helpers"
+import { RawCommunityRankingDetails } from "@/src/types/Reporting/raw-rows.reporting-types"
 
 /**
  * One server action per report module. Only ever called from
@@ -221,6 +227,20 @@ export const GetUsersReportModuleAction = CreateServerAction(
 
 // ─── Communities ─────────────────────────────────────────────────────────────
 
+/** Matches GetCommunityTotalsRaw: anything other than 'public' counts as private. */
+function mapCommunityRankingDetails(row: RawCommunityRankingDetails) {
+  return {
+    slug: row.slug,
+    visibility: (row.type === "public" ? "public" : "private") as
+      | "public"
+      | "private",
+    admin_names: (row.admin_names ?? [])
+      .map((name) => name.trim())
+      .filter(Boolean),
+    fyp_enabled: Boolean(row.fyp_enabled)
+  }
+}
+
 export const GetCommunitiesReportModuleAction = CreateServerAction(
   false,
   async () => {
@@ -315,12 +335,14 @@ export const GetCommunitiesReportModuleAction = CreateServerAction(
           by_members: memberRankingRows.map((row) => ({
             community_id: row.community_id,
             title: row.title,
-            total_members: Number(row.total_members)
+            total_members: Number(row.total_members),
+            ...mapCommunityRankingDetails(row)
           })),
           by_posts: postRankingRows.map((row) => ({
             community_id: row.community_id,
             title: row.title,
-            total_posts: Number(row.total_posts)
+            total_posts: Number(row.total_posts),
+            ...mapCommunityRankingDetails(row)
           }))
         },
         community_stats: communityStatRows.map((row) => ({
@@ -403,6 +425,36 @@ export const GetMentorshipReportModuleAction = CreateServerAction(
       return { success: true, data }
     } catch (error) {
       console.error("Error building mentorship report module:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+// ─── Advisors ────────────────────────────────────────────────────────────────
+// Counts only (the four advisor KPI cards). The advisor and project rows
+// behind each card are queried live by the drill-down pages, not snapshotted.
+
+export const GetAdvisorsReportModuleAction = CreateServerAction(
+  false,
+  async () => {
+    try {
+      const [totals, projects] = await Promise.all([
+        GetAdvisorTotalsRaw(),
+        GetFypProjectTotalsRaw()
+      ])
+
+      const data: AdvisorsReport = {
+        total: Number(totals.total),
+        active: Number(totals.active),
+        verified: Number(totals.verified),
+        projects: {
+          completed: Number(projects.completed)
+        }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error("Error building advisors report module:", error)
       return { success: false, error }
     }
   }
