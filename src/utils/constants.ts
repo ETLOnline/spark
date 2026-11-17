@@ -385,7 +385,7 @@ export const AI_POST_MODERATION_ENABLED = "ai_Post_Moderation_Enabled"
 
 /** Feature flag key — whether posts in private communities go through post moderation. */
 export const PRIVATE_COMMUNITY_AI_POST_MODERATION_ENABLED =
-  "Private_Community_Post_Moderation_Enabled"
+  "Private_Community_AI_Post_Moderation_Enabled"
 
 /** Max length for a session request's Topic field. */
 export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
