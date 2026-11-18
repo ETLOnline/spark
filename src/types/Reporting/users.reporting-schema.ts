@@ -30,6 +30,9 @@ export const UsersReportSchema = z.object({
   // Keyed dynamically by roles.name (e.g. "Mentor", "Super_Admin") — not a
   // fixed set of keys, the contract's "Mentor" example is illustrative only.
   roles: z.record(z.string(), RoleStatBlockSchema),
+  // Users with no persona (no GLOBAL role), not super admins. Optional because
+  // snapshots saved before this field existed don't have it.
+  incomplete_persona: RoleStatBlockSchema.optional(),
   trends: z.object({
     new_users: z.object({
       daily: z.array(NewUsersTrendEntrySchema),
