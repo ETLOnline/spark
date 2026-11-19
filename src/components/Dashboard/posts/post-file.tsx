@@ -53,7 +53,6 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
           </Link>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
-          <PostAiTags tags={post.ai_tags} />
           {post.hashtags &&
             post.hashtags.map((tag) => (
               <Badge key={tag.id} variant="secondary">
@@ -61,6 +60,7 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
               </Badge>
             ))}
         </div>
+        <PostAiTags tags={post.ai_tags} />
       </CardContent>
       <PostFooter post={post} spaceId={spaceId} />
     </>
