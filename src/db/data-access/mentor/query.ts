@@ -842,39 +842,50 @@ export async function ArchiveGroupSessionSpace(sessionIds: number[]) {
     .returning()
 }
 
-async function incrementCompletedSessionsIfNowComplete(
-  sessionId: number,
-  userId: string
-) {
+/**
+ * Mirrors buildSessionCompletedCondition below: a session only counts as
+ * complete (and bumps the mentor's profile.total_completed_sessions) once
+ * the mentor confirmed attendance AND BOTH mentor and mentee submitted
+ * feedback. Called after any one of those three things happens, from
+ * whichever side (mentor or mentee) triggered it — the counter always lands
+ * on the mentor's profile row regardless of who completed the last step.
+ */
+async function incrementCompletedSessionsIfNowComplete(sessionId: number) {
   const session = await db.query.sessionRequestsTable.findFirst({
     where: eq(sessionRequestsTable.id, sessionId),
-    columns: { mentor_id: true, attendee_confirmations: true }
+    columns: {
+      mentor_id: true,
+      mentee_id: true,
+      status: true,
+      attendee_confirmations: true
+    }
   })
-  if (!session || session.mentor_id !== userId) return
+  if (!session || session.status !== "accepted") return
 
   const mentorConfirmed = !!(
     session.attendee_confirmations as Record<string, string> | null
-  )?.[userId]
+  )?.[session.mentor_id]
   if (!mentorConfirmed) return
 
   const feedback = await db
-    .select({ id: mentorshipFeedbackTable.id })
+    .select({ submitted_by: mentorshipFeedbackTable.submitted_by })
     .from(mentorshipFeedbackTable)
-    .where(
-      and(
-        eq(mentorshipFeedbackTable.session_request_id, sessionId),
-        eq(mentorshipFeedbackTable.submitted_by, userId)
-      )
-    )
-    .limit(1)
-  if (feedback.length === 0) return
+    .where(eq(mentorshipFeedbackTable.session_request_id, sessionId))
+
+  const mentorSubmitted = feedback.some(
+    (f) => f.submitted_by === session.mentor_id
+  )
+  const menteeSubmitted = feedback.some(
+    (f) => f.submitted_by === session.mentee_id
+  )
+  if (!mentorSubmitted || !menteeSubmitted) return
 
   await db
     .update(profileTable)
     .set({
       total_completed_sessions: sql`${profileTable.total_completed_sessions} + 1`
     })
-    .where(eq(profileTable.user_id, userId))
+    .where(eq(profileTable.user_id, session.mentor_id))
 }
 
 /** Record that a user confirmed they attended a session (jsonb patch). */
@@ -903,7 +914,7 @@ export async function ConfirmSessionAttendance(
     .returning()
 
   if (!alreadyConfirmed) {
-    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+    await incrementCompletedSessionsIfNowComplete(sessionId)
   }
 
   return updated
@@ -944,7 +955,7 @@ export async function SubmitMentorshipFeedback(
     .returning()
 
   if (row) {
-    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+    await incrementCompletedSessionsIfNowComplete(sessionId)
   }
 
   return row
@@ -1145,23 +1156,30 @@ export async function ResubmitSessionRequest(
 
 const sessionAttendeeConfirmedFragment = sql`(${sessionRequestsTable.attendee_confirmations} ? ${sessionRequestsTable.mentor_id})`
 
-const sessionFeedbackSubmittedFragment = sql`exists (
+const sessionMentorFeedbackSubmittedFragment = sql`exists (
   select 1 from ${mentorshipFeedbackTable}
   where ${mentorshipFeedbackTable.session_request_id} = ${sessionRequestsTable.id}
     and ${mentorshipFeedbackTable.submitted_by} = ${sessionRequestsTable.mentor_id}
+)`
+
+const sessionMenteeFeedbackSubmittedFragment = sql`exists (
+  select 1 from ${mentorshipFeedbackTable}
+  where ${mentorshipFeedbackTable.session_request_id} = ${sessionRequestsTable.id}
+    and ${mentorshipFeedbackTable.submitted_by} = ${sessionRequestsTable.mentee_id}
 )`
 
 /**
  * session_requests.status never contains "completed" — it's derived the same
  * way incrementCompletedSessionsIfNowComplete (above) decides whether to bump
  * profile.total_completed_sessions: the mentor confirmed attendance AND
- * submitted feedback for this session.
+ * BOTH mentor and mentee submitted feedback for this session.
  */
 const buildSessionCompletedCondition = (): SQL =>
   and(
     eq(sessionRequestsTable.status, "accepted"),
     sessionAttendeeConfirmedFragment,
-    sessionFeedbackSubmittedFragment
+    sessionMentorFeedbackSubmittedFragment,
+    sessionMenteeFeedbackSubmittedFragment
   ) as SQL
 
 const sessionStatusCaseFragment = sql<SessionListStatusFilter>`
@@ -1169,7 +1187,8 @@ const sessionStatusCaseFragment = sql<SessionListStatusFilter>`
     when ${sessionRequestsTable.status} = 'rejected' then 'rejected'
     when ${sessionRequestsTable.status} = 'accepted'
       and ${sessionAttendeeConfirmedFragment}
-      and ${sessionFeedbackSubmittedFragment}
+      and ${sessionMentorFeedbackSubmittedFragment}
+      and ${sessionMenteeFeedbackSubmittedFragment}
     then 'completed'
     else 'pending'
   end

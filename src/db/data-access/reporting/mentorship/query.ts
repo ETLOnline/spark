@@ -41,12 +41,12 @@ export async function GetMentorAvailabilityTotalsRaw(): Promise<RawAvailabilityR
 
 /**
  * "Completed" is not a session_requests.status value — nothing ever writes
- * it. It comes from profile.total_completed_sessions, the same counter the
- * public /mentors listing reads (GetMentors in db/data-access/mentor/query.ts),
- * summed across every Mentor-role user (not just the top-10 shown in the
- * ranking table) so this platform-wide total reflects all mentors.
- * total/rejected are still row counts from session_requests, so
- * total == pending + completed + rejected is an approximation, not exact —
+ * it. It comes from profile.total_completed_sessions, the same raw counter
+ * a mentor's own profile page reads directly (ProfileScreen.tsx) — summed
+ * unfiltered across every profile row, so a session doesn't drop out of the
+ * platform-wide total just because the mentor was later disabled or lost
+ * the Mentor role. total/rejected are still row counts from session_requests,
+ * so total == pending + completed + rejected is an approximation, not exact —
  * "completed" and "total/rejected" come from different sources.
  */
 export async function GetMentorSessionTotalsRaw(): Promise<RawSessionsRow> {
@@ -63,11 +63,8 @@ export async function GetMentorSessionTotalsRaw(): Promise<RawSessionsRow> {
       from session_requests
     ) t,
     (
-      select coalesce(sum(p.total_completed_sessions), 0) as completed
-      from user_roles ur
-      inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
-      inner join users u on u.unique_id = ur.user_id and u.disabled = false
-      inner join profile p on p.user_id = ur.user_id
+      select coalesce(sum(total_completed_sessions), 0) as completed
+      from profile
     ) c
   `)
   return rows[0] as unknown as RawSessionsRow
