@@ -141,16 +141,18 @@ export const GetFypPlatformStatsAction = CreateServerAction(
       const row = await GetFypPlatformStats(filters)
 
       const runningCount = Number(row.running_count)
+      const completedCount = Number(row.completed_count)
       const advisorsCount = Number(row.advisors_count)
       const studentsEngaged = Number(row.students_engaged)
+      const teamsCounted = runningCount + completedCount
 
       const stats: FypPlatformStats = {
         universitiesCount: Number(row.universities_count),
         runningCount,
-        completedCount: Number(row.completed_count),
+        completedCount,
         studentsEngaged,
         avgStudentsPerTeam:
-          runningCount > 0 ? studentsEngaged / runningCount : 0,
+          teamsCounted > 0 ? studentsEngaged / teamsCounted : 0,
         advisorsCount,
         avgFypsPerAdvisor: advisorsCount > 0 ? runningCount / advisorsCount : 0
       }
