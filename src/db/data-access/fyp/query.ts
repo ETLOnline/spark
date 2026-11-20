@@ -359,8 +359,10 @@ export async function GetFypPlatformStats(
         as universities_count,
       count(*) filter (where bucket = 'running') as running_count,
       count(*) filter (where bucket = 'completed') as completed_count,
-      coalesce(sum(team_size) filter (where bucket = 'running'), 0)
-        as students_engaged,
+      coalesce(
+        sum(team_size) filter (where bucket in ('running', 'completed')),
+        0
+      ) as students_engaged,
       count(distinct accepted_by) filter (where bucket = 'running')
         as advisors_count
     from scoped

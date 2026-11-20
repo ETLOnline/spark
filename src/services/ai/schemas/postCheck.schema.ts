@@ -8,7 +8,6 @@ export const postAiTagSchema = z.enum([
   "productive",
   "interesting_idea",
   "inspiring",
-  "asking_for_help",
   "opportunity",
   // Products
   "product",
@@ -44,7 +43,6 @@ export const POST_AI_TAG_LABELS: Record<PostAiTag, string> = {
   productive: "Productive",
   interesting_idea: "Interesting Idea",
   inspiring: "Inspiring",
-  asking_for_help: "Asking for Help",
   opportunity: "Opportunity",
   product: "Product",
   product_launch: "Product Launch",
