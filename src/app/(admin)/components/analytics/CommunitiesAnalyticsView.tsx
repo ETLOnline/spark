@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Download, Network, MessageSquare } from "lucide-react"
+import { ArrowRight, Download, Network, MessageSquare } from "lucide-react"
 import { CommunitiesReport } from "@/src/types/Reporting/Reporting.schema"
 import { useAtomValue } from "jotai"
 import {
@@ -11,18 +11,20 @@ import {
   SnapshotUnavailable
 } from "./AnalyticsPage"
 import { adminAnalyticsStore } from "@/src/store/adminAnalytics/adminAnalyticsStore"
-import { Button } from "@/src/components/ui/button"
+import { Button, buttonVariants } from "@/src/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/src/components/ui/table"
 import { KpiCard } from "./KpiCard"
 import { Progress } from "@/src/components/ui/progress"
 import { Badge } from "@/src/components/ui/badge"
 import { cn } from "@/src/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
 import {
   Card,
   CardContent,
@@ -33,6 +35,14 @@ import {
 import { downloadCsv } from "./csv"
 import { RANK_BADGE_CLASSES } from "../../admin/analytics/_data/constants"
 import { formatCount, getInitials, toPercent } from "./format"
+import {
+  AdminNames,
+  FypBadge,
+  VISIBILITY_LABEL,
+  VisibilityBadge
+} from "./CommunityCells"
+
+export const ADMIN_COMMUNITIES_LIST_URL = "/admin/analytics/communities/list"
 
 const TOP_LIST_SIZE = 10
 type RankMode = "members" | "posts"
@@ -55,59 +65,6 @@ interface CommunityRankingRow {
   visibility?: "public" | "private"
   adminNames?: string[]
   fypEnabled?: boolean
-}
-
-const VISIBILITY_LABEL = { public: "Public", private: "Private" } as const
-
-/** Shown when a field is missing — e.g. a snapshot built before these columns existed. */
-function EmptyCell() {
-  return <span className="text-muted-foreground">—</span>
-}
-
-/**
- * First admin (the creator, when they still hold the role — the backend
- * orders it that way) plus a "+N" badge whose tooltip lists every admin.
- */
-function AdminNames({ names }: { names?: string[] }) {
-  if (!names || names.length === 0) return <EmptyCell />
-
-  const [first, ...rest] = names
-  if (rest.length === 0) return <span>{first}</span>
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <span>{first}</span>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label={`Show all ${names.length} admins`}
-              className="h-auto p-0 rounded-full hover:bg-transparent focus-visible:ring-2"
-            >
-              <Badge
-                variant="outline"
-                className="border-transparent bg-muted text-muted-foreground font-medium px-1.5 cursor-default"
-              >
-                +{rest.length}
-              </Badge>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64">
-            <p className="text-xs font-semibold mb-1">
-              {names.length} community admins
-            </p>
-            <ul className="text-xs space-y-0.5">
-              {names.map((name, i) => (
-                <li key={`${name}-${i}`}>{name}</li>
-              ))}
-            </ul>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
-  )
 }
 
 function CommunityName({ title, slug }: { title: string; slug?: string }) {
@@ -221,7 +178,20 @@ export default function CommunitiesAnalyticsView() {
       ) : (
         <>
           <section className="flex flex-col gap-3 sm:gap-4">
-            <h2 className="text-sm font-semibold">Community performance</h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Community performance</h2>
+              {/* Plain Link: our Button renders extra children, which breaks asChild */}
+              <Link
+                href={ADMIN_COMMUNITIES_LIST_URL}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "gap-1.5"
+                )}
+              >
+                View all communities
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
             <KpiCard
               columns={2}
               items={[
@@ -281,40 +251,40 @@ export default function CommunitiesAnalyticsView() {
               ) : (
                 <>
                   <div className="w-full flex-1 overflow-x-auto">
-                    <table className="w-full min-w-[56rem] text-sm">
-                      <thead>
-                        <tr className="text-xs text-muted-foreground border-b">
-                          <th className="text-left px-3 sm:px-5 py-3 font-medium w-14 sm:w-16">
+                    <Table className="w-full min-w-[56rem] text-sm">
+                      <TableHeader>
+                        <TableRow className="text-xs text-muted-foreground border-b hover:bg-transparent">
+                          <TableHead className="text-left px-3 sm:px-5 py-3 font-medium w-14 sm:w-16">
                             Rank
-                          </th>
-                          <th className="text-left px-3 sm:px-5 py-3 font-medium">
+                          </TableHead>
+                          <TableHead className="text-left px-3 sm:px-5 py-3 font-medium">
                             Community
-                          </th>
-                          <th className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                          </TableHead>
+                          <TableHead className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                             Visibility
-                          </th>
-                          <th className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                          </TableHead>
+                          <TableHead className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                             Community admin
-                          </th>
-                          <th className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                          </TableHead>
+                          <TableHead className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                             FYP enabled
-                          </th>
-                          <th className="text-right px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
+                          </TableHead>
+                          <TableHead className="text-right px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                             {valueCol}
-                          </th>
-                          <th className="text-left px-3 sm:px-5 py-3 font-medium w-28 sm:w-44 whitespace-nowrap">
+                          </TableHead>
+                          <TableHead className="text-left px-3 sm:px-5 py-3 font-medium w-28 sm:w-44 whitespace-nowrap">
                             Relative to #1
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {pageData.map((c) => {
                           return (
-                            <tr
+                            <TableRow
                               key={c.id}
                               className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                             >
-                              <td className="px-3 sm:px-5 py-3">
+                              <TableCell className="px-3 sm:px-5 py-3">
                                 <Badge
                                   variant="outline"
                                   className={cn(
@@ -325,62 +295,34 @@ export default function CommunitiesAnalyticsView() {
                                 >
                                   {c.rank}
                                 </Badge>
-                              </td>
-                              <td className="px-3 sm:px-5 py-3">
+                              </TableCell>
+                              <TableCell className="px-3 sm:px-5 py-3">
                                 <CommunityName title={c.title} slug={c.slug} />
-                              </td>
-                              <td className="px-3 sm:px-5 py-3">
-                                {c.visibility ? (
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "border-transparent font-medium",
-                                      c.visibility === "public"
-                                        ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
-                                        : "bg-muted text-muted-foreground"
-                                    )}
-                                  >
-                                    {VISIBILITY_LABEL[c.visibility]}
-                                  </Badge>
-                                ) : (
-                                  <EmptyCell />
-                                )}
-                              </td>
-                              <td className="px-3 sm:px-5 py-3 whitespace-nowrap">
+                              </TableCell>
+                              <TableCell className="px-3 sm:px-5 py-3">
+                                <VisibilityBadge visibility={c.visibility} />
+                              </TableCell>
+                              <TableCell className="px-3 sm:px-5 py-3 whitespace-nowrap">
                                 <AdminNames names={c.adminNames} />
-                              </td>
-                              <td className="px-3 sm:px-5 py-3">
-                                {c.fypEnabled === undefined ? (
-                                  <EmptyCell />
-                                ) : (
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "border-transparent font-medium",
-                                      c.fypEnabled
-                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                                        : "bg-muted text-muted-foreground"
-                                    )}
-                                  >
-                                    {c.fypEnabled ? "Yes" : "No"}
-                                  </Badge>
-                                )}
-                              </td>
-                              <td className="px-3 sm:px-5 py-3 text-right font-semibold tabular-nums">
+                              </TableCell>
+                              <TableCell className="px-3 sm:px-5 py-3">
+                                <FypBadge enabled={c.fypEnabled} />
+                              </TableCell>
+                              <TableCell className="px-3 sm:px-5 py-3 text-right font-semibold tabular-nums">
                                 {c.value.toLocaleString()}
-                              </td>
-                              <td className="px-3 sm:px-5 py-3">
+                              </TableCell>
+                              <TableCell className="px-3 sm:px-5 py-3">
                                 <Progress
                                   value={toPercent(c.value, topValue) ?? 0}
                                   className="bg-muted"
                                   indicatorClassName="rounded-full duration-300"
                                 />
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           )
                         })}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
 
                   <div className="px-3 sm:px-5 py-3 border-t">

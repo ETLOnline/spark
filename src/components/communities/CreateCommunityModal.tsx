@@ -78,11 +78,13 @@ type CommunityFormData = z.infer<typeof communitySchema>
 
 type CreateCommunityModalProps = {
   onCommunityCreated?: (newCommunity: SelectCommunity) => void
+  onCommunityUpdated?: (updatedCommunity: SelectCommunity) => void
   availableCategories: CommunityCategory[]
 }
 
 export default function CreateCommunityModal({
   onCommunityCreated,
+  onCommunityUpdated,
   availableCategories
 }: CreateCommunityModalProps) {
   const [editMode, setEditMode] = useState<boolean>(false)
@@ -416,6 +418,7 @@ export default function CreateCommunityModal({
         })
 
         setCommunityFormModalVisibility(false)
+        onCommunityUpdated?.(updatedCommunity.data)
 
         toast({
           title: "Community updated",

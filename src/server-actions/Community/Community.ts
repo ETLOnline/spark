@@ -32,6 +32,11 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
+import {
+  AdminCommunityListFilters,
+  GetAdminCommunitiesList
+} from "@/src/db/data-access/communities/adminQuery"
+import { isSuperAdmin } from "@/src/utils/helpers"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -293,7 +298,7 @@ export const GetCommunityByIdAction = CreateServerAction(
 
 export const AttachCommunityUserAction = CreateServerAction(
   true,
-  async (communityId: string, userId: string, roleName?: EntityType,) => {
+  async (communityId: string, userId: string, roleName?: EntityType) => {
     try {
       const roleAssigned = roleName ? roleName : "community_viewer"
       const attachUserRole = await getAndAssignViewerRoles(
@@ -404,6 +409,27 @@ export const LeaveCommunityAction = CreateServerAction(
       return { success: true, data: deleted }
     } catch (error: any) {
       return { success: false, error: error.message || error }
+    }
+  }
+)
+
+// Super Admin only: full, searchable list of every community for the admin panel
+export const GetAdminCommunitiesListAction = CreateServerAction(
+  true,
+  async (filters: AdminCommunityListFilters) => {
+    try {
+      const user = await AuthUserAction()
+      if (!user || !(await isSuperAdmin(user))) {
+        throw new Error("Forbidden", { cause: 403 })
+      }
+      const data = await GetAdminCommunitiesList(filters)
+      return { success: true, data }
+    } catch (error: any) {
+      console.error("Error in GetAdminCommunitiesListAction:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to fetch communities."
+      }
     }
   }
 )

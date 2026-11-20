@@ -148,7 +148,7 @@ export async function GetCommunityCategoriesRaw(): Promise<RawCategoryRow[]> {
  * against duplicate user_roles rows (no unique constraint on that table).
  * Must be used where `c` is the communities alias.
  */
-const communityAdminLateral = sql`
+export const communityAdminLateral = sql`
   left join lateral (
     select coalesce(
       array_agg(
