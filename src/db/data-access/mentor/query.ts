@@ -211,6 +211,29 @@ const buildAvailabilityCondition = (
   )
 }
 
+/**
+ * Live count, same condition as buildSessionCompletedCondition below and
+ * GetMentorSessionTotalsRaw/GetMentorRankingRaw (reporting/mentorship/query.ts)
+ * — not profile.total_completed_sessions, a separately-maintained counter
+ * that can drift from what actually satisfies this condition.
+ */
+const completedSessionsCountFragment = (
+  mentorIdColumn: SQLWrapper
+) => sql<number>`(
+  select count(*) from session_requests csr
+  where csr.mentor_id = ${mentorIdColumn}
+    and csr.status = 'accepted'
+    and (csr.attendee_confirmations ? csr.mentor_id)
+    and exists (
+      select 1 from mentorship_feedback mf
+      where mf.session_request_id = csr.id and mf.submitted_by = csr.mentor_id
+    )
+    and exists (
+      select 1 from mentorship_feedback mf
+      where mf.session_request_id = csr.id and mf.submitted_by = csr.mentee_id
+    )
+)`
+
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
@@ -255,7 +278,10 @@ export async function GetMentors(filters?: GetMentorFilters) {
       .select({
         user: usersTable,
         profile: profileTable,
-        totalCount: sql<number>`count(*) over()`
+        totalCount: sql<number>`count(*) over()`,
+        completedSessionsCount: completedSessionsCountFragment(
+          usersTable.unique_id
+        )
       })
       .from(userRolesTable)
       .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
@@ -281,7 +307,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     const mentors = mentorRows.map((row) => ({
       ...row.user,
       profile: row.profile,
-      completedSessionsCount: row.profile.total_completed_sessions ?? 0,
+      completedSessionsCount: Number(row.completedSessionsCount ?? 0),
       userTags: userTags.filter((ut) => ut.user_id === row.user.unique_id)
     }))
 
@@ -1237,7 +1263,9 @@ export async function GetMentorsList(
       last_name: usersTable.last_name,
       email: usersTable.email,
       linkedin_url: profileTable.linkedin_url,
-      total_completed_sessions: profileTable.total_completed_sessions,
+      total_completed_sessions: completedSessionsCountFragment(
+        usersTable.unique_id
+      ),
       total_count: sql<number>`count(*) over()`
     })
     .from(userRolesTable)
