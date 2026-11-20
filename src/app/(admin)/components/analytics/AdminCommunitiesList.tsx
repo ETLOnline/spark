@@ -21,11 +21,13 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetAdminCommunitiesListAction } from "@/src/server-actions/Community/Community"
-import type { AdminCommunityListItem } from "@/src/db/data-access/communities/adminQuery"
+import {
+  GetAdminCommunitiesListAction,
+  type AdminCommunityListItem
+} from "@/src/server-actions/Community/Community"
 import type { PaginationType } from "@/src/components/common/types/pagination.type"
 import { AnalyticsPage, SnapshotUnavailable } from "./AnalyticsPage"
-import { AdminNames, FypBadge, VisibilityBadge } from "./CommunityCells"
+import { FypBadge, VisibilityBadge } from "./CommunityCells"
 import { formatDate, getInitials } from "./format"
 
 const PAGE_SIZE = 10
@@ -125,7 +127,7 @@ export default function AdminCommunitiesList() {
                 setSearchInput(e.target.value)
                 applySearch(e.target.value)
               }}
-              placeholder="Search by name or slug"
+              placeholder="Search by name"
               aria-label="Search communities"
               className="pl-9"
             />
@@ -169,9 +171,6 @@ export default function AdminCommunitiesList() {
                     </TableHead>
                     <TableHead className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                       Visibility
-                    </TableHead>
-                    <TableHead className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
-                      Community admin
                     </TableHead>
                     <TableHead className="text-left px-3 sm:px-5 py-3 font-medium whitespace-nowrap">
                       FYP enabled
@@ -220,12 +219,6 @@ export default function AdminCommunitiesList() {
                         </TableCell>
                         <TableCell className="px-3 sm:px-5 py-3">
                           <VisibilityBadge visibility={c.visibility} />
-                        </TableCell>
-                        <TableCell
-                          className="px-3 sm:px-5 py-3 whitespace-nowrap"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <AdminNames names={c.admin_names} />
                         </TableCell>
                         <TableCell className="px-3 sm:px-5 py-3">
                           <FypBadge enabled={c.fyp_enabled} />

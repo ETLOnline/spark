@@ -32,10 +32,6 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
-import {
-  AdminCommunityListFilters,
-  GetAdminCommunitiesList
-} from "@/src/db/data-access/communities/adminQuery"
 import { isSuperAdmin } from "@/src/utils/helpers"
 
 export const CreateCommunityAction = CreateServerAction(
@@ -413,17 +409,53 @@ export const LeaveCommunityAction = CreateServerAction(
   }
 )
 
-// Super Admin only: full, searchable list of every community for the admin panel
+/** Only the fields the admin communities table shows. */
+export interface AdminCommunityListItem {
+  id: string
+  title: string
+  slug: string
+  visibility: "public" | "private"
+  category: string | null
+  fyp_enabled: boolean
+  total_members: number
+  created_at: string | null
+}
+
+// Super Admin only: every community for the admin panel, using the same
+// query as the public communities page (search by title, newest first).
 export const GetAdminCommunitiesListAction = CreateServerAction(
   true,
-  async (filters: AdminCommunityListFilters) => {
+  async ({
+    searchTerm,
+    page = 1,
+    limit = 10
+  }: {
+    searchTerm?: string
+    page?: number
+    limit?: number
+  }) => {
     try {
       const user = await AuthUserAction()
       if (!user || !(await isSuperAdmin(user))) {
         throw new Error("Forbidden", { cause: 403 })
       }
-      const data = await GetAdminCommunitiesList(filters)
-      return { success: true, data }
+      const { communities, pagination } = await GetCommunities(
+        user,
+        { searchTerm, sortBy: "newest" },
+        page,
+        limit
+      )
+      const items: AdminCommunityListItem[] = communities.map((c) => ({
+        id: c.id,
+        title: c.title,
+        slug: c.slug,
+        visibility: c.type === "public" ? "public" : "private",
+        category: c.category?.name ?? null,
+        fyp_enabled: !!c.is_FYP_enable,
+        total_members: c.communityMembers?.length ?? 0,
+        created_at: c.created_at ?? null
+      }))
+      return { success: true, data: { communities: items, pagination } }
     } catch (error: any) {
       console.error("Error in GetAdminCommunitiesListAction:", error)
       return {
