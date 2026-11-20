@@ -89,14 +89,13 @@ import pusherClient from "@/src/services/realtime/PusherClient"
 import { EntityUpdateBroadCast, permissions } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import RankingCard from "./RankingCard"
+import { ADMIN_COMMUNITIES_LIST_URL } from "@/src/app/(admin)/admin/analytics/_data/constants"
 import FacultyDashboardCard from "./FacultyDashboardCard"
 import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
 import {
   GetCommunityLeaderboardAction,
   GetCurrentUserRankAction
 } from "@/src/server-actions/Communities/CommunityRanking"
-
-const ADMIN_COMMUNITIES_LIST_URL = "/admin/analytics/communities/list"
 
 /** The detail payload in the shape the community store and edit modal expect. */
 const toSelectCommunity = (

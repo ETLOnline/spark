@@ -1,6 +1,9 @@
 // Presentational constants only — every number shown on the analytics pages
 // comes from the admin report snapshot (GetReportSnapshotAction).
 
+/** Admin page listing every community (search + pagination). */
+export const ADMIN_COMMUNITIES_LIST_URL = "/admin/analytics/communities/list"
+
 /** Badge colours for the top three positions in analytics rankings (rank 4+ is a plain number). */
 export const RANK_BADGE_CLASSES: Record<number, string> = {
   1: "bg-amber-100 text-amber-700 border-amber-300 font-bold",

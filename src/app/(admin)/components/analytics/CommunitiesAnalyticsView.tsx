@@ -33,7 +33,10 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { downloadCsv } from "./csv"
-import { RANK_BADGE_CLASSES } from "../../admin/analytics/_data/constants"
+import {
+  ADMIN_COMMUNITIES_LIST_URL,
+  RANK_BADGE_CLASSES
+} from "../../admin/analytics/_data/constants"
 import { formatCount, getInitials, toPercent } from "./format"
 import {
   AdminNames,
@@ -41,8 +44,6 @@ import {
   VISIBILITY_LABEL,
   VisibilityBadge
 } from "./CommunityCells"
-
-export const ADMIN_COMMUNITIES_LIST_URL = "/admin/analytics/communities/list"
 
 const TOP_LIST_SIZE = 10
 type RankMode = "members" | "posts"
