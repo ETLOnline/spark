@@ -70,12 +70,14 @@ const getVerification = (user: UsersListUser): UserVerification =>
 type UsersListProps = {
   // role selected in the page's role chips (roles.name); undefined = all users
   role?: string
+  // the "Incomplete Persona" chip: users who haven't picked a persona yet
+  incompletePersona?: boolean
 }
 
 // Admin list of every user with verification filter, search and disable/enable. The role
 // filter comes from the role chips at the top of the page.
 // Data is fetched live (GetAdminUsersAction), filtered and paginated on the server.
-export function UsersList({ role }: UsersListProps) {
+export function UsersList({ role, incompletePersona }: UsersListProps) {
   const { toast } = useToast()
   const [users, setUsers] = useState<UsersListUser[]>([])
   const [pagination, setPagination] = useState<PaginationType>()
@@ -92,12 +94,13 @@ export function UsersList({ role }: UsersListProps) {
   // a new role from the page's chips starts again from page 1
   useEffect(() => {
     setPage(1)
-  }, [role])
+  }, [role, incompletePersona])
 
   useEffect(() => {
     const fetchUsers = async () => {
       const res = await getUsers({
         role,
+        incompletePersona,
         verified:
           verification === "all" ? undefined : verification === "verified",
         search: debouncedSearch,
@@ -110,7 +113,7 @@ export function UsersList({ role }: UsersListProps) {
       }
     }
     fetchUsers()
-  }, [role, verification, debouncedSearch, page])
+  }, [role, incompletePersona, verification, debouncedSearch, page])
 
   const total = pagination?.total ?? 0
   const totalPages = pagination?.totalPages ?? 1

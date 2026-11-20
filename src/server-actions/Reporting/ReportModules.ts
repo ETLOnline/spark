@@ -4,7 +4,8 @@ import { CreateServerAction } from ".."
 import {
   GetUserTotalsRaw,
   GetUserRoleBreakdownRaw,
-  GetProfileSignupTimestampsRaw
+  GetProfileSignupTimestampsRaw,
+  GetIncompletePersonaStatsRaw
 } from "@/src/db/data-access/reporting/users/query"
 import {
   GetCommunityTotalsRaw,
@@ -185,11 +186,13 @@ export const GetUsersReportModuleAction = CreateServerAction(
   false,
   async () => {
     try {
-      const [totals, roleRows, signupRows] = await Promise.all([
-        GetUserTotalsRaw(),
-        GetUserRoleBreakdownRaw(),
-        GetProfileSignupTimestampsRaw()
-      ])
+      const [totals, roleRows, signupRows, incompletePersona] =
+        await Promise.all([
+          GetUserTotalsRaw(),
+          GetUserRoleBreakdownRaw(),
+          GetProfileSignupTimestampsRaw(),
+          GetIncompletePersonaStatsRaw()
+        ])
 
       // users.active/inactive/online (and the per-role equivalents) are
       // always null — no status/activity/presence column exists on `users`.
@@ -212,6 +215,13 @@ export const GetUsersReportModuleAction = CreateServerAction(
         completed_profiles: Number(totals.completed_profiles),
         online: null,
         roles,
+        incomplete_persona: {
+          total: Number(incompletePersona.total),
+          active: null,
+          verified: Number(incompletePersona.verified),
+          completed_profiles: Number(incompletePersona.completed_profiles),
+          online: null
+        },
         trends: {
           new_users: buildNewUserTrends(parseSignupDates(signupRows))
         }
