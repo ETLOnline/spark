@@ -2,7 +2,6 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
-import { Linkedin } from "lucide-react"
 import {
   Card,
   CardDescription,
@@ -27,7 +26,6 @@ import {
   ADVISOR_FILTER_TITLES,
   ADVISOR_PAGE_SIZE,
   ADVISOR_TABLE_COLUMNS,
-  DRILLDOWN_LINK_CLASS,
   emptyPage,
   toExternalUrl
 } from "./constants"
@@ -116,10 +114,9 @@ export function AdvisorsTable({ filter, search, page }: AdvisorsTableProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       title={a.linkedinUrl}
-                      className={`inline-flex items-center gap-1 ${DRILLDOWN_LINK_CLASS}`}
+                      className="underline underline-offset-2 text-[hsl(174_78%_30%)] hover:text-[hsl(174_78%_24%)] dark:text-primary dark:hover:text-[hsl(174_78%_70%)]"
                     >
-                      <Linkedin aria-hidden="true" className="w-3.5 h-3.5" />
-                      View Profile
+                      Click here
                     </Link>
                   ) : (
                     <span className="text-muted-foreground">Not added</span>

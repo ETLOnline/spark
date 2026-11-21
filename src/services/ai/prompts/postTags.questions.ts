@@ -49,14 +49,6 @@ export const POST_TAG_QUESTIONS = {
       false: "The post does not try to motivate anyone."
     }
   }),
-  asking_for_help: (textPath: string): NoulQuestion => ({
-    type: "noul",
-    instructions: `Is the author of \`${textPath}\` asking the community for help, feedback, or advice?`,
-    criteria: {
-      true: "The author asks a question or requests feedback, e.g. 'how do I deploy this?' or 'thoughts on my design?'.",
-      false: "The author asks nothing of readers."
-    }
-  }),
   opportunity: (textPath: string): NoulQuestion => ({
     type: "noul",
     instructions: `Does \`${textPath}\` share an opportunity members can apply for or join, such as a job, internship, scholarship, event, or program?`,

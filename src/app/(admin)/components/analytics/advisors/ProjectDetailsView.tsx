@@ -229,11 +229,11 @@ export default function ProjectDetailsView({ spaceId }: { spaceId: string }) {
           {project.students.length === 0 ? (
             <p className="text-sm text-muted-foreground">No students listed</p>
           ) : (
-            <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 text-sm">
+            <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
               {project.students.map((s, i) => (
                 <div key={`${i}-${s.registrationNumber}`} className="contents">
-                  <dt className="font-medium">{s.name}</dt>
-                  <dd className="text-muted-foreground tabular-nums">
+                  <dt>{s.name}</dt>
+                  <dd className="text-muted-foreground tabular-nums [overflow-wrap:anywhere]">
                     {s.registrationNumber}
                   </dd>
                 </div>

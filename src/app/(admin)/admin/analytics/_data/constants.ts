@@ -69,3 +69,7 @@ export const MONTH_LABELS = [
   "Nov",
   "Dec"
 ]
+
+/** Users page role chips: "all users" chip, and the chip for users with no persona yet (not a real role name, so it can't clash with one). */
+export const ALL_ROLES = "all"
+export const INCOMPLETE_PERSONA = "incomplete_persona"
