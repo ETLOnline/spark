@@ -5,7 +5,10 @@ import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/pro
 import { GetMilestoneByIdAction } from "@/src/server-actions/Milestone/Milestone"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
-import { GetFypProjectDetailAction } from "@/src/server-actions/Fyp/Fyp"
+import {
+  GetFypCommunityTitleAction,
+  GetFypProjectDetailAction
+} from "@/src/server-actions/Fyp/Fyp"
 import { GetSessionDetailsAction } from "@/src/server-actions/Mentor/MentorActions"
 import { GetAdminFypProjectTitleAction } from "@/src/server-actions/Advisors/AdminAdvisors"
 
@@ -370,6 +373,17 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
                     }
                   }
                 ]
+              },
+              {
+                path: "/[communityId]",
+                dynamicLabelFetcher: async (communityId: string) => {
+                  try {
+                    const res = await GetFypCommunityTitleAction(communityId)
+                    return res?.data || `Community ${communityId}`
+                  } catch {
+                    return `Community ${communityId}`
+                  }
+                }
               }
             ]
           },
