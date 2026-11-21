@@ -307,6 +307,7 @@ export type CommunityDetailData = {
   description: string
   cover_image: string
   category: string
+  category_id: string
   slug: string
   type: "public" | "private"
   is_FYP_enable: boolean
@@ -370,6 +371,7 @@ export async function GetCommunityBySlug(
       description: communityDetails.description || "",
       cover_image: communityDetails.cover_image || "",
       category: categoryName,
+      category_id: communityDetails.category_id,
       slug: communityDetails.slug,
       type:
         communityDetails.type === "public" ||
