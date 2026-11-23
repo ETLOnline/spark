@@ -227,7 +227,7 @@ export default function AdminCommunitiesList() {
                           {c.total_members.toLocaleString()}
                         </TableCell>
                         <TableCell className="px-3 sm:px-5 py-3 whitespace-nowrap text-muted-foreground">
-                          {formatDate(c.created_at)}
+                          {formatDate(c.created_at) ?? "—"}
                         </TableCell>
                         <TableCell className="px-3 sm:px-5 py-3 text-muted-foreground">
                           <ChevronRight className="w-4 h-4" />
