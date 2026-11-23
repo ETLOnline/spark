@@ -4,6 +4,8 @@ import { usersTable } from "../../../schema"
 
 export interface GetAdminUsersFilters {
   role?: string
+  // users who haven't picked a persona yet (no GLOBAL role, not super admins)
+  incompletePersona?: boolean
   verified?: boolean
   search?: string
   page?: number
@@ -13,12 +15,25 @@ export interface GetAdminUsersFilters {
 // Paginated users list for the admin Users page (live data, not snapshots).
 // role = roles.name of a GLOBAL role; verified = profile.verified
 export async function GetAdminUsers(filters: GetAdminUsersFilters) {
-  const { role, verified, search, page = 1, limit = 10 } = filters
+  const {
+    role,
+    incompletePersona,
+    verified,
+    search,
+    page = 1,
+    limit = 10
+  } = filters
 
   const whereClause: (SQLWrapper | SQL | undefined)[] = []
   if (role) {
     whereClause.push(
       sql`exists (select 1 from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = ${usersTable.unique_id} and r.role_type = 'GLOBAL' and r.name = ${role})`
+    )
+  }
+  if (incompletePersona) {
+    // same rule as GetIncompletePersonaStatsRaw in the users report
+    whereClause.push(
+      sql`not exists (select 1 from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = ${usersTable.unique_id} and (r.role_type = 'GLOBAL' or (r.role_type = 'SYSTEM' and r.name = 'Super_Admin')))`
     )
   }
   if (verified !== undefined) {

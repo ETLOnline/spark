@@ -37,7 +37,7 @@ export async function GetUserRoleBreakdownRaw(): Promise<RawUserRoleRow[]> {
   const rows = await db.execute(sql`
     select
       r.name as role_name,
-      count(ur.user_id) as total,
+      count(distinct ur.user_id) as total,
       count(*) filter (where p.verified = true) as verified,
       count(*) filter (where p.is_profile_completed <> 0) as completed_profiles
     from roles r
@@ -50,6 +50,34 @@ export async function GetUserRoleBreakdownRaw(): Promise<RawUserRoleRow[]> {
     group by r.name
   `)
   return rows as unknown as RawUserRoleRow[]
+}
+
+/**
+ * Users who signed up but never picked a persona: no GLOBAL role (the same
+ * check the dashboard uses to send them back to /personas). Super admins are
+ * left out because they skip persona selection on purpose.
+ */
+export async function GetIncompletePersonaStatsRaw(): Promise<RawUserTotalsRow> {
+  const rows = await db.execute(sql`
+    select
+      count(*) as total,
+      count(*) filter (where p.verified = true) as verified,
+      count(*) filter (where p.is_profile_completed <> 0) as completed_profiles
+    from users u
+    left join profile p on p.user_id = u.unique_id
+    where u.disabled = false
+      and not exists (
+        select 1
+        from user_roles ur
+        inner join roles r on r.id = ur.role_id
+        where ur.user_id = u.unique_id
+          and (
+            r.role_type = 'GLOBAL'
+            or (r.role_type = 'SYSTEM' and r.name = 'Super_Admin')
+          )
+      )
+  `)
+  return rows[0] as unknown as RawUserTotalsRow
 }
 
 /**

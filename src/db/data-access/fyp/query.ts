@@ -20,6 +20,28 @@ const COMPLETED_MILESTONE_STATUSES = [
   MilestoneStatus.VERIFIED
 ]
 
+/**
+ * Shared search condition over the `enriched` CTE (aliased `e`), used by
+ * both GetFypDirectory and GetFypPlatformStats so the project list and its
+ * summary stats never disagree on what matches a search term. Matches
+ * first/last name individually (so "Umer" or "Ali" alone still work) AND
+ * the concatenated full name (so "Umer Ali" matches too — neither
+ * advisor_first_name nor advisor_last_name alone contains the full
+ * two-word string).
+ */
+const buildFypSearchCondition = (searchTerm?: string) => {
+  const q = searchTerm?.trim() ? `%${searchTerm.trim()}%` : null
+  if (!q) return sql``
+
+  return sql`and (
+    e.space_name ilike ${q}
+    or e.advisor_first_name ilike ${q}
+    or e.advisor_last_name ilike ${q}
+    or (trim(e.advisor_first_name) || ' ' || trim(e.advisor_last_name)) ilike ${q}
+    or e.tech_stack ilike ${q}
+  )`
+}
+
 export async function GetFypDashboardProjects(
   filters: FypDashboardFilters = {},
   page: number = 1,
@@ -332,7 +354,6 @@ export async function GetFypPlatformStats(
   filters: FypPlatformStatsFilters = {}
 ): Promise<RawFypPlatformStats> {
   const { communityId, academicYear, domainTagId, searchTerm } = filters
-  const q = searchTerm?.trim() ? `%${searchTerm.trim()}%` : null
 
   const rows = await db.execute(sql`
     with ${fypEnrichedCte},
@@ -343,24 +364,17 @@ export async function GetFypPlatformStats(
         ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
         ${academicYear ? sql`and e.academic_year = ${academicYear}` : sql``}
         ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
-        ${
-          q
-            ? sql`and (
-                e.space_name ilike ${q}
-                or e.advisor_first_name ilike ${q}
-                or e.advisor_last_name ilike ${q}
-                or e.tech_stack ilike ${q}
-              )`
-            : sql``
-        }
+        ${buildFypSearchCondition(searchTerm)}
     )
     select
       count(distinct community_id) filter (where bucket = 'running')
         as universities_count,
       count(*) filter (where bucket = 'running') as running_count,
       count(*) filter (where bucket = 'completed') as completed_count,
-      coalesce(sum(team_size) filter (where bucket = 'running'), 0)
-        as students_engaged,
+      coalesce(
+        sum(team_size) filter (where bucket in ('running', 'completed')),
+        0
+      ) as students_engaged,
       count(distinct accepted_by) filter (where bucket = 'running')
         as advisors_count
     from scoped
@@ -376,7 +390,6 @@ export async function GetFypDirectory(
 ): Promise<RawFypDirectoryRow[]> {
   const { communityId, academicYear, domainTagId, bucket, searchTerm } = filters
   const offset = (page - 1) * limit
-  const q = searchTerm?.trim() ? `%${searchTerm.trim()}%` : null
 
   const rows = await db.execute(sql`
     with ${fypEnrichedCte},
@@ -388,16 +401,7 @@ export async function GetFypDirectory(
         ${academicYear ? sql`and e.academic_year = ${academicYear}` : sql``}
         ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
         ${bucket ? sql`and e.bucket = ${bucket}` : sql`and e.bucket is not null`}
-        ${
-          q
-            ? sql`and (
-                e.space_name ilike ${q}
-                or e.advisor_first_name ilike ${q}
-                or e.advisor_last_name ilike ${q}
-                or e.tech_stack ilike ${q}
-              )`
-            : sql``
-        }
+        ${buildFypSearchCondition(searchTerm)}
       order by e.space_name asc
       limit ${limit} offset ${offset}
     )

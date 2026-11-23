@@ -1,6 +1,9 @@
 // Presentational constants only — every number shown on the analytics pages
 // comes from the admin report snapshot (GetReportSnapshotAction).
 
+/** Admin page listing every community (search + pagination). */
+export const ADMIN_COMMUNITIES_LIST_URL = "/admin/analytics/communities/list"
+
 /** Badge colours for the top three positions in analytics rankings (rank 4+ is a plain number). */
 export const RANK_BADGE_CLASSES: Record<number, string> = {
   1: "bg-amber-100 text-amber-700 border-amber-300 font-bold",
@@ -69,3 +72,7 @@ export const MONTH_LABELS = [
   "Nov",
   "Dec"
 ]
+
+/** Users page role chips: "all users" chip, and the chip for users with no persona yet (not a real role name, so it can't clash with one). */
+export const ALL_ROLES = "all"
+export const INCOMPLETE_PERSONA = "incomplete_persona"
