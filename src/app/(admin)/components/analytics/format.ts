@@ -75,17 +75,6 @@ export function toExactPercentages(values: number[], decimals = 1): number[] {
   return scaled.map((v) => v / scale)
 }
 
-/** ISO timestamp → "Nov 20, 2026" in the viewer's locale; "—" when missing. */
-export function formatDate(iso: string | null | undefined) {
-  return iso
-    ? new Date(iso).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      })
-    : "—"
-}
-
 export function getInitials(name: string) {
   return name
     .split(" ")
