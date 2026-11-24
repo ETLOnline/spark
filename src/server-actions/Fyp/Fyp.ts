@@ -6,9 +6,9 @@ import {
   GetFypCommunityTitle,
   GetFypDashboardProjects,
   GetFypDashboardStats,
-  GetFypDirectory,
   GetFypPlatformStats,
   GetFypProjectDetail,
+  GetFypSpaces,
   GetFypUniversitiesOverview
 } from "@/src/db/data-access/fyp/query"
 import {
@@ -16,11 +16,11 @@ import {
   FypDashboardProject,
   FypDashboardStats,
   FypDashboardStatsFilters,
-  FypDirectoryFilters,
-  FypDirectoryProject,
   FypPlatformStats,
   FypPlatformStatsFilters,
   FypProjectDetail,
+  FypSpace,
+  FypSpacesFilters,
   FypUniversityOverview
 } from "@/src/types/Fyp/Fyp"
 
@@ -144,7 +144,7 @@ export const GetFypPlatformStatsAction = CreateServerAction(
       const completedCount = Number(row.completed_count)
       const advisorsCount = Number(row.advisors_count)
       const studentsEngaged = Number(row.students_engaged)
-      const teamsCounted = runningCount + completedCount
+      const teamsCounted = Number(row.teams_count)
 
       const stats: FypPlatformStats = {
         universitiesCount: Number(row.universities_count),
@@ -165,17 +165,17 @@ export const GetFypPlatformStatsAction = CreateServerAction(
   }
 )
 
-export const GetFypDirectoryAction = CreateServerAction(
+export const GetFypSpacesAction = CreateServerAction(
   true,
   async (
-    filters: FypDirectoryFilters = {},
+    filters: FypSpacesFilters = {},
     page: number = 1,
     limit: number = 10
   ) => {
     try {
-      const rows = await GetFypDirectory(filters, page, limit)
+      const rows = await GetFypSpaces(filters, page, limit)
 
-      const projects: FypDirectoryProject[] = rows.map((row) => ({
+      const spaces: FypSpace[] = rows.map((row) => ({
         spaceId: row.space_id,
         spaceSlug: row.space_slug,
         channelSlug: row.channel_slug,
@@ -184,20 +184,14 @@ export const GetFypDirectoryAction = CreateServerAction(
         universityTitle: row.community_title,
         domain: row.domain,
         techStack: splitTechStack(row.tech_stack),
-        teamSize: row.group_members?.length ?? 0,
-        universitySupervisor: joinName(
-          row.supervisor_first_name,
-          row.supervisor_last_name
-        ),
+        teamSize: Number(row.team_size),
         industryAdvisor: joinName(
           row.advisor_first_name,
           row.advisor_last_name
         ),
         requestId: row.request_id,
         requestStatus: row.request_status,
-        bucket: row.bucket,
-        milestonesCompleted: Number(row.milestones_completed),
-        milestonesTotal: Number(row.milestones_total)
+        status: row.is_completed ? "completed" : "running"
       }))
 
       const total = rows.length > 0 ? Number(rows[0].total_count) : 0
@@ -205,7 +199,7 @@ export const GetFypDirectoryAction = CreateServerAction(
       return {
         success: true,
         data: {
-          projects,
+          spaces,
           pagination: {
             total,
             page,
@@ -215,7 +209,7 @@ export const GetFypDirectoryAction = CreateServerAction(
         }
       }
     } catch (error) {
-      console.error("Error fetching FYP directory:", error)
+      console.error("Error fetching FYP spaces:", error)
       return { success: false, error }
     }
   }

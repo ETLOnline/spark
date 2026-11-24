@@ -22,8 +22,8 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import PaginationComponent from "@/src/components/common/Pagination"
 import type { PaginationType } from "@/src/components/common/types/pagination.type"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetFypDirectoryAction } from "@/src/server-actions/Fyp/Fyp"
-import type { FypDirectoryProject } from "@/src/types/Fyp/Fyp"
+import { GetFypSpacesAction } from "@/src/server-actions/Fyp/Fyp"
+import type { FypSpace } from "@/src/types/Fyp/Fyp"
 
 export default function CompletedFypsListView() {
   const router = useRouter()
@@ -32,19 +32,19 @@ export default function CompletedFypsListView() {
 
   const [searchInput, setSearchInput] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
-  const [projects, setProjects] = useState<FypDirectoryProject[]>([])
+  const [projects, setProjects] = useState<FypSpace[]>([])
   const [pagination, setPagination] = useState<PaginationType>()
 
-  const [loading, , , fetchDirectory] = useServerAction(GetFypDirectoryAction)
+  const [loading, , , fetchDirectory] = useServerAction(GetFypSpacesAction)
 
   useEffect(() => {
     fetchDirectory(
-      { bucket: "completed", searchTerm: searchTerm || undefined },
+      { status: "completed", searchTerm: searchTerm || undefined },
       page,
       10
     ).then((res) => {
       if (res?.success && res.data) {
-        setProjects(res.data.projects)
+        setProjects(res.data.spaces)
         setPagination(res.data.pagination)
       }
     })
@@ -70,7 +70,7 @@ export default function CompletedFypsListView() {
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold">Completed FYPs</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Every Final Year Project that has finished all its milestones.
+            Every Final Year Project whose last milestone has been verified.
           </p>
         </div>
       </div>

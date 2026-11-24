@@ -31,10 +31,10 @@ import type { PaginationType } from "@/src/components/common/types/pagination.ty
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   GetFypCommunityTitleAction,
-  GetFypDirectoryAction
+  GetFypSpacesAction
 } from "@/src/server-actions/Fyp/Fyp"
 import { GetAllTAgsAction } from "@/src/server-actions/Tag/Tag"
-import type { FypDirectoryProject } from "@/src/types/Fyp/Fyp"
+import type { FypBucket, FypSpace } from "@/src/types/Fyp/Fyp"
 import type { SelectTag } from "@/src/db/schema"
 import { downloadCsv } from "../csv"
 
@@ -51,17 +51,17 @@ export default function FypCommunityDirectoryView({
   const searchParams = useSearchParams()
   const page = parseInt(searchParams.get("page") || "1", 10)
   const domain = searchParams.get("domain") || ALL
+  const status = searchParams.get("status") || ALL
 
   const [searchInput, setSearchInput] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [communityTitle, setCommunityTitle] = useState<string | null>(null)
   const [domainOptions, setDomainOptions] = useState<SelectTag[]>([])
-  const [projects, setProjects] = useState<FypDirectoryProject[]>([])
+  const [projects, setProjects] = useState<FypSpace[]>([])
   const [pagination, setPagination] = useState<PaginationType>()
 
-  const [directoryLoading, , , fetchDirectory] = useServerAction(
-    GetFypDirectoryAction
-  )
+  const [directoryLoading, , , fetchDirectory] =
+    useServerAction(GetFypSpacesAction)
   const [, , , fetchCommunityTitle] = useServerAction(
     GetFypCommunityTitleAction
   )
@@ -83,18 +83,18 @@ export default function FypCommunityDirectoryView({
         communityId,
         domainTagId: domain !== ALL ? Number(domain) : undefined,
         searchTerm: searchTerm || undefined,
-        bucket: "running"
+        status: status !== ALL ? (status as FypBucket) : undefined
       },
       page,
       10
     ).then((res) => {
       if (res?.success && res.data) {
-        setProjects(res.data.projects)
+        setProjects(res.data.spaces)
         setPagination(res.data.pagination)
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [communityId, domain, searchTerm, page])
+  }, [communityId, domain, status, searchTerm, page])
 
   const updateParams = (updates: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -118,6 +118,7 @@ export default function FypCommunityDirectoryView({
     setSearchTerm("")
     const params = new URLSearchParams(searchParams.toString())
     params.delete("domain")
+    params.delete("status")
     params.set("page", "1")
     router.replace(`?${params.toString()}`, { scroll: false })
   }
@@ -125,9 +126,10 @@ export default function FypCommunityDirectoryView({
   const exportCsv = () => {
     downloadCsv(
       `fyp-directory-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Project", "Domain", "Tech stack", "Advisor", "Team"],
+      ["Project", "Status", "Domain", "Tech stack", "Advisor", "Team"],
       projects.map((p) => [
         p.projectName,
+        p.status === "completed" ? "Completed" : "Running",
         p.domain ?? "",
         p.techStack.join("; "),
         p.industryAdvisor ?? "",
@@ -157,6 +159,19 @@ export default function FypCommunityDirectoryView({
 
       <Card>
         <CardContent className="p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Select
+            value={status}
+            onValueChange={(value) => updateParams({ status: value })}
+          >
+            <SelectTrigger className="sm:w-[160px]">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All statuses</SelectItem>
+              <SelectItem value="running">Running</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
           <Select
             value={domain}
             onValueChange={(value) => updateParams({ domain: value })}
@@ -219,6 +234,7 @@ export default function FypCommunityDirectoryView({
               <TableHeader>
                 <TableRow>
                   <TableHead>Project</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Tech stack</TableHead>
                   <TableHead>Advisor</TableHead>
@@ -227,9 +243,24 @@ export default function FypCommunityDirectoryView({
               </TableHeader>
               <TableBody>
                 {projects.map((p) => (
-                  <TableRow key={p.spaceId}>
+                  <TableRow
+                    key={p.spaceId}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      router.push(
+                        `/channels/${p.channelSlug}/spaces/${p.spaceSlug}`
+                      )
+                    }
+                  >
                     <TableCell className="font-medium">
                       {p.projectName}
+                    </TableCell>
+                    <TableCell>
+                      {p.status === "completed" ? (
+                        <Badge>Completed</Badge>
+                      ) : (
+                        <Badge variant="secondary">Running</Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {p.domain ? (
