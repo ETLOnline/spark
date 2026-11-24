@@ -50,20 +50,24 @@ export const lastMilestoneCte = sql`
 `
 
 /**
+ * Each space's most recent advisor request → every advisor_requests column.
+ * A space can be re-requested after a rejection/expiry, so a plain join to
+ * advisor_requests would repeat the space; this keeps one row per space.
+ */
+export const latestRequestCte = sql`
+  select distinct on (ar.space_id) ar.*
+  from advisor_requests ar
+  order by ar.space_id, ar.created_at desc
+`
+
+/**
  * Each FYP space's assigned advisor → (space_id, accepted_by). Only the
  * space's latest advisor request counts (a space can be re-requested after
  * a rejection/expiry), and only when that request was accepted.
  */
 export const assignedAdvisorCte = sql`
   select space_id, accepted_by
-  from (
-    select distinct on (ar.space_id)
-      ar.space_id,
-      ar.accepted_by,
-      ar.status
-    from advisor_requests ar
-    order by ar.space_id, ar.created_at desc
-  ) latest
+  from (${latestRequestCte}) latest
   where latest.status = ${AdvisorRequestStatus.ACCEPTED}
     and latest.accepted_by is not null
 `

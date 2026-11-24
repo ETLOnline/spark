@@ -1,7 +1,8 @@
-import { sql } from "drizzle-orm"
+import { SQL, sql } from "drizzle-orm"
 import { db } from "../.."
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import { lastMilestoneCte, latestRequestCte } from "../reporting/advisors/query"
 import {
   FypDashboardFilters,
   FypDashboardStatsFilters,
@@ -19,6 +20,47 @@ const COMPLETED_MILESTONE_STATUSES = [
   MilestoneStatus.COMPLETED_PENDING_VERIFICATION,
   MilestoneStatus.VERIFIED
 ]
+
+/** COMPLETED_MILESTONE_STATUSES as a SQL value list, for `in (...)`. */
+const completedMilestoneStatusesSql = sql.join(
+  COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
+  sql`, `
+)
+
+/**
+ * University Supervisor = the first "Space Admin" added to the space.
+ * Multiple admins can exist for a space, so only the earliest is taken.
+ * Lateral subquery → (user_id); `spaceId` is the outer space id column.
+ */
+const firstSpaceAdminLateral = (spaceId: SQL) => sql`
+  lateral (
+    select su.user_id
+    from space_users su
+    where su.space_id = ${spaceId} and su.role = 'Space Admin'
+    order by su.id asc
+    limit 1
+  )
+`
+
+/**
+ * Milestone counts for one space → (total, completed, verified).
+ * completed = submitted (pending verification) or verified; verified =
+ * actually signed off. Lateral subquery; `spaceId` is the outer space id.
+ */
+const milestoneCountsLateral = (spaceId: SQL) => sql`
+  lateral (
+    select
+      count(*) as total,
+      count(*) filter (
+        where fm.status in (${completedMilestoneStatusesSql})
+      ) as completed,
+      count(*) filter (
+        where fm.status = ${MilestoneStatus.VERIFIED}
+      ) as verified
+    from fyp_milestones fm
+    where fm.space_id = ${spaceId}
+  )
+`
 
 /**
  * Shared search condition over the `fyp_spaces`/`enriched` CTEs (aliased
@@ -51,41 +93,28 @@ export async function GetFypDashboardProjects(
   const offset = (page - 1) * limit
 
   const rows = await db.execute(sql`
-    with latest_request as (
-      -- A space can be re-requested after a rejection/expiry, so a plain
-      -- join to advisor_requests would duplicate spaces with more than one
-      -- request. Keep only each space's most recent one.
-      select distinct on (r.space_id)
-        r.id as request_id,
-        r.space_id,
-        r.status as request_status,
-        r.domain_tag_id,
-        r.accepted_by
-      from advisor_requests r
-      order by r.space_id, r.created_at desc
-    ),
-    filtered_projects as (
+    with filtered_projects as (
       -- Every filter lives here, and total_count is captured before the
       -- limit/offset slice below, so this is the only place that scans
-      -- spaces/channels/latest_request for the whole (unpaginated) result.
+      -- spaces/channels/latest request for the whole (unpaginated) result.
       select
         s.id as space_id,
         s.space_slug,
         s.space_name,
         ch.channel_slug,
-        lr.request_id,
-        lr.request_status,
+        lr.id as request_id,
+        lr.status as request_status,
         lr.domain_tag_id,
         lr.accepted_by,
         count(*) over () as total_count
-      from latest_request lr
+      from (${latestRequestCte}) lr
       inner join spaces s on s.id = lr.space_id
       left join channels ch on ch.channel_id = s.channel_id
       where 1 = 1
         ${communityId ? sql`and ch.community_id = ${communityId}` : sql``}
         ${searchTerm ? sql`and s.space_name ilike ${`%${searchTerm}%`}` : sql``}
         ${domainTagId ? sql`and lr.domain_tag_id = ${domainTagId}` : sql``}
-        ${status ? sql`and lr.request_status = ${status}` : sql``}
+        ${status ? sql`and lr.status = ${status}` : sql``}
       order by s.space_name asc
       limit ${limit} offset ${offset}
     )
@@ -106,30 +135,11 @@ export async function GetFypDashboardProjects(
       coalesce(milestones.completed, 0) as milestones_completed
     from filtered_projects fp
     left join tags t on t.id = fp.domain_tag_id
-    -- University Supervisor = the first "Space Admin" added to the space.
-    -- Multiple admins can exist for a space, so we only take the earliest.
-    left join lateral (
-      select su.user_id
-      from space_users su
-      where su.space_id = fp.space_id and su.role = 'Space Admin'
-      order by su.id asc
-      limit 1
-    ) admin on true
+    left join ${firstSpaceAdminLateral(sql`fp.space_id`)} admin on true
     left join users sup on sup.unique_id = admin.user_id
     -- Industry Advisor = whoever accepted the request; null until accepted.
     left join users adv on adv.unique_id = fp.accepted_by
-    left join lateral (
-      select
-        count(*) as total,
-        count(*) filter (
-          where fm.status in (${sql.join(
-            COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
-            sql`, `
-          )})
-        ) as completed
-      from fyp_milestones fm
-      where fm.space_id = fp.space_id
-    ) milestones on true
+    left join ${milestoneCountsLateral(sql`fp.space_id`)} milestones on true
     order by fp.space_name asc
   `)
 
@@ -142,16 +152,9 @@ export async function GetFypDashboardStats(
   const { communityId } = filters
 
   const rows = await db.execute(sql`
-    with latest_request as (
-      select distinct on (r.space_id)
-        r.space_id,
-        r.status as request_status
-      from advisor_requests r
-      order by r.space_id, r.created_at desc
-    ),
-    scoped as (
-      select lr.space_id, lr.request_status
-      from latest_request lr
+    with scoped as (
+      select lr.space_id, lr.status as request_status
+      from (${latestRequestCte}) lr
       inner join spaces s on s.id = lr.space_id
       left join channels ch on ch.channel_id = s.channel_id
       where 1 = 1
@@ -175,17 +178,13 @@ export async function GetFypDashboardStats(
         where scoped.request_status != ${AdvisorRequestStatus.ACCEPTED}
       ) as without_advisor,
       (
-      
         select count(*)
         from fyp_milestones fm
         inner join scoped on scoped.space_id = fm.space_id
         where fm.end_date is not null
           and fm.end_date <> ''
           and fm.end_date::date < current_date
-          and fm.status not in (${sql.join(
-            COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
-            sql`, `
-          )})
+          and fm.status not in (${completedMilestoneStatusesSql})
       ) as milestones_overdue
     from scoped
   `)
@@ -243,31 +242,13 @@ const fypEnrichedCte = sql`
         when r.status = ${AdvisorRequestStatus.ACCEPTED} then 'running'
         else null
       end as bucket
-    from (
-      select distinct on (space_id) *
-      from advisor_requests
-      order by space_id, created_at desc
-    ) r
+    from (${latestRequestCte}) r
     inner join spaces s on s.id = r.space_id
     left join channels ch on ch.channel_id = s.channel_id
-    left join lateral (
-      select
-        count(*) as total,
-        count(*) filter (
-          where fm.status in (${sql.join(
-            COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
-            sql`, `
-          )})
-        ) as completed,
-        -- The project only counts as "completed" once every milestone is
-        -- actually VERIFIED — "completed_pending_verification" means
-        -- submitted but not yet signed off, so it's still "running".
-        count(*) filter (
-          where fm.status = ${MilestoneStatus.VERIFIED}
-        ) as verified
-      from fyp_milestones fm
-      where fm.space_id = r.space_id
-    ) ms on true
+    -- The project only counts as "completed" once every milestone is
+    -- actually VERIFIED — "completed_pending_verification" means
+    -- submitted but not yet signed off, so it's still "running".
+    left join ${milestoneCountsLateral(sql`r.space_id`)} ms on true
   ),
   enriched as (
     select
@@ -281,14 +262,7 @@ const fypEnrichedCte = sql`
     from project_buckets pb
     left join communities comm on comm.id = pb.community_id
     left join tags t on t.id = pb.domain_tag_id
-    -- University Supervisor = the first "Space Admin" added to the space.
-    left join lateral (
-      select su.user_id
-      from space_users su
-      where su.space_id = pb.space_id and su.role = 'Space Admin'
-      order by su.id asc
-      limit 1
-    ) admin on true
+    left join ${firstSpaceAdminLateral(sql`pb.space_id`)} admin on true
     left join users sup on sup.unique_id = admin.user_id
     -- Industry Advisor = whoever accepted the request; null until accepted.
     left join users adv on adv.unique_id = pb.accepted_by
@@ -304,8 +278,8 @@ const fypEnrichedCte = sql`
  * per-university directory and the completed listing.
  *
  * A space is "completed" when its last milestone (highest order_index, newest
- * created breaks ties — same order as lastMilestoneCte in
- * reporting/advisors) is VERIFIED, regardless of any advisor request. Every
+ * created breaks ties — see lastMilestoneCte in reporting/advisors) is
+ * VERIFIED, regardless of any advisor request. Every
  * other FYP-enabled space is running. academic_year falls back to the
  * space's own created_at when it has no request.
  */
@@ -335,13 +309,7 @@ const fypSpacesCte = sql`
     left join communities comm on comm.id = ch.community_id
     -- A space can be re-requested after a rejection/expiry; keep only its
     -- most recent request so the space appears once.
-    left join lateral (
-      select ar.*
-      from advisor_requests ar
-      where ar.space_id = s.id
-      order by ar.created_at desc
-      limit 1
-    ) r on true
+    left join (${latestRequestCte}) r on r.space_id = s.id
     cross join lateral (
       select coalesce(r.created_at, s.created_at) as created_at
     ) y
@@ -360,13 +328,7 @@ const fypSpacesCte = sql`
         and su.role is distinct from 'Space Admin'
         and su.user_id is distinct from r.accepted_by
     ) members on true
-    left join lateral (
-      select fm.status
-      from fyp_milestones fm
-      where fm.space_id = s.id
-      order by fm.order_index desc, fm.created_at desc
-      limit 1
-    ) lm on true
+    left join (${lastMilestoneCte}) lm on lm.space_id = s.id
     where s."is_FYP_enable" = true
   )
 `
@@ -532,30 +494,12 @@ export async function GetFypProjectDetail(
     from spaces s
     left join channels ch on ch.channel_id = s.channel_id
     left join communities c on c.id = ch.community_id
-    left join lateral (
-      select ar.*
-      from advisor_requests ar
-      where ar.space_id = s.id
-      order by ar.created_at desc
-      limit 1
-    ) r on true
+    left join (${latestRequestCte}) r on r.space_id = s.id
     left join tags t on t.id = r.domain_tag_id
-    left join lateral (
-      select su.user_id
-      from space_users su
-      where su.space_id = s.id and su.role = 'Space Admin'
-      order by su.id asc
-      limit 1
-    ) admin on true
+    left join ${firstSpaceAdminLateral(sql`s.id`)} admin on true
     left join users sup on sup.unique_id = admin.user_id
     left join users adv on adv.unique_id = r.accepted_by
-    left join lateral (
-      select fm.status
-      from fyp_milestones fm
-      where fm.space_id = s.id
-      order by fm.order_index desc, fm.created_at desc
-      limit 1
-    ) lm on true
+    left join (${lastMilestoneCte}) lm on lm.space_id = s.id
     where s.id = ${spaceId}
   `)
 
