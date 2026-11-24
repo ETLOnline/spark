@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/src/components/ui/button"
+import { buttonVariants } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import {
   Select,
@@ -21,6 +22,7 @@ import {
 } from "@/src/components/ui/table"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
+import { cn } from "@/src/lib/utils"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   GetFypAcademicYearsAction,
@@ -152,6 +154,7 @@ export default function FypOverviewView() {
                 <TableRow>
                   <TableHead>University</TableHead>
                   <TableHead className="text-right">Running FYPs</TableHead>
+                  <TableHead className="text-right">Completed FYPs</TableHead>
                   <TableHead className="text-right">Students engaged</TableHead>
                   <TableHead className="text-right">Advisors</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -167,7 +170,13 @@ export default function FypOverviewView() {
                     }
                   >
                     <TableCell>
-                      <p className="font-medium">{u.title}</p>
+                      <Link
+                        href={`/admin/analytics/fyp/${u.communityId}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-medium rounded-md hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {u.title}
+                      </Link>
                       {u.topDomain && (
                         <p className="text-xs text-muted-foreground">
                           top domain {u.topDomain}
@@ -178,23 +187,24 @@ export default function FypOverviewView() {
                       {u.runningCount.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
+                      {u.completedCount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
                       {u.studentsEngaged.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {u.advisorsCount.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          router.push(`/admin/analytics/fyp/${u.communityId}`)
-                        }}
+                      <Link
+                        href={`/admin/analytics/fyp/${u.communityId}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          buttonVariants({ variant: "outline", size: "sm" })
+                        )}
                       >
                         View FYPs
-                      </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -203,6 +213,9 @@ export default function FypOverviewView() {
                     <TableCell>All universities</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {stats.runningCount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {stats.completedCount.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {stats.studentsEngaged.toLocaleString()}

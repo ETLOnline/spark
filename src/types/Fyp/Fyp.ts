@@ -113,6 +113,7 @@ export interface RawFypPlatformStats {
   running_count: number | string
   completed_count: number | string
   students_engaged: number | string
+  teams_count: number | string
   advisors_count: number | string
 }
 
@@ -126,51 +127,46 @@ export interface FypPlatformStats {
   avgFypsPerAdvisor: number
 }
 
-export interface FypDirectoryFilters extends FypCommonFilters {
+export interface FypSpacesFilters {
+  communityId?: string
   domainTagId?: number
-  bucket?: FypBucket
   searchTerm?: string
+  status?: FypBucket
 }
 
-export interface RawFypDirectoryRow {
+/** One FYP-enabled space; request fields are null when it has none. */
+export interface RawFypSpaceRow {
   space_id: string
   space_slug: string
-  channel_slug: string | null
+  channel_slug: string
   project_name: string
-  community_id: string | null
+  community_id: string
   community_title: string | null
   domain: string | null
   tech_stack: string | null
   group_members: { name: string; registration_number: string }[] | null
-  supervisor_first_name: string | null
-  supervisor_last_name: string | null
   advisor_first_name: string | null
   advisor_last_name: string | null
-  request_id: string
-  request_status: AdvisorRequestStatus
-  bucket: FypBucket | null
+  request_id: string | null
+  request_status: AdvisorRequestStatus | null
+  is_completed: boolean
   total_count: number | string
-  milestones_total: number | string
-  milestones_completed: number | string
 }
 
-export interface FypDirectoryProject {
+export interface FypSpace {
   spaceId: string
   spaceSlug: string
-  channelSlug: string | null
+  channelSlug: string
   projectName: string
-  universityId: string | null
+  universityId: string
   universityTitle: string | null
   domain: string | null
   techStack: string[]
   teamSize: number
-  universitySupervisor: string | null
   industryAdvisor: string | null
-  requestId: string
-  requestStatus: AdvisorRequestStatus
-  bucket: FypBucket | null
-  milestonesCompleted: number
-  milestonesTotal: number
+  requestId: string | null
+  requestStatus: AdvisorRequestStatus | null
+  status: FypBucket
 }
 
 export interface RawFypProjectDetail {
@@ -187,8 +183,8 @@ export interface RawFypProjectDetail {
   advisor_id: string | null
   advisor_first_name: string | null
   advisor_last_name: string | null
-  request_status: AdvisorRequestStatus
-  bucket: FypBucket | null
+  request_status: AdvisorRequestStatus | null
+  bucket: FypBucket
   abstract: string | null
   problem_statement: string | null
   proposal_link: string | null
@@ -206,8 +202,8 @@ export interface FypProjectDetail {
   universitySupervisor: string | null
   industryAdvisor: string | null
   industryAdvisorId: string | null
-  requestStatus: AdvisorRequestStatus
-  bucket: FypBucket | null
+  requestStatus: AdvisorRequestStatus | null
+  bucket: FypBucket
   abstract: string | null
   problemStatement: string | null
   proposalLink: string | null

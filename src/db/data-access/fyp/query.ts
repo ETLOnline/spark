@@ -5,13 +5,13 @@ import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import {
   FypDashboardFilters,
   FypDashboardStatsFilters,
-  FypDirectoryFilters,
   FypPlatformStatsFilters,
+  FypSpacesFilters,
   RawFypDashboardRow,
   RawFypDashboardStats,
-  RawFypDirectoryRow,
   RawFypPlatformStats,
   RawFypProjectDetail,
+  RawFypSpaceRow,
   RawFypUniversityOverviewRow
 } from "@/src/types/Fyp/Fyp"
 
@@ -21,8 +21,8 @@ const COMPLETED_MILESTONE_STATUSES = [
 ]
 
 /**
- * Shared search condition over the `enriched` CTE (aliased `e`), used by
- * both GetFypDirectory and GetFypPlatformStats so the project list and its
+ * Shared search condition over the `fyp_spaces`/`enriched` CTEs (aliased
+ * `e`), used by GetFypSpaces and GetFypPlatformStats so the project list and its
  * summary stats never disagree on what matches a search term. Matches
  * first/last name individually (so "Umer" or "Ali" alone still work) AND
  * the concatenated full name (so "Umer Ali" matches too — neither
@@ -295,22 +295,90 @@ const fypEnrichedCte = sql`
   )
 `
 
+/**
+ * One row per FYP-enabled space (spaces."is_FYP_enable" = true), whether or
+ * not it has ever raised an advisor request. The latest request, when there
+ * is one, supplies domain/tech stack/team/advisor. Backs every space-driven
+ * FYP figure: running/completed counts, students engaged, the
+ * per-university directory and the completed listing.
+ *
+ * A space is "completed" when its last milestone (highest order_index, newest
+ * created breaks ties — same order as lastMilestoneCte in
+ * reporting/advisors) is VERIFIED, regardless of any advisor request. Every
+ * other FYP-enabled space is running. academic_year falls back to the
+ * space's own created_at when it has no request.
+ */
+const fypSpacesCte = sql`
+  fyp_spaces as (
+    select
+      s.id as space_id,
+      s.space_slug,
+      s.space_name,
+      ch.channel_slug,
+      ch.community_id,
+      comm.title as community_title,
+      r.id as request_id,
+      r.status as request_status,
+      r.domain_tag_id,
+      r.accepted_by,
+      r.tech_stack,
+      r.group_members,
+      t.name as domain,
+      adv.first_name as advisor_first_name,
+      adv.last_name as advisor_last_name,
+      coalesce(jsonb_array_length(r.group_members), 0) as team_size,
+      ${academicYearCase("y")} as academic_year,
+      (lm.status = ${MilestoneStatus.VERIFIED}) is true as is_completed
+    from spaces s
+    inner join channels ch on ch.channel_id = s.channel_id
+    left join communities comm on comm.id = ch.community_id
+    -- A space can be re-requested after a rejection/expiry; keep only its
+    -- most recent request so the space appears once.
+    left join lateral (
+      select ar.*
+      from advisor_requests ar
+      where ar.space_id = s.id
+      order by ar.created_at desc
+      limit 1
+    ) r on true
+    cross join lateral (
+      select coalesce(r.created_at, s.created_at) as created_at
+    ) y
+    left join tags t on t.id = r.domain_tag_id
+    -- Industry Advisor = whoever accepted the request; null until accepted.
+    left join users adv on adv.unique_id = r.accepted_by
+    left join lateral (
+      select fm.status
+      from fyp_milestones fm
+      where fm.space_id = s.id
+      order by fm.order_index desc, fm.created_at desc
+      limit 1
+    ) lm on true
+    where s."is_FYP_enable" = true
+  )
+`
+
 export async function GetFypUniversitiesOverview(
   filters: { academicYear?: string } = {}
 ): Promise<RawFypUniversityOverviewRow[]> {
   const { academicYear } = filters
 
   const rows = await db.execute(sql`
-    with ${fypEnrichedCte},
-    per_university as (
+    with ${fypEnrichedCte}, ${fypSpacesCte},
+    per_space_university as (
       select
         community_id,
-        count(*) filter (where bucket = 'running') as running_count,
-        count(*) filter (where bucket = 'completed') as completed_count,
-        coalesce(
-          sum(team_size) filter (where bucket in ('running', 'completed')),
-          0
-        ) as students_engaged,
+        count(*) filter (where not is_completed) as running_count,
+        count(*) filter (where is_completed) as completed_count,
+        coalesce(sum(team_size), 0) as students_engaged
+      from fyp_spaces
+      where community_id is not null
+        ${academicYear ? sql`and academic_year = ${academicYear}` : sql``}
+      group by community_id
+    ),
+    per_request_university as (
+      select
+        community_id,
         count(distinct accepted_by) filter (where bucket = 'running')
           as advisors_count
       from enriched
@@ -320,8 +388,8 @@ export async function GetFypUniversitiesOverview(
     ),
     domain_counts as (
       select community_id, domain, count(*) as cnt
-      from enriched
-      where bucket = 'running' and domain is not null
+      from fyp_spaces
+      where not is_completed and domain is not null
         ${academicYear ? sql`and academic_year = ${academicYear}` : sql``}
       group by community_id, domain
     ),
@@ -334,17 +402,18 @@ export async function GetFypUniversitiesOverview(
       c.id as community_id,
       c.title as community_title,
       c.slug as community_slug,
-      coalesce(pu.running_count, 0) as running_count,
-      coalesce(pu.completed_count, 0) as completed_count,
-      coalesce(pu.students_engaged, 0) as students_engaged,
-      coalesce(pu.advisors_count, 0) as advisors_count,
+      coalesce(ps.running_count, 0) as running_count,
+      coalesce(ps.completed_count, 0) as completed_count,
+      coalesce(ps.students_engaged, 0) as students_engaged,
+      coalesce(pr.advisors_count, 0) as advisors_count,
       td.domain as top_domain,
       coalesce(td.cnt, 0) as top_domain_count
     from communities c
-    left join per_university pu on pu.community_id = c.id
+    left join per_space_university ps on ps.community_id = c.id
+    left join per_request_university pr on pr.community_id = c.id
     left join top_domain td on td.community_id = c.id
     where c."is_FYP_enable" = true
-    order by coalesce(pu.running_count, 0) desc, c.title asc
+    order by coalesce(ps.running_count, 0) desc, c.title asc
   `)
 
   return rows as unknown as RawFypUniversityOverviewRow[]
@@ -355,86 +424,59 @@ export async function GetFypPlatformStats(
 ): Promise<RawFypPlatformStats> {
   const { communityId, academicYear, domainTagId, searchTerm } = filters
 
+  const scopeConditions = sql`
+    ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
+    ${academicYear ? sql`and e.academic_year = ${academicYear}` : sql``}
+    ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
+    ${buildFypSearchCondition(searchTerm)}
+  `
+
   const rows = await db.execute(sql`
-    with ${fypEnrichedCte},
-    scoped as (
-      select *
-      from enriched e
-      where 1 = 1
-        ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
-        ${academicYear ? sql`and e.academic_year = ${academicYear}` : sql``}
-        ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
-        ${buildFypSearchCondition(searchTerm)}
+    with ${fypEnrichedCte}, ${fypSpacesCte},
+    scoped_spaces as (
+      select * from fyp_spaces e where 1 = 1 ${scopeConditions}
+    ),
+    scoped_requests as (
+      select * from enriched e where 1 = 1 ${scopeConditions}
     )
     select
-      count(distinct community_id) filter (where bucket = 'running')
-        as universities_count,
-      count(*) filter (where bucket = 'running') as running_count,
-      count(*) filter (where bucket = 'completed') as completed_count,
-      coalesce(
-        sum(team_size) filter (where bucket in ('running', 'completed')),
-        0
+      (
+        select count(distinct community_id) filter (where not is_completed)
+        from scoped_spaces
+      ) as universities_count,
+      (
+        select count(*) filter (where not is_completed) from scoped_spaces
+      ) as running_count,
+      (
+        select count(*) filter (where is_completed) from scoped_spaces
+      ) as completed_count,
+      (
+        select coalesce(sum(team_size), 0) from scoped_spaces
       ) as students_engaged,
-      count(distinct accepted_by) filter (where bucket = 'running')
-        as advisors_count
-    from scoped
+      -- Teams behind students_engaged: spaces with at least one listed
+      -- student, so spaces with no request don't drag the average to 0.
+      (
+        select count(*) filter (where team_size > 0) from scoped_spaces
+      ) as teams_count,
+      (
+        select count(distinct accepted_by) filter (where bucket = 'running')
+        from scoped_requests
+      ) as advisors_count
   `)
 
   return rows[0] as unknown as RawFypPlatformStats
 }
 
-export async function GetFypDirectory(
-  filters: FypDirectoryFilters = {},
-  page: number = 1,
-  limit: number = 10
-): Promise<RawFypDirectoryRow[]> {
-  const { communityId, academicYear, domainTagId, bucket, searchTerm } = filters
-  const offset = (page - 1) * limit
-
-  const rows = await db.execute(sql`
-    with ${fypEnrichedCte},
-    filtered as (
-      select *, count(*) over () as total_count
-      from enriched e
-      where 1 = 1
-        ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
-        ${academicYear ? sql`and e.academic_year = ${academicYear}` : sql``}
-        ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
-        ${bucket ? sql`and e.bucket = ${bucket}` : sql`and e.bucket is not null`}
-        ${buildFypSearchCondition(searchTerm)}
-      order by e.space_name asc
-      limit ${limit} offset ${offset}
-    )
-    select
-      space_id,
-      space_slug,
-      channel_slug,
-      space_name as project_name,
-      community_id,
-      community_title,
-      domain,
-      tech_stack,
-      group_members,
-      supervisor_first_name,
-      supervisor_last_name,
-      advisor_first_name,
-      advisor_last_name,
-      request_id,
-      request_status,
-      bucket,
-      milestones_total,
-      milestones_completed,
-      total_count
-    from filtered
-  `)
-
-  return rows as unknown as RawFypDirectoryRow[]
-}
-
 export async function GetFypAcademicYears(): Promise<string[]> {
   const rows = await db.execute(sql`
+    -- Spaces count toward a year by their request date, else their own
+    -- created_at (see fypSpacesCte), so offer both.
     select distinct ${academicYearCase("r")} as academic_year
-    from advisor_requests r
+    from (
+      select created_at from advisor_requests
+      union all
+      select created_at from spaces where "is_FYP_enable" = true
+    ) r
     order by academic_year desc
   `)
 
@@ -443,16 +485,15 @@ export async function GetFypAcademicYears(): Promise<string[]> {
   )
 }
 
+/**
+ * Driven by the space, so a project with no advisor request still resolves
+ * (request fields null). bucket follows the fypSpacesCte rule: completed
+ * when the last milestone is VERIFIED, otherwise running.
+ */
 export async function GetFypProjectDetail(
   spaceId: string
 ): Promise<RawFypProjectDetail | null> {
   const rows = await db.execute(sql`
-    with latest as (
-      select distinct on (space_id) *
-      from advisor_requests
-      where space_id = ${spaceId}
-      order by space_id, created_at desc
-    )
     select
       s.id as space_id,
       s.space_slug,
@@ -471,44 +512,38 @@ export async function GetFypProjectDetail(
       sup.last_name as supervisor_last_name,
       adv.first_name as advisor_first_name,
       adv.last_name as advisor_last_name,
-      coalesce(ms.total, 0) as milestones_total,
-      coalesce(ms.completed, 0) as milestones_completed,
       case
-        when r.status = ${AdvisorRequestStatus.ACCEPTED}
-          and coalesce(ms.total, 0) > 0 and ms.total = ms.verified
-          then 'completed'
-        when r.status = ${AdvisorRequestStatus.ACCEPTED} then 'running'
-        else null
+        when lm.status = ${MilestoneStatus.VERIFIED} then 'completed'
+        else 'running'
       end as bucket
-    from latest r
-    inner join spaces s on s.id = r.space_id
+    from spaces s
     left join channels ch on ch.channel_id = s.channel_id
     left join communities c on c.id = ch.community_id
+    left join lateral (
+      select ar.*
+      from advisor_requests ar
+      where ar.space_id = s.id
+      order by ar.created_at desc
+      limit 1
+    ) r on true
     left join tags t on t.id = r.domain_tag_id
     left join lateral (
       select su.user_id
       from space_users su
-      where su.space_id = r.space_id and su.role = 'Space Admin'
+      where su.space_id = s.id and su.role = 'Space Admin'
       order by su.id asc
       limit 1
     ) admin on true
     left join users sup on sup.unique_id = admin.user_id
     left join users adv on adv.unique_id = r.accepted_by
     left join lateral (
-      select
-        count(*) as total,
-        count(*) filter (
-          where fm.status in (${sql.join(
-            COMPLETED_MILESTONE_STATUSES.map((s) => sql`${s}`),
-            sql`, `
-          )})
-        ) as completed,
-        count(*) filter (
-          where fm.status = ${MilestoneStatus.VERIFIED}
-        ) as verified
+      select fm.status
       from fyp_milestones fm
-      where fm.space_id = r.space_id
-    ) ms on true
+      where fm.space_id = s.id
+      order by fm.order_index desc, fm.created_at desc
+      limit 1
+    ) lm on true
+    where s.id = ${spaceId}
   `)
 
   return (rows[0] as unknown as RawFypProjectDetail) ?? null
@@ -526,4 +561,51 @@ export async function GetFypCommunityTitle(
   `)
 
   return (rows[0] as unknown as { title: string } | undefined)?.title ?? null
+}
+
+/**
+ * FYP directory driven by spaces rather than advisor requests: every
+ * FYP-enabled space (fypSpacesCte), whether or not it has ever raised an
+ * advisor request. Request fields stay null when it hasn't. Backs the
+ * per-university directory (communityId set) and the platform-wide completed
+ * listing (status "completed").
+ */
+export async function GetFypSpaces(
+  filters: FypSpacesFilters = {},
+  page: number = 1,
+  limit: number = 10
+): Promise<RawFypSpaceRow[]> {
+  const { communityId, domainTagId, searchTerm, status } = filters
+  const offset = (page - 1) * limit
+
+  const rows = await db.execute(sql`
+    with ${fypSpacesCte}
+    select
+      e.space_id,
+      e.space_slug,
+      e.channel_slug,
+      e.space_name as project_name,
+      e.community_id,
+      e.community_title,
+      e.domain,
+      e.tech_stack,
+      e.group_members,
+      e.advisor_first_name,
+      e.advisor_last_name,
+      e.request_id,
+      e.request_status,
+      e.is_completed,
+      count(*) over () as total_count
+    from fyp_spaces e
+    where 1 = 1
+      ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
+      ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
+      ${status === "completed" ? sql`and e.is_completed` : sql``}
+      ${status === "running" ? sql`and not e.is_completed` : sql``}
+      ${buildFypSearchCondition(searchTerm)}
+    order by e.space_name asc
+    limit ${limit} offset ${offset}
+  `)
+
+  return rows as unknown as RawFypSpaceRow[]
 }
