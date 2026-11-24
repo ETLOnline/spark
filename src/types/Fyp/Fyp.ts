@@ -144,7 +144,7 @@ export interface RawFypSpaceRow {
   community_title: string | null
   domain: string | null
   tech_stack: string | null
-  group_members: { name: string; registration_number: string }[] | null
+  team_size: number | string
   advisor_first_name: string | null
   advisor_last_name: string | null
   request_id: string | null

@@ -298,7 +298,8 @@ const fypEnrichedCte = sql`
 /**
  * One row per FYP-enabled space (spaces."is_FYP_enable" = true), whether or
  * not it has ever raised an advisor request. The latest request, when there
- * is one, supplies domain/tech stack/team/advisor. Backs every space-driven
+ * is one, supplies domain/tech stack/advisor; team size is the space's
+ * joined members (see the members lateral). Backs every space-driven
  * FYP figure: running/completed counts, students engaged, the
  * per-university directory and the completed listing.
  *
@@ -326,7 +327,7 @@ const fypSpacesCte = sql`
       t.name as domain,
       adv.first_name as advisor_first_name,
       adv.last_name as advisor_last_name,
-      coalesce(jsonb_array_length(r.group_members), 0) as team_size,
+      coalesce(members.student_count, 0) as team_size,
       ${academicYearCase("y")} as academic_year,
       (lm.status = ${MilestoneStatus.VERIFIED}) is true as is_completed
     from spaces s
@@ -347,6 +348,18 @@ const fypSpacesCte = sql`
     left join tags t on t.id = r.domain_tag_id
     -- Industry Advisor = whoever accepted the request; null until accepted.
     left join users adv on adv.unique_id = r.accepted_by
+    -- Students = active members who joined the space, not the request's
+    -- group_members, so a space that never raised a request still counts.
+    -- space_users has no student role: leave out Space Admins (university
+    -- supervisor) and the accepted advisor, who is added on acceptance.
+    left join lateral (
+      select count(distinct su.user_id) as student_count
+      from space_users su
+      where su.space_id = s.id
+        and su.status = 'active'
+        and su.role is distinct from 'Space Admin'
+        and su.user_id is distinct from r.accepted_by
+    ) members on true
     left join lateral (
       select fm.status
       from fyp_milestones fm
@@ -453,8 +466,8 @@ export async function GetFypPlatformStats(
       (
         select coalesce(sum(team_size), 0) from scoped_spaces
       ) as students_engaged,
-      -- Teams behind students_engaged: spaces with at least one listed
-      -- student, so spaces with no request don't drag the average to 0.
+      -- Teams behind students_engaged: spaces with at least one joined
+      -- student, so empty spaces don't drag the average to 0.
       (
         select count(*) filter (where team_size > 0) from scoped_spaces
       ) as teams_count,
@@ -589,7 +602,7 @@ export async function GetFypSpaces(
       e.community_title,
       e.domain,
       e.tech_stack,
-      e.group_members,
+      e.team_size,
       e.advisor_first_name,
       e.advisor_last_name,
       e.request_id,

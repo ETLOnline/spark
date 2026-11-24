@@ -184,7 +184,7 @@ export const GetFypSpacesAction = CreateServerAction(
         universityTitle: row.community_title,
         domain: row.domain,
         techStack: splitTechStack(row.tech_stack),
-        teamSize: row.group_members?.length ?? 0,
+        teamSize: Number(row.team_size),
         industryAdvisor: joinName(
           row.advisor_first_name,
           row.advisor_last_name
