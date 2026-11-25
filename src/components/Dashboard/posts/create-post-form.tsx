@@ -1,5 +1,7 @@
 "use client"
 
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import { POST_UNDER_REVIEW_MESSAGE } from "@/src/services/ai/post/postCheck.messages"
 import {
   Tabs,
   TabsContent,
@@ -40,8 +42,7 @@ import {
   CreatePollPostAction,
   CreatePostAction,
   CreateFilesPostAction,
-  LinkHashtagsToPostAction,
-  AttachImagesToPostAction
+  LinkHashtagsToPostAction
 } from "@/src/server-actions/Post/Post"
 import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
@@ -110,12 +111,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPostError,
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
-  const [
-    attachImagesToPostLoading,
-    attachedImages,
-    attachImagesToPostError,
-    attachImagesToPost
-  ] = useServerAction(AttachImagesToPostAction)
 
   const { permissionChecker } = usePermissionChecker(
     variant == "spaces" ? "scoped" : "global",
@@ -203,6 +198,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     }
     return null
   }
+  // Readable failures come back as a string, other failures as Error objects
+  const getPostErrorMessage = (error: unknown) =>
+    typeof error === "string" ? error : "Error creating post please try again!"
+
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
@@ -266,14 +265,20 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Error creating post please try again!"
+            description: getPostErrorMessage(post.error)
           })
           return
         }
       } else if (newPost.type === PostType.poll) {
         let linkedHashtags
 
-        // Create poll with options first
+        // poll images are sent with the poll, so text, options and images are checked together
+        const pollImages = newPost.images?.map((image) => ({
+          fileName: image.name,
+          fileSize: image.size,
+          fileType: image.type,
+          fileBase64: image.base64
+        }))
         const pollPost =
           variant === "spaces"
             ? await createPollPost(
@@ -282,45 +287,28 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 pollOptions,
                 newPost.category,
                 "space",
-                currentSpace?.id
+                currentSpace?.id,
+                pollImages,
+                "posts"
               )
             : await createPollPost(
                 newPost.content as string,
                 newPost.type,
-                pollOptions
+                pollOptions,
+                undefined,
+                undefined,
+                undefined,
+                pollImages,
+                "posts"
               )
         setPollOptions([])
 
         if (pollPost && pollPost.data) {
           const postId = pollPost.data.id
-          let pollWithImages: SelectPollPost = {
+          const pollWithImages = {
             ...pollPost.data,
             author: authUser as SelectUser
           } as SelectPollPost
-
-          // If poll has images, attach them to the post
-          if (newPost.images && newPost.images.length > 0) {
-            const imageData = newPost.images.map((image) => ({
-              fileName: image.name,
-              fileSize: image.size,
-              fileType: image.type,
-              fileBase64: image.base64
-            }))
-
-            const imagesResult = await attachImagesToPost({
-              postId,
-              files: imageData,
-              folderPath: "posts"
-            })
-
-            if (imagesResult?.success && imagesResult.data) {
-              pollWithImages = {
-                ...pollPost.data,
-                author: authUser as SelectUser,
-                files: imagesResult.data
-              } as SelectPollPost
-            }
-          }
 
           if (hashtags.length) {
             linkedHashtags = await linkHashtagsToPost(
@@ -358,7 +346,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Error creating post please try again!"
+            description: getPostErrorMessage(pollPost.error)
           })
           return
         }
@@ -434,7 +422,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             toast({
               variant: "destructive",
               title: "Error",
-              description: "Error creating post please try again!"
+              description: getPostErrorMessage(post.error)
             })
             return
           }
@@ -511,7 +499,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             toast({
               variant: "destructive",
               title: "Error",
-              description: "Error creating post please try again!"
+              description: getPostErrorMessage(post.error)
             })
             return
           }
@@ -523,10 +511,18 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           postData as unknown as SelectPost | SelectFilePost | SelectPollPost,
           ...posts
         ])
-        toast({
-          title: "Posted!",
-          duration: 3000
-        })
+        if (postData.status === PostStatus.PENDING_REVIEW) {
+          toast({
+            title: "Your post is under review",
+            description: POST_UNDER_REVIEW_MESSAGE,
+            duration: 5000
+          })
+        } else {
+          toast({
+            title: "Posted!",
+            duration: 3000
+          })
+        }
 
         setShowCard(false)
       }
@@ -694,14 +690,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 disabled={
                   createPostLoading ||
                   createFilesPostLoading ||
-                  createPollPostLoading ||
-                  attachImagesToPostLoading
+                  createPollPostLoading
                 }
                 loading={
                   createPostLoading ||
                   createFilesPostLoading ||
-                  createPollPostLoading ||
-                  attachImagesToPostLoading
+                  createPollPostLoading
                 }
               >
                 Post

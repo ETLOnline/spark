@@ -37,6 +37,7 @@ jobs:
       NEXT_PUBLIC_ENABLE_EMAIL_PREVIEW: ${{ secrets.NEXT_PUBLIC_ENABLE_EMAIL_PREVIEW }}
       NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID: ${{ secrets.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID }}
       NEXT_PUBLIC_PUSHER_BEAMS_SECRET_KEY: ${{ secrets.NEXT_PUBLIC_PUSHER_BEAMS_SECRET_KEY }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
     permissions:
       contents: read # This is required for actions/checkout
 

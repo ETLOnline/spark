@@ -11,11 +11,13 @@ import {
   isNull,
   lte,
   ne,
+  not,
   or,
   SQL,
   sql,
   SQLWrapper
 } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
 import { db } from "../.."
 import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import {
@@ -32,6 +34,14 @@ import {
 } from "../../schema"
 import { permissions } from "@/src/utils/constants"
 import { getRoleIdsWithPermission } from "../permissions/query"
+import {
+  MentorListFilters,
+  RawAvailabilitySlotRow,
+  RawMentorListRow,
+  RawSessionListRow,
+  SessionListFilters,
+  SessionListStatusFilter
+} from "@/src/types/Mentorship/Mentorship"
 
 export interface MentorAvailabilitySlotInput {
   date: string
@@ -123,6 +133,7 @@ const buildSearchCondition = (searchedItem?: string) => {
       sql`trim(${usersTable.first_name}) || ' ' || trim(${usersTable.last_name})`,
       q
     ),
+    ilike(usersTable.email, q),
     ilike(profileTable.professional_title, q),
     ilike(profileTable.company, q),
     ilike(profileTable.bio, q),
@@ -200,6 +211,29 @@ const buildAvailabilityCondition = (
   )
 }
 
+/**
+ * Live count, same condition as buildSessionCompletedCondition below and
+ * GetMentorSessionTotalsRaw/GetMentorRankingRaw (reporting/mentorship/query.ts)
+ * — not profile.total_completed_sessions, a separately-maintained counter
+ * that can drift from what actually satisfies this condition.
+ */
+const completedSessionsCountFragment = (
+  mentorIdColumn: SQLWrapper
+) => sql<number>`(
+  select count(*) from session_requests csr
+  where csr.mentor_id = ${mentorIdColumn}
+    and csr.status = 'accepted'
+    and (csr.attendee_confirmations ? csr.mentor_id)
+    and exists (
+      select 1 from mentorship_feedback mf
+      where mf.session_request_id = csr.id and mf.submitted_by = csr.mentor_id
+    )
+    and exists (
+      select 1 from mentorship_feedback mf
+      where mf.session_request_id = csr.id and mf.submitted_by = csr.mentee_id
+    )
+)`
+
 export async function GetMentors(filters?: GetMentorFilters) {
   try {
     const page = filters?.page ?? 1
@@ -244,7 +278,10 @@ export async function GetMentors(filters?: GetMentorFilters) {
       .select({
         user: usersTable,
         profile: profileTable,
-        totalCount: sql<number>`count(*) over()`
+        totalCount: sql<number>`count(*) over()`,
+        completedSessionsCount: completedSessionsCountFragment(
+          usersTable.unique_id
+        )
       })
       .from(userRolesTable)
       .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
@@ -270,7 +307,7 @@ export async function GetMentors(filters?: GetMentorFilters) {
     const mentors = mentorRows.map((row) => ({
       ...row.user,
       profile: row.profile,
-      completedSessionsCount: row.profile.total_completed_sessions ?? 0,
+      completedSessionsCount: Number(row.completedSessionsCount ?? 0),
       userTags: userTags.filter((ut) => ut.user_id === row.user.unique_id)
     }))
 
@@ -831,39 +868,50 @@ export async function ArchiveGroupSessionSpace(sessionIds: number[]) {
     .returning()
 }
 
-async function incrementCompletedSessionsIfNowComplete(
-  sessionId: number,
-  userId: string
-) {
+/**
+ * Mirrors buildSessionCompletedCondition below: a session only counts as
+ * complete (and bumps the mentor's profile.total_completed_sessions) once
+ * the mentor confirmed attendance AND BOTH mentor and mentee submitted
+ * feedback. Called after any one of those three things happens, from
+ * whichever side (mentor or mentee) triggered it — the counter always lands
+ * on the mentor's profile row regardless of who completed the last step.
+ */
+async function incrementCompletedSessionsIfNowComplete(sessionId: number) {
   const session = await db.query.sessionRequestsTable.findFirst({
     where: eq(sessionRequestsTable.id, sessionId),
-    columns: { mentor_id: true, attendee_confirmations: true }
+    columns: {
+      mentor_id: true,
+      mentee_id: true,
+      status: true,
+      attendee_confirmations: true
+    }
   })
-  if (!session || session.mentor_id !== userId) return
+  if (!session || session.status !== "accepted") return
 
   const mentorConfirmed = !!(
     session.attendee_confirmations as Record<string, string> | null
-  )?.[userId]
+  )?.[session.mentor_id]
   if (!mentorConfirmed) return
 
   const feedback = await db
-    .select({ id: mentorshipFeedbackTable.id })
+    .select({ submitted_by: mentorshipFeedbackTable.submitted_by })
     .from(mentorshipFeedbackTable)
-    .where(
-      and(
-        eq(mentorshipFeedbackTable.session_request_id, sessionId),
-        eq(mentorshipFeedbackTable.submitted_by, userId)
-      )
-    )
-    .limit(1)
-  if (feedback.length === 0) return
+    .where(eq(mentorshipFeedbackTable.session_request_id, sessionId))
+
+  const mentorSubmitted = feedback.some(
+    (f) => f.submitted_by === session.mentor_id
+  )
+  const menteeSubmitted = feedback.some(
+    (f) => f.submitted_by === session.mentee_id
+  )
+  if (!mentorSubmitted || !menteeSubmitted) return
 
   await db
     .update(profileTable)
     .set({
       total_completed_sessions: sql`${profileTable.total_completed_sessions} + 1`
     })
-    .where(eq(profileTable.user_id, userId))
+    .where(eq(profileTable.user_id, session.mentor_id))
 }
 
 /** Record that a user confirmed they attended a session (jsonb patch). */
@@ -892,7 +940,7 @@ export async function ConfirmSessionAttendance(
     .returning()
 
   if (!alreadyConfirmed) {
-    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+    await incrementCompletedSessionsIfNowComplete(sessionId)
   }
 
   return updated
@@ -933,7 +981,7 @@ export async function SubmitMentorshipFeedback(
     .returning()
 
   if (row) {
-    await incrementCompletedSessionsIfNowComplete(sessionId, userId)
+    await incrementCompletedSessionsIfNowComplete(sessionId)
   }
 
   return row
@@ -1125,4 +1173,260 @@ export async function ResubmitSessionRequest(
 
   if (!result) return null
   return result
+}
+
+// ── Admin Analytics: Mentors / Sessions / Availability lists ───────────────
+// Live queries backing the admin Mentorship analytics drill-down pages.
+// Distinct from src/db/data-access/reporting/mentorship/query.ts, which only
+// feeds the precomputed cron snapshot and has no per-record ids to drill into.
+
+const sessionAttendeeConfirmedFragment = sql`(${sessionRequestsTable.attendee_confirmations} ? ${sessionRequestsTable.mentor_id})`
+
+const sessionMentorFeedbackSubmittedFragment = sql`exists (
+  select 1 from ${mentorshipFeedbackTable}
+  where ${mentorshipFeedbackTable.session_request_id} = ${sessionRequestsTable.id}
+    and ${mentorshipFeedbackTable.submitted_by} = ${sessionRequestsTable.mentor_id}
+)`
+
+const sessionMenteeFeedbackSubmittedFragment = sql`exists (
+  select 1 from ${mentorshipFeedbackTable}
+  where ${mentorshipFeedbackTable.session_request_id} = ${sessionRequestsTable.id}
+    and ${mentorshipFeedbackTable.submitted_by} = ${sessionRequestsTable.mentee_id}
+)`
+
+/**
+ * session_requests.status never contains "completed" — it's derived the same
+ * way incrementCompletedSessionsIfNowComplete (above) decides whether to bump
+ * profile.total_completed_sessions: the mentor confirmed attendance AND
+ * BOTH mentor and mentee submitted feedback for this session.
+ */
+const buildSessionCompletedCondition = (): SQL =>
+  and(
+    eq(sessionRequestsTable.status, "accepted"),
+    sessionAttendeeConfirmedFragment,
+    sessionMentorFeedbackSubmittedFragment,
+    sessionMenteeFeedbackSubmittedFragment
+  ) as SQL
+
+const sessionStatusCaseFragment = sql<SessionListStatusFilter>`
+  case
+    when ${sessionRequestsTable.status} = 'rejected' then 'rejected'
+    when ${sessionRequestsTable.status} = 'accepted'
+      and ${sessionAttendeeConfirmedFragment}
+      and ${sessionMentorFeedbackSubmittedFragment}
+      and ${sessionMenteeFeedbackSubmittedFragment}
+    then 'completed'
+    else 'pending'
+  end
+`
+
+// "pending" is the residual bucket — mirrors the existing aggregate's
+// greatest(total - rejected - completed, 0) in reporting/mentorship/query.ts.
+const buildSessionListStatusCondition = (status?: SessionListStatusFilter) => {
+  if (status === "completed") return buildSessionCompletedCondition()
+  if (status === "rejected") return eq(sessionRequestsTable.status, "rejected")
+  if (status === "pending")
+    return and(
+      ne(sessionRequestsTable.status, "rejected"),
+      not(buildSessionCompletedCondition())
+    )
+  return undefined
+}
+
+export async function GetMentorsList(
+  filters: MentorListFilters,
+  page: number = 1,
+  limit: number = 10
+): Promise<RawMentorListRow[]> {
+  const offset = (page - 1) * limit
+
+  const roleIds = await getRoleIdsWithPermission(
+    "mentorship",
+    permissions.mentorship.addAvailability
+  )
+  if (!roleIds.length) return []
+
+  const conditions = [
+    inArray(userRolesTable.role_id, roleIds),
+    filters.status === "active"
+      ? eq(profileTable.is_mentor_active, true)
+      : filters.status === "verified"
+        ? eq(profileTable.verified, true)
+        : undefined,
+    buildSearchCondition(filters.search)
+  ].filter(Boolean) as SQL[]
+
+  const rows = await db
+    .select({
+      user_id: usersTable.unique_id,
+      first_name: usersTable.first_name,
+      last_name: usersTable.last_name,
+      email: usersTable.email,
+      linkedin_url: profileTable.linkedin_url,
+      total_completed_sessions: completedSessionsCountFragment(
+        usersTable.unique_id
+      ),
+      total_count: sql<number>`count(*) over()`
+    })
+    .from(userRolesTable)
+    .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
+    .leftJoin(profileTable, eq(profileTable.user_id, userRolesTable.user_id))
+    .where(and(...conditions))
+    .groupBy(userRolesTable.user_id, usersTable.unique_id, profileTable.id)
+    .orderBy(asc(usersTable.first_name), asc(usersTable.last_name))
+    .limit(limit)
+    .offset(offset)
+
+  return rows as unknown as RawMentorListRow[]
+}
+
+export async function GetSessionsList(
+  filters: SessionListFilters,
+  page: number = 1,
+  limit: number = 10
+): Promise<RawSessionListRow[]> {
+  const offset = (page - 1) * limit
+  const mentorUser = alias(usersTable, "mentor_user")
+  const menteeUser = alias(usersTable, "mentee_user")
+
+  const search = filters.search?.trim()
+  const searchCondition = search
+    ? or(
+        ilike(sessionRequestsTable.topic, `%${search}%`),
+        ilike(mentorUser.first_name, `%${search}%`),
+        ilike(mentorUser.last_name, `%${search}%`),
+        ilike(mentorUser.email, `%${search}%`),
+        ilike(menteeUser.first_name, `%${search}%`),
+        ilike(menteeUser.last_name, `%${search}%`),
+        ilike(menteeUser.email, `%${search}%`)
+      )
+    : undefined
+
+  const conditions = [
+    buildSessionListStatusCondition(filters.status),
+    searchCondition
+  ].filter(Boolean) as SQL[]
+
+  const rows = await db
+    .select({
+      id: sessionRequestsTable.id,
+      session_date: sessionRequestsTable.session_date,
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time,
+      session_type: sessionRequestsTable.session_type,
+      topic: sessionRequestsTable.topic,
+      status: sessionStatusCaseFragment,
+      mentor_id: sessionRequestsTable.mentor_id,
+      mentor_first_name: mentorUser.first_name,
+      mentor_last_name: mentorUser.last_name,
+      mentor_email: mentorUser.email,
+      mentee_id: sessionRequestsTable.mentee_id,
+      mentee_first_name: menteeUser.first_name,
+      mentee_last_name: menteeUser.last_name,
+      mentee_email: menteeUser.email,
+      mentor_rating: sql<number | null>`(
+        select ${mentorshipFeedbackTable.rating} from ${mentorshipFeedbackTable}
+        where ${mentorshipFeedbackTable.session_request_id} = ${sessionRequestsTable.id}
+          and ${mentorshipFeedbackTable.submitted_by} = ${sessionRequestsTable.mentor_id}
+        limit 1
+      )`,
+      mentee_rating: sql<number | null>`(
+        select ${mentorshipFeedbackTable.rating} from ${mentorshipFeedbackTable}
+        where ${mentorshipFeedbackTable.session_request_id} = ${sessionRequestsTable.id}
+          and ${mentorshipFeedbackTable.submitted_by} = ${sessionRequestsTable.mentee_id}
+        limit 1
+      )`,
+      total_count: sql<number>`count(*) over()`
+    })
+    .from(sessionRequestsTable)
+    .innerJoin(
+      mentorUser,
+      eq(mentorUser.unique_id, sessionRequestsTable.mentor_id)
+    )
+    .innerJoin(
+      menteeUser,
+      eq(menteeUser.unique_id, sessionRequestsTable.mentee_id)
+    )
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(
+      desc(sessionRequestsTable.session_date),
+      desc(sessionRequestsTable.start_time)
+    )
+    .limit(limit)
+    .offset(offset)
+
+  return rows as unknown as RawSessionListRow[]
+}
+
+export async function GetSessionById(sessionId: number) {
+  const session = await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, sessionId),
+    with: {
+      mentor: { with: { profile: true } },
+      mentee: true
+    }
+  })
+  if (!session || !session.mentor || !session.mentee) return null
+
+  const feedback = await db.query.mentorshipFeedbackTable.findMany({
+    where: eq(mentorshipFeedbackTable.session_request_id, sessionId)
+  })
+
+  const mentorConfirmed = !!(
+    session.attendee_confirmations as Record<string, string> | null
+  )?.[session.mentor_id]
+  const mentorSubmittedFeedback = feedback.some(
+    (f) => f.submitted_by === session.mentor_id
+  )
+  const status: SessionListStatusFilter =
+    session.status === "rejected"
+      ? "rejected"
+      : session.status === "accepted" &&
+          mentorConfirmed &&
+          mentorSubmittedFeedback
+        ? "completed"
+        : "pending"
+
+  return {
+    session,
+    mentor: session.mentor,
+    mentee: session.mentee,
+    status,
+    feedback
+  }
+}
+
+export async function GetAvailabilitySlotsList(
+  page: number = 1,
+  limit: number = 10
+): Promise<RawAvailabilitySlotRow[]> {
+  const offset = (page - 1) * limit
+
+  const rows = await db
+    .select({
+      id: mentorAvailabilityTable.id,
+      mentor_first_name: usersTable.first_name,
+      mentor_last_name: usersTable.last_name,
+      mentor_email: usersTable.email,
+      date: mentorAvailabilityTable.date,
+      start_time: mentorAvailabilityTable.start_time,
+      end_time: mentorAvailabilityTable.end_time,
+      session_type: mentorAvailabilityTable.session_type,
+      repeat_type: mentorAvailabilityTable.repeat_type,
+      total_count: sql<number>`count(*) over()`
+    })
+    .from(mentorAvailabilityTable)
+    .innerJoin(
+      usersTable,
+      eq(usersTable.unique_id, mentorAvailabilityTable.mentor_id)
+    )
+    .where(eq(mentorAvailabilityTable.is_active, true))
+    .orderBy(
+      desc(mentorAvailabilityTable.date),
+      asc(mentorAvailabilityTable.start_time)
+    )
+    .limit(limit)
+    .offset(offset)
+
+  return rows as unknown as RawAvailabilitySlotRow[]
 }

@@ -39,7 +39,9 @@ export async function GetEventRegistrationsTotalRaw(): Promise<RawTotal> {
 
 export async function GetEventHostsTotalRaw(): Promise<RawTotal> {
   const rows = await db.execute(sql`
-    select count(distinct host_id) as total from events
+    select count(distinct e.host_id) as total
+    from events e
+    inner join users u on u.unique_id = e.host_id and u.disabled = false
   `)
   return rows[0] as unknown as RawTotal
 }
@@ -49,7 +51,7 @@ export async function GetEventHostRankingRaw(): Promise<RawHostRankingRow[]> {
   const rows = await db.execute(sql`
     select e.host_id, u.first_name, u.last_name, u.email, count(*) as total_events
     from events e
-    inner join users u on u.unique_id = e.host_id
+    inner join users u on u.unique_id = e.host_id and u.disabled = false
     group by e.host_id, u.first_name, u.last_name, u.email
     order by total_events desc
     limit ${RANKING_LIMIT}

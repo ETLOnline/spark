@@ -22,9 +22,14 @@ import {
   PlusCircle,
   PencilRuler,
   Check,
-  LogOut
+  LogOut,
+  Pencil,
+  Trash2
 } from "lucide-react"
-import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import {
+  CommunityCategory,
+  CommunityDetailData
+} from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import { useAtom, useAtomValue } from "jotai"
 import { channelStore } from "@/src/store/channel/channelStore"
@@ -45,9 +50,19 @@ import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import {
   AttachCommunityUserAction,
+  DeleteCommunityAction,
   DetachCommunityUserAction,
+  GetCommunityCategoriesAction,
   UpdateCommunityAction
 } from "@/src/server-actions/Community/Community"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "../ui/dropdown-menu"
+import CreateCommunityModal from "./CreateCommunityModal"
 import { Switch } from "../ui/switch"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
@@ -74,12 +89,31 @@ import pusherClient from "@/src/services/realtime/PusherClient"
 import { EntityUpdateBroadCast, permissions } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import RankingCard from "./RankingCard"
+import { ADMIN_COMMUNITIES_LIST_URL } from "@/src/app/(admin)/admin/analytics/_data/constants"
 import FacultyDashboardCard from "./FacultyDashboardCard"
 import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
 import {
   GetCommunityLeaderboardAction,
   GetCurrentUserRankAction
 } from "@/src/server-actions/Communities/CommunityRanking"
+
+/** The detail payload in the shape the community store and edit modal expect. */
+const toSelectCommunity = (
+  community: CommunityDetailData
+): SelectCommunity => ({
+  id: community.id,
+  title: community.title,
+  description: community.description,
+  slug: community.slug,
+  type: community.type,
+  cover_image: community.cover_image,
+  is_FYP_enable: community.is_FYP_enable,
+  category_id: community.category_id,
+  created_by: community.owner?.id || "unknown",
+  updated_at: null,
+  created_at: community.created_at ? community.created_at.toISOString() : null,
+  deleted_at: null
+})
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -136,28 +170,38 @@ export default function CommunityDetailsClient({
     "COMMUNITY",
     community?.id
   )
-  useEffect(() => {
-    if (community) {
-      const transformedCommunity: SelectCommunity = {
-        id: community.id,
-        title: community.title,
-        description: community.description,
-        slug: community.slug,
-        type: community.type,
-        cover_image: community.cover_image,
-        is_FYP_enable: community.is_FYP_enable,
+  const [communityFormModalVisibility, setCommunityFormModalVisibility] =
+    useAtom(communityStore.communityFormModalVisibility)
+  const [communityCategories, setCommunityCategories] = useState<
+    CommunityCategory[]
+  >([])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteLoading, , , deleteCommunity] = useServerAction(
+    DeleteCommunityAction
+  )
 
-        category_id: community.category,
-        created_by: "unknown",
-        updated_at: null,
-        created_at: community.created_at
-          ? community.created_at.toISOString()
-          : null,
-        deleted_at: null
-      }
-      setCurrentCommunity(transformedCommunity)
+  const canEditCommunity = permissionChecker
+    ? permissionChecker.canAccess("community.update")
+    : false
+  const canDeleteCommunity = permissionChecker
+    ? permissionChecker.canAccess("community.delete")
+    : false
+
+  // The edit modal clears the selected community whenever it is closed, so
+  // re-select this one after it closes (other pages, e.g. spaces, read it).
+  useEffect(() => {
+    if (community && !communityFormModalVisibility) {
+      setCurrentCommunity(toSelectCommunity(community))
     }
-  }, [community])
+  }, [community, communityFormModalVisibility])
+
+  // Categories are only needed by the edit modal.
+  useEffect(() => {
+    if (!canEditCommunity || communityCategories.length > 0) return
+    GetCommunityCategoriesAction()
+      .then(setCommunityCategories)
+      .catch((err) => console.error("Error fetching categories:", err))
+  }, [canEditCommunity])
 
   useEffect(() => {
     if (currentUserId) {
@@ -322,6 +366,76 @@ export default function CommunityDetailsClient({
         `fyp.${permissions.fyp.facultyDashboardView}`
       )
     : false
+
+  const handleEditCommunity = () => {
+    setCurrentCommunity(toSelectCommunity(community))
+    setCommunityFormModalVisibility(true)
+  }
+
+  const handleCommunityUpdated = (updated: SelectCommunity) => {
+    if (updated.slug && updated.slug !== community.slug) {
+      // A title change regenerates the slug, so the current URL no longer exists.
+      router.replace(`/communities/${encodeURIComponent(updated.slug)}`)
+    } else {
+      router.refresh()
+    }
+  }
+
+  const handleDeleteCommunity = async () => {
+    const res = await deleteCommunity(toSelectCommunity(community))
+    if (res?.success) {
+      setDeleteDialogOpen(false)
+      toast({
+        title: "Community deleted",
+        description: `"${community.title}" has been deleted.`,
+        duration: 3000
+      })
+      router.replace(isSuperAdmin ? ADMIN_COMMUNITIES_LIST_URL : "/communities")
+    } else {
+      toast({
+        title: "Deletion failed",
+        description: res?.error || "Could not delete the community.",
+        variant: "destructive",
+        duration: 3000
+      })
+    }
+  }
+
+  const manageMenu =
+    canEditCommunity || canDeleteCommunity ? (
+      // modal={false}: the default modal mode locks body scroll and hides the
+      // scrollbar, which shifts the whole page sideways while the menu is open.
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-sm md:bg-white/10 md:border-white/20 md:text-white md:hover:bg-white/20 md:hover:text-white"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Manage
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {canEditCommunity && (
+            <DropdownMenuItem onClick={handleEditCommunity}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit community
+            </DropdownMenuItem>
+          )}
+          {canEditCommunity && canDeleteCommunity && <DropdownMenuSeparator />}
+          {canDeleteCommunity && (
+            <DropdownMenuItem
+              onClick={() => setDeleteDialogOpen(true)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete community
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ) : null
 
   const handleEnableFyp = async () => {
     const res = await updateCommunityFyp(community.id, {
@@ -497,6 +611,7 @@ export default function CommunityDetailsClient({
 
               {/* Action Buttons */}
               <div className="hidden md:flex md:flex-col gap-2 self-start md:self-auto flex-shrink-0">
+                {manageMenu}
                 {canInviteUser && (
                   <Button
                     variant="outline"
@@ -581,6 +696,7 @@ export default function CommunityDetailsClient({
             {community?.category}
           </Badge>
           <div className="flex flex-row flex-wrap items-center gap-2">
+            {manageMenu}
             {canInviteUser && (
               <Button
                 variant="outline"
@@ -972,6 +1088,44 @@ export default function CommunityDetailsClient({
         entityType="community"
         entity={community}
       />
+      {canEditCommunity && (
+        <CreateCommunityModal
+          availableCategories={communityCategories}
+          onCommunityUpdated={handleCommunityUpdated}
+        />
+      )}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => !deleteLoading && setDeleteDialogOpen(open)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete &ldquo;{community.title}&rdquo;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes the community and removes all of its
+              members and community roles. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              loading={deleteLoading}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault()
+                await handleDeleteCommunity()
+              }}
+            >
+              Delete community
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

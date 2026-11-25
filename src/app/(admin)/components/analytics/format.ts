@@ -1,21 +1,17 @@
 /**
- * Display-only helpers for the analytics views. The snapshot already holds
- * every number — these only format what's there (nullable fields render as
- * "—" rather than a misleading 0).
+ * Display-only helpers for the analytics views. A missing/null value renders
+ * as "0" — no separate placeholder/error text for "no data" here.
  */
 
+import moment from "moment"
 import {
   MONTH_LABELS,
   TrendGranularity,
   WEEKDAY_LABELS
 } from "../../admin/analytics/_data/constants"
 
-export const EMPTY_VALUE = "—"
-
 export function formatCount(value: number | null | undefined) {
-  return value === null || value === undefined
-    ? EMPTY_VALUE
-    : value.toLocaleString()
+  return value === null || value === undefined ? "0" : value.toLocaleString()
 }
 
 /**
@@ -48,7 +44,7 @@ export function formatPercent(
   total: number | null | undefined
 ) {
   const pct = toPercent(value, total)
-  return pct === null ? EMPTY_VALUE : `${pct.toFixed(1)}%`
+  return pct === null ? "0%" : `${pct.toFixed(1)}%`
 }
 
 /**
@@ -95,6 +91,13 @@ export function humanizeKey(key: string) {
   return spaced === spaced.toLowerCase()
     ? spaced.charAt(0).toUpperCase() + spaced.slice(1)
     : spaced
+}
+
+/** Formats an ISO / date string as "Sep 17, 2026"; null for empty or unparseable values. */
+export function formatDate(value: string | null | undefined) {
+  if (!value) return null
+  const date = moment(value)
+  return date.isValid() ? date.format("MMM D, YYYY") : null
 }
 
 /** date is always "YYYY-MM-DD" (see GetUsersReportModuleAction). Parsed with

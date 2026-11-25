@@ -15,17 +15,21 @@ import {
   GetAcceptedSessionRequestsForMentee,
   GetAcceptedSessionRequestsForMentor,
   GetAcceptedSessionRequestsForMentorOnDate,
+  GetAvailabilitySlotsList,
   GetEngagementsForUser,
   GetFeedbackForSession,
   GetFeedbackSubmittersForSessions,
   GetMentorAvailability,
   GetMentors,
+  GetMentorsList,
   GetPendingSessionRequestsForMentor,
   DeleteSessionRequestsByIds,
+  GetSessionById,
   GetSessionRequestById,
   GetSessionRequestsByIds,
   GetSessionRequestsForMenteeAndMentor,
   GetSessionRequestsForMentorByStatus,
+  GetSessionsList,
   GetSharedSpacesForSessions,
   HasAcceptedOverlap,
   HasPendingSessionRequest,
@@ -38,6 +42,15 @@ import {
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
+import type {
+  AvailabilitySlotItem,
+  MentorListFilters,
+  MentorListItem,
+  SessionDetail,
+  SessionListFilters,
+  SessionListItem
+} from "@/src/types/Mentorship/Mentorship"
+import type { PaginationType } from "@/src/components/common/types/pagination.type"
 import type {
   Engagement,
   EngagementStatus,
@@ -1242,6 +1255,204 @@ export const ResubmitSessionRequestAction = CreateServerAction(
     } catch (error) {
       console.error("ResubmitSessionRequestAction error:", error)
       return { error: "Failed to resubmit session request" }
+    }
+  }
+)
+
+// ── Admin Analytics: Mentors / Sessions / Availability lists ───────────────
+
+export const GetMentorsListAction = CreateServerAction(
+  true,
+  async (filters: MentorListFilters, page: number = 1, limit: number = 10) => {
+    try {
+      const rows = await GetMentorsList(filters, page, limit)
+
+      const mentors: MentorListItem[] = rows.map((row) => ({
+        id: row.user_id,
+        name: `${row.first_name} ${row.last_name}`.trim(),
+        email: row.email,
+        linkedinUrl: row.linkedin_url,
+        sessionsCompleted: Number(row.total_completed_sessions ?? 0)
+      }))
+
+      const total = rows.length > 0 ? Number(rows[0].total_count) : 0
+
+      return {
+        success: true,
+        data: {
+          mentors,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+          } satisfies PaginationType
+        }
+      }
+    } catch (error) {
+      console.error("GetMentorsListAction error:", error)
+      return { success: false, error: "Failed to fetch mentors" }
+    }
+  }
+)
+
+export const GetSessionsListAction = CreateServerAction(
+  true,
+  async (filters: SessionListFilters, page: number = 1, limit: number = 10) => {
+    try {
+      const rows = await GetSessionsList(filters, page, limit)
+
+      const sessions: SessionListItem[] = rows.map((row) => ({
+        id: row.id,
+        date: row.session_date,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        topic: row.topic,
+        status: row.status,
+        mentor: {
+          id: row.mentor_id,
+          name: `${row.mentor_first_name} ${row.mentor_last_name}`.trim(),
+          email: row.mentor_email
+        },
+        mentee: {
+          id: row.mentee_id,
+          name: `${row.mentee_first_name} ${row.mentee_last_name}`.trim(),
+          email: row.mentee_email
+        },
+        ratings: {
+          mentor: row.mentor_rating,
+          mentee: row.mentee_rating
+        }
+      }))
+
+      const total = rows.length > 0 ? Number(rows[0].total_count) : 0
+
+      return {
+        success: true,
+        data: {
+          sessions,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+          } satisfies PaginationType
+        }
+      }
+    } catch (error) {
+      console.error("GetSessionsListAction error:", error)
+      return { success: false, error: "Failed to fetch sessions" }
+    }
+  }
+)
+
+const toMinutesSinceMidnight = (time: string) => {
+  const [hours, minutes] = time.split(":").map(Number)
+  return hours * 60 + minutes
+}
+
+export const GetSessionDetailsAction = CreateServerAction(
+  true,
+  async (sessionId: number) => {
+    try {
+      const result = await GetSessionById(sessionId)
+      if (!result) return { success: false, error: "Session not found" }
+
+      const { session, mentor, mentee, status, feedback } = result
+
+      const mentorToMentee = feedback.find(
+        (f) => f.submitted_by === session.mentor_id
+      )
+      const menteeToMentor = feedback.find(
+        (f) => f.submitted_by === session.mentee_id
+      )
+
+      const data: SessionDetail = {
+        id: session.id,
+        date: session.session_date,
+        startTime: session.start_time,
+        endTime: session.end_time,
+        topic: session.topic,
+        status,
+        durationMinutes:
+          toMinutesSinceMidnight(session.end_time) -
+          toMinutesSinceMidnight(session.start_time),
+        sessionType: session.session_type,
+        mentor: {
+          id: mentor.unique_id,
+          name: `${mentor.first_name} ${mentor.last_name}`.trim(),
+          email: mentor.email
+        },
+        mentee: {
+          id: mentee.unique_id,
+          name: `${mentee.first_name} ${mentee.last_name}`.trim(),
+          email: mentee.email
+        },
+        mentorProfessionalTitle: mentor.profile?.professional_title ?? null,
+        mentorCompany: mentor.profile?.company ?? null,
+        mentorSessionsCompleted: mentor.profile?.total_completed_sessions ?? 0,
+        ratings: {
+          mentor: mentorToMentee?.rating ?? null,
+          mentee: menteeToMentor?.rating ?? null
+        },
+        feedback: {
+          mentorToMentee: mentorToMentee
+            ? {
+                rating: mentorToMentee.rating,
+                comment: mentorToMentee.comment
+              }
+            : null,
+          menteeToMentor: menteeToMentor
+            ? {
+                rating: menteeToMentor.rating,
+                comment: menteeToMentor.comment
+              }
+            : null
+        }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error("GetSessionDetailsAction error:", error)
+      return { success: false, error: "Failed to fetch session details" }
+    }
+  }
+)
+
+export const GetAvailabilitySlotsListAction = CreateServerAction(
+  true,
+  async (page: number = 1, limit: number = 10) => {
+    try {
+      const rows = await GetAvailabilitySlotsList(page, limit)
+
+      const slots: AvailabilitySlotItem[] = rows.map((row) => ({
+        id: row.id,
+        mentorName: `${row.mentor_first_name} ${row.mentor_last_name}`.trim(),
+        mentorEmail: row.mentor_email,
+        date: row.date,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        sessionType: row.session_type,
+        repeatType: row.repeat_type
+      }))
+
+      const total = rows.length > 0 ? Number(rows[0].total_count) : 0
+
+      return {
+        success: true,
+        data: {
+          slots,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+          } satisfies PaginationType
+        }
+      }
+    } catch (error) {
+      console.error("GetAvailabilitySlotsListAction error:", error)
+      return { success: false, error: "Failed to fetch availability slots" }
     }
   }
 )

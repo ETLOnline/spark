@@ -1,6 +1,7 @@
 "use client"
 
-import { Info, type LucideIcon } from "lucide-react"
+import Link from "next/link"
+import { ArrowRight, Info, type LucideIcon } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { Card } from "@/src/components/ui/card"
 import {
@@ -19,8 +20,10 @@ export interface KpiItem {
   description?: string
   /** Full, uncompacted number shown in a hover tooltip over a compacted value (e.g. 12.4K → 12,412). */
   fullValue?: string
-  /** True when the underlying data failed to load — renders "No data found" instead of the value. */
-  error?: boolean
+  /** Makes the card a link (drill-down) and shows an arrow affordance. */
+  href?: string
+  /** Highlights the card as the current selection (e.g. the open drill-down). */
+  active?: boolean
 }
 
 const COLUMN_CLASSES = {
@@ -70,57 +73,65 @@ export function KpiCard({
     >
       {items.map(
         (
-          { label, value, sub, icon: Icon, description, fullValue, error },
+          {
+            label,
+            value,
+            sub,
+            icon: Icon,
+            description,
+            fullValue,
+            href,
+            active
+          },
           idx
-        ) => (
-          <Card
-            key={label}
-            className={
-              compact
-                ? "min-w-0 p-4 flex flex-col gap-2"
-                : "min-w-0 rounded-xl border bg-card p-4 sm:p-5 shadow-sm flex flex-col gap-1"
-            }
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span
-                className={cn(
-                  "min-w-0 flex items-center gap-1 text-muted-foreground [overflow-wrap:anywhere]",
-                  compact
-                    ? "text-sm"
-                    : "text-xs font-medium uppercase tracking-wide"
-                )}
-              >
-                {label}
-                {description && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="w-3 h-3 flex-shrink-0 cursor-help normal-case font-normal" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-56 normal-case font-normal">
-                        {description}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </span>
-              {Icon && (
+        ) => {
+          const card = (
+            <Card
+              key={href ? undefined : label}
+              className={cn(
+                compact
+                  ? "min-w-0 p-4 flex flex-col gap-2"
+                  : "min-w-0 rounded-xl border bg-card p-4 sm:p-5 shadow-sm flex flex-col gap-1",
+                href &&
+                  "h-full transition-colors group-hover:border-primary group-focus-visible:ring-2 group-focus-visible:ring-primary",
+                active && "border-primary ring-1 ring-primary"
+              )}
+            >
+              <div className="flex items-start justify-between gap-2">
                 <span
                   className={cn(
-                    "rounded-lg flex items-center justify-center flex-shrink-0",
-                    compact ? "w-8 h-8" : "w-7 h-7",
-                    ICON_PALETTE[idx % ICON_PALETTE.length]
+                    "min-w-0 flex items-center gap-1 text-muted-foreground [overflow-wrap:anywhere]",
+                    compact
+                      ? "text-sm"
+                      : "text-xs font-medium uppercase tracking-wide"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  {label}
+                  {description && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="w-3 h-3 flex-shrink-0 cursor-help normal-case font-normal" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-56 normal-case font-normal">
+                          {description}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </span>
-              )}
-            </div>
-            {error ? (
-              <span className="text-sm text-muted-foreground">
-                No data found
-              </span>
-            ) : (
+                {Icon && (
+                  <span
+                    className={cn(
+                      "rounded-lg flex items-center justify-center flex-shrink-0",
+                      compact ? "w-8 h-8" : "w-7 h-7",
+                      ICON_PALETTE[idx % ICON_PALETTE.length]
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </span>
+                )}
+              </div>
               <span
                 title={fullValue}
                 className={cn(
@@ -130,19 +141,41 @@ export function KpiCard({
               >
                 {value}
               </span>
-            )}
-            {sub && (
-              <span
-                className={cn(
-                  "text-xs text-muted-foreground",
-                  !compact && "[overflow-wrap:anywhere]"
-                )}
-              >
-                {sub}
-              </span>
-            )}
-          </Card>
-        )
+              {sub && (
+                <span
+                  className={cn(
+                    "text-xs text-muted-foreground",
+                    !compact && "[overflow-wrap:anywhere]"
+                  )}
+                >
+                  {sub}
+                </span>
+              )}
+              {href && (
+                <ArrowRight
+                  aria-hidden="true"
+                  className="w-4 h-4 self-end text-primary transition-transform group-hover:translate-x-0.5"
+                />
+              )}
+            </Card>
+          )
+
+          if (!href) return card
+
+          return (
+            <Link
+              key={label}
+              href={href}
+              // Cards often only change a query param (a filter) on the same
+              // page; keep the reader's scroll position.
+              scroll={false}
+              aria-current={active ? "true" : undefined}
+              className="group min-w-0 rounded-xl focus-visible:outline-none"
+            >
+              {card}
+            </Link>
+          )
+        }
       )}
     </div>
   )

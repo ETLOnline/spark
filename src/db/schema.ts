@@ -2,6 +2,8 @@ import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
+import { PostStatus } from "@/src/types/Post/PostStatus"
+import type { PostModerationResult } from "@/src/services/ai/schemas/postCheck.schema"
 import {
   integer,
   pgTable,
@@ -32,6 +34,8 @@ export const usersTable = pgTable("users", {
   cover_image: varchar(),
   meta: varchar(),
   role: varchar().notNull().default("user"),
+  // disabled by a super admin: banned in Clerk, so they can't sign in
+  disabled: boolean("disabled").notNull().default(false),
   meta_profile: json("meta_profile").default({
     bio_written: false,
     persona_selected: false,
@@ -143,8 +147,13 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
 }))
 
 export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
+export type SelectUser = Omit<
+  typeof usersTable.$inferSelect,
+  "meta" | "disabled"
+> & {
   // meta?: string
+  // optional: queries that pick their own columns may leave it out
+  disabled?: boolean
   chats?: SelectUserChat[]
   contacts?: SelectUserContact[]
   users?: SelectUserContact[]
@@ -738,6 +747,14 @@ export const postsTable = pgTable("posts", {
   likes: integer().notNull().default(0),
   comments: integer().notNull().default(0),
   category: varchar(),
+  // tags added by TypeSafe AI when the post is created/edited, e.g. ["helpful", "impressive"]
+  ai_tags: jsonb("ai_tags").$type<string[]>().notNull().default([]),
+  // published | pending_review | rejected
+  status: varchar().notNull().default(PostStatus.PUBLISHED),
+  // why the AI held the post; null when the post was published straight away
+  moderation_result: jsonb("moderation_result").$type<PostModerationResult>(),
+  // user id of the admin who approved or rejected the post
+  reviewed_by: varchar(),
   ...timestamps
 })
 
@@ -1637,6 +1654,12 @@ export const advisorRequestsRelations = relations(
     requester: one(usersTable, {
       fields: [advisorRequestsTable.requested_by],
       references: [usersTable.unique_id]
+    }),
+    // The advisor who accepted the request (null until accepted).
+    advisor: one(usersTable, {
+      fields: [advisorRequestsTable.accepted_by],
+      references: [usersTable.unique_id],
+      relationName: "advisorRequestToAdvisor"
     }),
     domain: one(tagsTable, {
       fields: [advisorRequestsTable.domain_tag_id],

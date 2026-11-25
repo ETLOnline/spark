@@ -24,6 +24,7 @@ export async function GetMentorTotalsRaw(): Promise<RawMentorTotalsRow> {
       count(*) filter (where p.verified = true) as verified
     from user_roles ur
     inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
+    inner join users u on u.unique_id = ur.user_id and u.disabled = false
     left join profile p on p.user_id = ur.user_id
   `)
   return rows[0] as unknown as RawMentorTotalsRow
@@ -40,33 +41,40 @@ export async function GetMentorAvailabilityTotalsRaw(): Promise<RawAvailabilityR
 
 /**
  * "Completed" is not a session_requests.status value — nothing ever writes
- * it. It comes from profile.total_completed_sessions, the same counter the
- * public /mentors listing reads (GetMentors in db/data-access/mentor/query.ts),
- * summed across every Mentor-role user (not just the top-10 shown in the
- * ranking table) so this platform-wide total reflects all mentors.
- * total/rejected are still row counts from session_requests, so
- * total == pending + completed + rejected is an approximation, not exact —
- * "completed" and "total/rejected" come from different sources.
+ * it. Computed live here, straight from session_requests +
+ * mentorship_feedback, using the exact same condition as the admin Completed
+ * Sessions list (buildSessionCompletedCondition in
+ * db/data-access/mentor/query.ts): status=accepted AND mentor confirmed
+ * attendance AND both mentor and mentee submitted feedback. Deliberately NOT
+ * sourced from profile.total_completed_sessions (a separately-maintained
+ * counter) — two independent mechanisms computing the same thing is exactly
+ * what let this KPI and the live list disagree before. Every other field
+ * here now derives from the same single condition too, so
+ * total == pending + completed + rejected exactly, by construction.
  */
 export async function GetMentorSessionTotalsRaw(): Promise<RawSessionsRow> {
   const rows = await db.execute(sql`
     select
-      t.total,
-      t.rejected,
-      c.completed,
-      greatest(t.total - t.rejected - c.completed, 0) as pending
-    from (
+      count(*) as total,
+      count(*) filter (where sr.status = 'rejected') as rejected,
+      count(*) filter (where sr.status != 'rejected' and completed.is_completed) as completed,
+      count(*) filter (where sr.status != 'rejected' and not completed.is_completed) as pending
+    from session_requests sr
+    cross join lateral (
       select
-        count(*) as total,
-        count(*) filter (where status = 'rejected') as rejected
-      from session_requests
-    ) t,
-    (
-      select coalesce(sum(p.total_completed_sessions), 0) as completed
-      from user_roles ur
-      inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
-      inner join profile p on p.user_id = ur.user_id
-    ) c
+        sr.status = 'accepted'
+          and (sr.attendee_confirmations ? sr.mentor_id)
+          and exists (
+            select 1 from mentorship_feedback mf
+            where mf.session_request_id = sr.id
+              and mf.submitted_by = sr.mentor_id
+          )
+          and exists (
+            select 1 from mentorship_feedback mf
+            where mf.session_request_id = sr.id
+              and mf.submitted_by = sr.mentee_id
+          ) as is_completed
+    ) completed
   `)
   return rows[0] as unknown as RawSessionsRow
 }
@@ -82,10 +90,10 @@ export async function GetMentorFeedbackTotalsRaw(): Promise<RawFeedbackRow> {
  * Ranked by sessions_completed ("delivered"). This does NOT come from
  * session_requests.status — that column's real values are pending/accepted/
  * rejected/resubmitted/slot_suggested; 'completed' is never written there.
- * "Delivered" comes from profile.total_completed_sessions, the same counter
- * the public /mentors listing reads (GetMentors in
- * db/data-access/mentor/query.ts) — keeps this leaderboard's numbers
- * consistent with what mentors see about themselves. Mentors with zero
+ * "Delivered" is computed live, same condition as GetMentorSessionTotalsRaw
+ * (above) and the admin Completed Sessions list (buildSessionCompletedCondition
+ * in db/data-access/mentor/query.ts): status=accepted AND mentor confirmed
+ * attendance AND both mentor and mentee submitted feedback. Mentors with zero
  * completed sessions are excluded entirely, not just ranked last.
  */
 export async function GetMentorRankingRaw(): Promise<RawMentorRankingRow[]> {
@@ -96,17 +104,28 @@ export async function GetMentorRankingRaw(): Promise<RawMentorRankingRow[]> {
       u.last_name,
       u.email,
       coalesce(s.total, 0) as sessions_total,
-      coalesce(p.total_completed_sessions, 0) as sessions_completed,
+      coalesce(s.completed, 0) as sessions_completed,
       coalesce(s.rejected, 0) as sessions_rejected,
       coalesce(f.total, 0) as feedback_total
     from user_roles ur
     inner join roles r on r.id = ur.role_id and r.name = 'Mentor'
-    inner join users u on u.unique_id = ur.user_id
-    left join profile p on p.user_id = u.unique_id
+    inner join users u on u.unique_id = ur.user_id and u.disabled = false
     left join lateral (
       select
         count(*) as total,
-        count(*) filter (where status = 'rejected') as rejected
+        count(*) filter (where status = 'rejected') as rejected,
+        count(*) filter (
+          where status = 'accepted'
+            and (attendee_confirmations ? mentor_id)
+            and exists (
+              select 1 from mentorship_feedback mf
+              where mf.session_request_id = sr.id and mf.submitted_by = sr.mentor_id
+            )
+            and exists (
+              select 1 from mentorship_feedback mf
+              where mf.session_request_id = sr.id and mf.submitted_by = sr.mentee_id
+            )
+        ) as completed
       from session_requests sr
       where sr.mentor_id = u.unique_id
     ) s on true
@@ -117,8 +136,8 @@ export async function GetMentorRankingRaw(): Promise<RawMentorRankingRow[]> {
       from mentorship_feedback mf
       where mf.recipient_id = u.unique_id
     ) f on true
-    where coalesce(p.total_completed_sessions, 0) > 0
-    order by coalesce(p.total_completed_sessions, 0) desc
+    where coalesce(s.completed, 0) > 0
+    order by coalesce(s.completed, 0) desc
     limit ${RANKING_LIMIT}
   `)
   return rows as unknown as RawMentorRankingRow[]
