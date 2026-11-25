@@ -32,6 +32,7 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
+import { isSuperAdmin } from "@/src/utils/helpers"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -293,7 +294,7 @@ export const GetCommunityByIdAction = CreateServerAction(
 
 export const AttachCommunityUserAction = CreateServerAction(
   true,
-  async (communityId: string, userId: string, roleName?: EntityType,) => {
+  async (communityId: string, userId: string, roleName?: EntityType) => {
     try {
       const roleAssigned = roleName ? roleName : "community_viewer"
       const attachUserRole = await getAndAssignViewerRoles(
@@ -404,6 +405,63 @@ export const LeaveCommunityAction = CreateServerAction(
       return { success: true, data: deleted }
     } catch (error: any) {
       return { success: false, error: error.message || error }
+    }
+  }
+)
+
+/** Only the fields the admin communities table shows. */
+export interface AdminCommunityListItem {
+  id: string
+  title: string
+  slug: string
+  visibility: "public" | "private"
+  category: string | null
+  fyp_enabled: boolean
+  total_members: number
+  created_at: string | null
+}
+
+// Super Admin only: every community for the admin panel, using the same
+// query as the public communities page (search by title, newest first).
+export const GetAdminCommunitiesListAction = CreateServerAction(
+  true,
+  async ({
+    searchTerm,
+    page = 1,
+    limit = 10
+  }: {
+    searchTerm?: string
+    page?: number
+    limit?: number
+  }) => {
+    try {
+      const user = await AuthUserAction()
+      if (!user || !(await isSuperAdmin(user))) {
+        throw new Error("Forbidden", { cause: 403 })
+      }
+      const { communities, pagination } = await GetCommunities(
+        user,
+        { searchTerm, sortBy: "newest" },
+        page,
+        limit
+      )
+      const items: AdminCommunityListItem[] = communities.map((c) => ({
+        id: c.id,
+        title: c.title,
+        slug: c.slug,
+        visibility: c.type === "public" ? "public" : "private",
+        category: c.category?.name ?? null,
+        fyp_enabled: !!c.is_FYP_enable,
+        total_members: c.communityMembers?.length ?? 0,
+        created_at: c.created_at ?? null
+      }))
+      return { success: true, data: { communities: items, pagination } }
+    } catch (error: any) {
+      console.error("Error in GetAdminCommunitiesListAction:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to fetch communities."
+      }
     }
   }
 )

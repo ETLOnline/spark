@@ -22,6 +22,7 @@ import { downloadCsv } from "./csv"
 import { KpiCard } from "./KpiCard"
 import { TrendBarChart, TrendPoint } from "./TrendBarChart"
 import { UserSegmentCard } from "./UserSegmentCard"
+import { UsersList } from "../UsersList/UsersList"
 import {
   formatCount,
   formatPercent,
@@ -29,11 +30,11 @@ import {
   humanizeKey
 } from "./format"
 import {
+  ALL_ROLES,
+  INCOMPLETE_PERSONA,
   TREND_TABS,
   TrendGranularity
 } from "../../admin/analytics/_data/constants"
-
-const ALL_ROLES = "all"
 
 /**
  * One row of user stats — the whole user base or a single role. Only
@@ -76,9 +77,16 @@ export default function UsersAnalyticsView() {
     )
   }
 
-  const roles = Object.entries(users.roles).map(([name, stats]) => ({
+  const roles = Object.entries({
+    ...users.roles,
+    // not a real role; missing in older snapshots
+    ...(users.incomplete_persona && {
+      [INCOMPLETE_PERSONA]: users.incomplete_persona
+    })
+  }).map(([name, stats]) => ({
     name,
-    label: humanizeKey(name),
+    label:
+      name === INCOMPLETE_PERSONA ? "Incomplete Persona" : humanizeKey(name),
     stats: {
       total: stats.total,
       verified: stats.verified,
@@ -86,6 +94,7 @@ export default function UsersAnalyticsView() {
     } as UserStats
   }))
   const selected = roles.find((r) => r.name === selectedRole)
+  const isIncompletePersona = selectedRole === INCOMPLETE_PERSONA
   const stats: UserStats = selected?.stats ?? users
   const selectedLabel = selected?.label ?? "All roles"
 
@@ -181,6 +190,12 @@ export default function UsersAnalyticsView() {
       </div>
 
       <KpiCard items={statCards} variant="compact" />
+
+      <UsersList
+        // Incomplete Persona isn't a real role, so it goes as its own filter
+        role={selected && !isIncompletePersona ? selectedRole : undefined}
+        incompletePersona={isIncompletePersona}
+      />
 
       <UserSegmentCard users={users} error={false} showLink={false} />
 

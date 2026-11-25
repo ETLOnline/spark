@@ -58,3 +58,6 @@ export type Comment = {
   content: string
   createdAt: string
 }
+
+// "public": published posts of everyone; "mine": the user's own posts in every status
+export type PostFeedType = "public" | "mine"

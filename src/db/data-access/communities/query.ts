@@ -14,7 +14,8 @@ import {
   leaderboardSnapshotsTable,
   InsertLeaderboardSnapshot,
   SelectLeaderboardSnapshot,
-  pointLedgerTable
+  pointLedgerTable,
+  usersTable
 } from "../../schema"
 import {
   eq,
@@ -306,6 +307,7 @@ export type CommunityDetailData = {
   description: string
   cover_image: string
   category: string
+  category_id: string
   slug: string
   type: "public" | "private"
   is_FYP_enable: boolean
@@ -369,6 +371,7 @@ export async function GetCommunityBySlug(
       description: communityDetails.description || "",
       cover_image: communityDetails.cover_image || "",
       category: categoryName,
+      category_id: communityDetails.category_id,
       slug: communityDetails.slug,
       type:
         communityDetails.type === "public" ||
@@ -676,6 +679,7 @@ export async function getUserCommunitiesWithRanking(userId: string) {
 }
 
 export async function getCommunityLedgerTotals(communityId: string) {
+  // disabled users are left out of the leaderboard
   return db
     .select({
       user_id: pointLedgerTable.user_id,
@@ -683,6 +687,13 @@ export async function getCommunityLedgerTotals(communityId: string) {
       total_points: sql<number>`CAST(SUM(${pointLedgerTable.amount}) AS INTEGER)`
     })
     .from(pointLedgerTable)
+    .innerJoin(
+      usersTable,
+      and(
+        eq(usersTable.unique_id, pointLedgerTable.user_id),
+        eq(usersTable.disabled, false)
+      )
+    )
     .where(sql`${pointLedgerTable.metadata}->>'community_id' = ${communityId}`)
     .groupBy(pointLedgerTable.user_id, pointLedgerTable.reward_id)
     .orderBy(sql`SUM(${pointLedgerTable.amount}) DESC`)

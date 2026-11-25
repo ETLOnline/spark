@@ -17,6 +17,11 @@ export const AuthUserAction = CreateServerAction(true, async () => {
       throw new Error("User not found", { cause: 401 })
     }
 
+    // disabled users are banned in Clerk; this also blocks API keys
+    if (user.disabled) {
+      throw new Error("User is disabled", { cause: 403 })
+    }
+
     return user
   } catch (error) {
     throw new Error("Unauthorized", { cause: error })

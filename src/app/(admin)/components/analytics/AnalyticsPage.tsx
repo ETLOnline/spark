@@ -41,7 +41,7 @@ export function SnapshotUnavailable({ className }: { className?: string }) {
         className
       )}
     >
-      This data isn&apos;t available in the latest report snapshot yet.
+      No data found
     </div>
   )
 }
