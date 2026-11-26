@@ -30,11 +30,28 @@ export async function GetMentorTotalsRaw(): Promise<RawMentorTotalsRow> {
   return rows[0] as unknown as RawMentorTotalsRow
 }
 
+/**
+ * "Available" = is_active AND not yet expired — same date-level rule the
+ * live Availability Slots modal uses (GetAvailabilitySlotsListAction in
+ * MentorActions.ts), so this count and that list agree. One intentional gap:
+ * this is date-only (no time-of-day), so a one-time slot scheduled earlier
+ * today still counts here for the rest of today, while the modal (which also
+ * checks time-of-day) would have already rolled/dropped it. Expected — this
+ * number is a periodic cron snapshot, not live.
+ */
 export async function GetMentorAvailabilityTotalsRaw(): Promise<RawAvailabilityRow> {
   const rows = await db.execute(sql`
     select
       count(*) as total_slots
-    from mentor_availability
+    from mentor_availability m
+    where m.is_active = true
+      and (
+        (m.repeat_type = 'none' and m.date >= current_date::text)
+        or (
+          m.repeat_type != 'none'
+          and (m.repeat_end_date is null or m.repeat_end_date >= current_date::text)
+        )
+      )
   `)
   return rows[0] as unknown as RawAvailabilityRow
 }

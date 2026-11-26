@@ -91,6 +91,7 @@ export interface SessionDetail extends SessionListItem {
 
 export interface RawAvailabilitySlotRow {
   id: number
+  mentor_id: string
   mentor_first_name: string
   mentor_last_name: string
   mentor_email: string
@@ -99,16 +100,26 @@ export interface RawAvailabilitySlotRow {
   end_time: string
   session_type: string
   repeat_type: string
-  total_count: number | string
+  repeat_end_date: string | null
 }
 
+/** `date` is the slot's next upcoming occurrence (computed), not necessarily
+ * the raw stored anchor date of a recurring series. */
 export interface AvailabilitySlotItem {
   id: number
-  mentorName: string
-  mentorEmail: string
   date: string
   startTime: string
   endTime: string
   sessionType: string
   repeatType: string
+}
+
+/** One mentor with every active, not-yet-expired slot they have, nearest
+ * occurrence first (slots[0]). */
+export interface MentorAvailabilityGroup {
+  mentorId: string
+  mentorName: string
+  mentorEmail: string
+  totalSlots: number
+  slots: AvailabilitySlotItem[]
 }
