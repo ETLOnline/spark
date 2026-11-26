@@ -15,9 +15,39 @@ export interface RecurrencePattern {
 }
 
 /** Last date (inclusive) this pattern can occur on. */
-function recurrenceEndDate(p: RecurrencePattern) {
+export function recurrenceEndDate(p: RecurrencePattern) {
   if (p.repeat_type === "none") return p.date
   return p.repeat_end_date ?? "9999-12-31"
+}
+
+/**
+ * Earliest date (YYYY-MM-DD) this pattern occurs on at or after
+ * `fromDateStr`, or null if the pattern has no occurrence left on/after that
+ * date (one-time slot already passed, or recurring series already ended).
+ * Date-only — callers needing time-of-day precision (e.g. "has today's
+ * occurrence already started") should combine the result with start_time
+ * and re-call with the next day's date string to roll forward.
+ */
+export function nextOccurrenceDate(
+  p: RecurrencePattern,
+  fromDateStr: string
+): string | null {
+  if (p.repeat_type === "none") {
+    return p.date >= fromDateStr ? p.date : null
+  }
+
+  const start = p.date > fromDateStr ? p.date : fromDateStr
+  const end = recurrenceEndDate(p)
+  if (start > end) return null
+  if (p.repeat_type === "daily") return start
+
+  // Weekly: first date >= start matching the anchor's day-of-week.
+  const anchorDow = moment(p.date, "YYYY-MM-DD").day()
+  const diff = (anchorDow - moment(start, "YYYY-MM-DD").day() + 7) % 7
+  const next = moment(start, "YYYY-MM-DD")
+    .add(diff, "days")
+    .format("YYYY-MM-DD")
+  return next <= end ? next : null
 }
 
 /**
