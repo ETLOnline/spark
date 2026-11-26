@@ -13,7 +13,8 @@ import {
   RawFypPlatformStats,
   RawFypProjectDetail,
   RawFypSpaceRow,
-  RawFypUniversityOverviewRow
+  RawFypUniversityOverviewRow,
+  REQUEST_NOT_SENT
 } from "@/src/types/Fyp/Fyp"
 
 const COMPLETED_MILESTONE_STATUSES = [
@@ -92,30 +93,29 @@ export async function GetFypDashboardProjects(
   const { communityId, searchTerm, domainTagId, status } = filters
   const offset = (page - 1) * limit
 
+  // Driven by fypSpacesCte (same base as the admin per-university directory),
+  // so every FYP-enabled space is listed whether or not it has raised an
+  // advisor request; request fields are null when it hasn't.
   const rows = await db.execute(sql`
-    with filtered_projects as (
+    with ${fypSpacesCte},
+    filtered_projects as (
       -- Every filter lives here, and total_count is captured before the
-      -- limit/offset slice below, so this is the only place that scans
-      -- spaces/channels/latest request for the whole (unpaginated) result.
-      select
-        s.id as space_id,
-        s.space_slug,
-        s.space_name,
-        ch.channel_slug,
-        lr.id as request_id,
-        lr.status as request_status,
-        lr.domain_tag_id,
-        lr.accepted_by,
-        count(*) over () as total_count
-      from (${latestRequestCte}) lr
-      inner join spaces s on s.id = lr.space_id
-      left join channels ch on ch.channel_id = s.channel_id
+      -- limit/offset slice below, so the supervisor/milestone laterals only
+      -- run for the rows on this page.
+      select e.*, count(*) over () as total_count
+      from fyp_spaces e
       where 1 = 1
-        ${communityId ? sql`and ch.community_id = ${communityId}` : sql``}
-        ${searchTerm ? sql`and s.space_name ilike ${`%${searchTerm}%`}` : sql``}
-        ${domainTagId ? sql`and lr.domain_tag_id = ${domainTagId}` : sql``}
-        ${status ? sql`and lr.status = ${status}` : sql``}
-      order by s.space_name asc
+        ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
+        ${domainTagId ? sql`and e.domain_tag_id = ${domainTagId}` : sql``}
+        ${
+          status === REQUEST_NOT_SENT
+            ? sql`and e.request_id is null`
+            : status
+              ? sql`and e.request_status = ${status}`
+              : sql``
+        }
+        ${buildFypSearchCondition(searchTerm)}
+      order by e.space_name asc
       limit ${limit} offset ${offset}
     )
     select
@@ -126,19 +126,16 @@ export async function GetFypDashboardProjects(
       fp.request_id,
       fp.request_status,
       fp.total_count,
-      t.name as domain,
+      fp.domain,
       sup.first_name as supervisor_first_name,
       sup.last_name as supervisor_last_name,
-      adv.first_name as advisor_first_name,
-      adv.last_name as advisor_last_name,
+      fp.advisor_first_name,
+      fp.advisor_last_name,
       coalesce(milestones.total, 0) as milestones_total,
       coalesce(milestones.completed, 0) as milestones_completed
     from filtered_projects fp
-    left join tags t on t.id = fp.domain_tag_id
     left join ${firstSpaceAdminLateral(sql`fp.space_id`)} admin on true
     left join users sup on sup.unique_id = admin.user_id
-    -- Industry Advisor = whoever accepted the request; null until accepted.
-    left join users adv on adv.unique_id = fp.accepted_by
     left join ${milestoneCountsLateral(sql`fp.space_id`)} milestones on true
     order by fp.space_name asc
   `)
@@ -152,13 +149,12 @@ export async function GetFypDashboardStats(
   const { communityId } = filters
 
   const rows = await db.execute(sql`
-    with scoped as (
-      select lr.space_id, lr.status as request_status
-      from (${latestRequestCte}) lr
-      inner join spaces s on s.id = lr.space_id
-      left join channels ch on ch.channel_id = s.channel_id
+    with ${fypSpacesCte},
+    scoped as (
+      select e.space_id, e.request_status
+      from fyp_spaces e
       where 1 = 1
-        ${communityId ? sql`and ch.community_id = ${communityId}` : sql``}
+        ${communityId ? sql`and e.community_id = ${communityId}` : sql``}
     )
     select
       count(*) as total_projects,
@@ -174,8 +170,9 @@ export async function GetFypDashboardStats(
           sql`, `
         )})
       ) as pending_requests,
+      -- Includes spaces that never raised a request (request_status null).
       count(*) filter (
-        where scoped.request_status != ${AdvisorRequestStatus.ACCEPTED}
+        where scoped.request_status is distinct from ${AdvisorRequestStatus.ACCEPTED}
       ) as without_advisor,
       (
         select count(*)
