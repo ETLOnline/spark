@@ -50,6 +50,8 @@ export default function AdvisorsAnalyticsView() {
               label: "Total Advisors",
               value: advisors.total.toLocaleString(),
               sub: "Registered as FYP advisors",
+              description:
+                "Unique users who can receive FYP advisor requests through a global role (e.g. Industry Partner). Space-level roles such as Space Admin are not counted.",
               icon: GraduationCap,
               href: ADVISOR_ROUTES.filtered("all"),
               active: filter === "all"
@@ -58,7 +60,8 @@ export default function AdvisorsAnalyticsView() {
               label: "Active Advisors",
               value: advisors.active.toLocaleString(),
               sub: `${formatPercent(advisors.active, advisors.total)} of advisors`,
-              description: "Advisors on at least one ongoing project.",
+              description:
+                "Advisors assigned to at least one ongoing FYP project: they accepted its latest advisor request and its last milestone is not verified yet (projects with no milestones count as ongoing).",
               icon: UserCheck,
               href: ADVISOR_ROUTES.filtered("active"),
               active: filter === "active"
@@ -67,7 +70,7 @@ export default function AdvisorsAnalyticsView() {
               label: "Verified Advisors",
               value: advisors.verified.toLocaleString(),
               sub: `${formatPercent(advisors.verified, advisors.total)} of advisors`,
-              description: "Advisors with a verified profile.",
+              description: "Advisors whose profile has been verified.",
               icon: ShieldCheck,
               href: ADVISOR_ROUTES.filtered("verified"),
               active: filter === "verified"
@@ -77,7 +80,7 @@ export default function AdvisorsAnalyticsView() {
               value: advisors.projects.completed.toLocaleString(),
               sub: "Last milestone done and verified",
               description:
-                "FYP projects whose last milestone is completed and verified.",
+                "FYP projects whose last milestone (by milestone order) is completed and verified.",
               icon: CheckCircle2,
               href: ADVISOR_ROUTES.projects
             }

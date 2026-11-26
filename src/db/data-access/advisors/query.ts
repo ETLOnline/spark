@@ -18,11 +18,15 @@ import {
   profileTable,
   programFeedbackTable,
   rolePermissionsTable,
+  rolesTable,
   spacesTable,
   userRolesTable,
   usersTable
 } from "../../schema"
-import { ADVISOR_PERMISSION } from "../reporting/advisors/query"
+import {
+  ADVISOR_PERMISSION,
+  ADVISOR_ROLE_TYPE
+} from "../reporting/advisors/query"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 import { MilestoneStatus } from "@/src/types/Milestone/Milestone"
 import { AdvisorFilter } from "@/src/types/Advisors/AdminAdvisors"
@@ -32,7 +36,7 @@ import { PaginationType } from "@/src/components/common/types/pagination.type"
 // relations (db.query.*.findMany + `with`) and is paginated in the database
 // (limit/offset + db.$count), like GetTasks. Filters use subqueries, never
 // joins. The rules match the snapshot counts (reporting/advisors/query.ts):
-//   - an advisor is anyone holding the advisor permission, whatever the role
+//   - an advisor is anyone holding the advisor permission through a GLOBAL role
 //   - a project (FYP space) is completed when its last milestone is verified
 //   - a project's advisor is whoever accepted its latest advisor request
 
@@ -76,7 +80,7 @@ const acceptedAdvisorId = (request: Request | undefined) =>
 
 // ─── Subqueries (used inside `where: inArray(...)`) ──────────────────────────
 
-/** Ids of users holding the advisor permission through any of their roles. */
+/** Ids of users holding the advisor permission through a GLOBAL role. */
 const advisorUserIds = () =>
   db
     .select({ id: userRolesTable.user_id })
@@ -88,20 +92,29 @@ const advisorUserIds = () =>
           .select({ id: rolePermissionsTable.role_id })
           .from(rolePermissionsTable)
           .where(
-            inArray(
-              rolePermissionsTable.permission_id,
-              db
-                .select({ id: permissionsTable.id })
-                .from(permissionsTable)
-                .where(
-                  and(
-                    eq(
-                      permissionsTable.namespace,
-                      ADVISOR_PERMISSION.namespace
-                    ),
-                    eq(permissionsTable.action, ADVISOR_PERMISSION.action)
+            and(
+              inArray(
+                rolePermissionsTable.role_id,
+                db
+                  .select({ id: rolesTable.id })
+                  .from(rolesTable)
+                  .where(eq(rolesTable.role_type, ADVISOR_ROLE_TYPE))
+              ),
+              inArray(
+                rolePermissionsTable.permission_id,
+                db
+                  .select({ id: permissionsTable.id })
+                  .from(permissionsTable)
+                  .where(
+                    and(
+                      eq(
+                        permissionsTable.namespace,
+                        ADVISOR_PERMISSION.namespace
+                      ),
+                      eq(permissionsTable.action, ADVISOR_PERMISSION.action)
+                    )
                   )
-                )
+              )
             )
           )
       )
