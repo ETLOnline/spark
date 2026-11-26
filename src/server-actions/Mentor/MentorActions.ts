@@ -44,6 +44,7 @@ import {
 } from "@/src/db/data-access/mentor/query"
 import type {
   AvailabilitySlotItem,
+  MentorAvailabilityGroup,
   MentorListFilters,
   MentorListItem,
   SessionDetail,
@@ -77,7 +78,7 @@ import {
   SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
 import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
-import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
+import { MIN_DURATION_MINS, nextOccurrenceDate, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
 import { sendPushNotification } from "@/src/services/notifications/PushNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -1423,25 +1424,84 @@ export const GetAvailabilitySlotsListAction = CreateServerAction(
   true,
   async (page: number = 1, limit: number = 10) => {
     try {
-      const rows = await GetAvailabilitySlotsList(page, limit)
+      const rows = await GetAvailabilitySlotsList()
+      const now = moment()
+      const todayStr = now.format("YYYY-MM-DD")
+      const tomorrowStr = now.clone().add(1, "day").format("YYYY-MM-DD")
 
-      const slots: AvailabilitySlotItem[] = rows.map((row) => ({
-        id: row.id,
-        mentorName: `${row.mentor_first_name} ${row.mentor_last_name}`.trim(),
-        mentorEmail: row.mentor_email,
-        date: row.date,
-        startTime: row.start_time,
-        endTime: row.end_time,
-        sessionType: row.session_type,
-        repeatType: row.repeat_type
-      }))
+      // Resolve each slot to its next upcoming occurrence (date-only math via
+      // nextOccurrenceDate), then drop to time-of-day precision so a
+      // recurring/one-time slot whose time already passed today rolls to its
+      // next real occurrence instead of showing as "available now".
+      const upcoming = rows
+        .map((row) => {
+          const pattern = {
+            date: row.date,
+            repeat_type: row.repeat_type,
+            repeat_end_date: row.repeat_end_date
+          }
 
-      const total = rows.length > 0 ? Number(rows[0].total_count) : 0
+          let occDate = nextOccurrenceDate(pattern, todayStr)
+          if (!occDate) return null
+
+          let occDateTime = moment(
+            `${occDate} ${row.start_time}`,
+            "YYYY-MM-DD HH:mm"
+          )
+          if (occDateTime.isBefore(now)) {
+            occDate = nextOccurrenceDate(pattern, tomorrowStr)
+            if (!occDate) return null
+            occDateTime = moment(
+              `${occDate} ${row.start_time}`,
+              "YYYY-MM-DD HH:mm"
+            )
+          }
+
+          return { row, occDate, occDateTime }
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null)
+        .sort((a, b) => a.occDateTime.valueOf() - b.occDateTime.valueOf())
+
+      // Group by mentor. `upcoming` is already sorted nearest-first, and a
+      // Map keeps first-insertion order, so the group a mentor is first seen
+      // in already holds their nearest slot, and `groups.values()` is
+      // already mentor-sorted by nearest upcoming slot — no second sort.
+      const groups = new Map<string, MentorAvailabilityGroup>()
+      for (const { row, occDate } of upcoming) {
+        const slot: AvailabilitySlotItem = {
+          id: row.id,
+          date: occDate,
+          startTime: row.start_time,
+          endTime: row.end_time,
+          sessionType: row.session_type,
+          repeatType: row.repeat_type
+        }
+
+        const existing = groups.get(row.mentor_id)
+        if (existing) {
+          existing.slots.push(slot)
+          existing.totalSlots += 1
+        } else {
+          groups.set(row.mentor_id, {
+            mentorId: row.mentor_id,
+            mentorName:
+              `${row.mentor_first_name} ${row.mentor_last_name}`.trim(),
+            mentorEmail: row.mentor_email,
+            totalSlots: 1,
+            slots: [slot]
+          })
+        }
+      }
+
+      const mentors = Array.from(groups.values())
+      const total = mentors.length
+      const offset = (page - 1) * limit
+      const paged = mentors.slice(offset, offset + limit)
 
       return {
         success: true,
         data: {
-          slots,
+          mentors: paged,
           pagination: {
             total,
             page,

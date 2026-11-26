@@ -1396,15 +1396,20 @@ export async function GetSessionById(sessionId: number) {
   }
 }
 
-export async function GetAvailabilitySlotsList(
-  page: number = 1,
-  limit: number = 10
-): Promise<RawAvailabilitySlotRow[]> {
-  const offset = (page - 1) * limit
-
+/**
+ * Every active availability slot definition, across all mentors. Expiry
+ * (one-time slots whose date/time has passed, recurring series whose
+ * repeat_end_date has passed) and mentor-wise grouping/sorting are business
+ * rules computed in GetAvailabilitySlotsListAction, not here — this stays
+ * data access only.
+ */
+export async function GetAvailabilitySlotsList(): Promise<
+  RawAvailabilitySlotRow[]
+> {
   const rows = await db
     .select({
       id: mentorAvailabilityTable.id,
+      mentor_id: mentorAvailabilityTable.mentor_id,
       mentor_first_name: usersTable.first_name,
       mentor_last_name: usersTable.last_name,
       mentor_email: usersTable.email,
@@ -1413,7 +1418,7 @@ export async function GetAvailabilitySlotsList(
       end_time: mentorAvailabilityTable.end_time,
       session_type: mentorAvailabilityTable.session_type,
       repeat_type: mentorAvailabilityTable.repeat_type,
-      total_count: sql<number>`count(*) over()`
+      repeat_end_date: mentorAvailabilityTable.repeat_end_date
     })
     .from(mentorAvailabilityTable)
     .innerJoin(
@@ -1422,11 +1427,9 @@ export async function GetAvailabilitySlotsList(
     )
     .where(eq(mentorAvailabilityTable.is_active, true))
     .orderBy(
-      desc(mentorAvailabilityTable.date),
+      asc(mentorAvailabilityTable.date),
       asc(mentorAvailabilityTable.start_time)
     )
-    .limit(limit)
-    .offset(offset)
 
   return rows as unknown as RawAvailabilitySlotRow[]
 }
