@@ -46,7 +46,11 @@ import { GetAdvisorRequestDetailsAction } from "@/src/server-actions/AdvisorRequ
 import { GetAllTAgsAction } from "@/src/server-actions/Tag/Tag"
 import { SelectTag } from "@/src/db/schema"
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
-import { FypDashboardProject, FypDashboardStats } from "@/src/types/Fyp/Fyp"
+import {
+  FypDashboardProject,
+  FypDashboardStats,
+  REQUEST_NOT_SENT
+} from "@/src/types/Fyp/Fyp"
 import { getSpaceBasePath } from "@/src/utils/helpers"
 import { RequestDetailsDialog } from "@/src/components/Dashboard/profile/RequestDetailsDialog"
 
@@ -169,7 +173,10 @@ export default function FacultyDashboardView({
         communityId,
         searchTerm: searchTerm || undefined,
         domainTagId: domainTagId !== "all" ? Number(domainTagId) : undefined,
-        status: status !== "all" ? (status as AdvisorRequestStatus) : undefined
+        status:
+          status !== "all"
+            ? (status as AdvisorRequestStatus | typeof REQUEST_NOT_SENT)
+            : undefined
       },
       page,
       10
@@ -295,6 +302,7 @@ export default function FacultyDashboardView({
                   {STATUS_LABEL[value]}
                 </SelectItem>
               ))}
+              <SelectItem value={REQUEST_NOT_SENT}>Not Sent</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
@@ -332,7 +340,10 @@ export default function FacultyDashboardView({
               </TableHeader>
               <TableBody>
                 {projects.map((project) => {
-                  const isAccepted =
+                  const requestId = project.request_id
+                  // No request to open → link straight to the space.
+                  const showSpaceLink =
+                    !requestId ||
                     project.request_status === AdvisorRequestStatus.ACCEPTED
                   const spaceHref = getSpaceBasePath(
                     project.channel_slug,
@@ -350,27 +361,33 @@ export default function FacultyDashboardView({
                       <TableCell className="font-medium">
                         {project.project_name}
                       </TableCell>
-                      <TableCell>{project.domain ?? "-"}</TableCell>
+                      <TableCell>
+                        {project.domain ?? (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {project.university_supervisor ?? (
-                          <span className="text-muted-foreground">
-                            Not Assigned
-                          </span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
                         {project.industry_advisor ?? (
-                          <span className="text-muted-foreground">
-                            Not Assigned
-                          </span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <span
-                          className={`inline-block rounded px-2.5 py-1 text-xs font-medium ${STATUS_BADGE_CLASS[project.request_status]}`}
-                        >
-                          {STATUS_LABEL[project.request_status]}
-                        </span>
+                        {project.request_status ? (
+                          <span
+                            className={`inline-block rounded px-2.5 py-1 text-xs font-medium ${STATUS_BADGE_CLASS[project.request_status]}`}
+                          >
+                            {STATUS_LABEL[project.request_status]}
+                          </span>
+                        ) : (
+                          <span className="inline-block rounded bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                            Not Sent
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="w-40 space-y-1">
@@ -382,7 +399,7 @@ export default function FacultyDashboardView({
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        {isAccepted ? (
+                        {showSpaceLink ? (
                           <Link
                             href={spaceHref}
                             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
@@ -394,9 +411,7 @@ export default function FacultyDashboardView({
                           <Button
                             type="button"
                             variant="link"
-                            onClick={() =>
-                              handleViewRequest(project.request_id)
-                            }
+                            onClick={() => handleViewRequest(requestId)}
                             className="h-auto gap-1 p-0 font-medium no-underline hover:underline [&_svg]:size-3.5"
                           >
                             <Eye className="h-3.5 w-3.5" />

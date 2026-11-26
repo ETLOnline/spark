@@ -1,10 +1,13 @@
 import { AdvisorRequestStatus } from "@/src/types/AdvisorRequest/AdvisorRequest"
 
+/** Status filter value for FYP spaces that never sent an advisor request. */
+export const REQUEST_NOT_SENT = "not_sent" as const
+
 export interface FypDashboardFilters {
   communityId?: string
   searchTerm?: string
   domainTagId?: number
-  status?: AdvisorRequestStatus
+  status?: AdvisorRequestStatus | typeof REQUEST_NOT_SENT
 }
 
 export interface RawFypDashboardRow {
@@ -17,8 +20,9 @@ export interface RawFypDashboardRow {
   supervisor_last_name: string | null
   advisor_first_name: string | null
   advisor_last_name: string | null
-  request_id: string
-  request_status: AdvisorRequestStatus
+  // Null when the FYP-enabled space has never raised an advisor request.
+  request_id: string | null
+  request_status: AdvisorRequestStatus | null
   total_count: number | string
   milestones_total: number | string
   milestones_completed: number | string
@@ -32,8 +36,8 @@ export interface FypDashboardProject {
   domain: string | null
   university_supervisor: string | null
   industry_advisor: string | null
-  request_id: string
-  request_status: AdvisorRequestStatus
+  request_id: string | null
+  request_status: AdvisorRequestStatus | null
   milestones_completed: number
   milestones_total: number
 }
