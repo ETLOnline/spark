@@ -51,7 +51,7 @@ export default function AdvisorsAnalyticsView() {
               value: advisors.total.toLocaleString(),
               sub: "Registered as FYP advisors",
               description:
-                "Unique users who can receive FYP advisor requests through a global role (e.g. Industry Partner). Space-level roles such as Space Admin are not counted.",
+                "Unique active users with a global role (e.g. Industry Partner) that has the FYP advisor permission. Disabled users are excluded.",
               icon: GraduationCap,
               href: ADVISOR_ROUTES.filtered("all"),
               active: filter === "all"
