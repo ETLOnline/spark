@@ -21,13 +21,18 @@ export const ADVISOR_PERMISSION = {
   action: permissions.advisory.canReceiveAdvisorRequest
 } as const
 
-/** Distinct users holding the advisor permission through a GLOBAL role → (user_id). */
+/**
+ * Distinct, valid users holding the advisor permission through a GLOBAL role
+ * → (user_id). Disabled users (users.disabled) are left out, same as the Users
+ * reporting.
+ */
 export const advisorUsersCte = sql`
   select distinct ur.user_id
   from permissions p
   inner join role_permissions rp on rp.permission_id = p.id
   inner join roles r on r.id = rp.role_id and r.role_type = ${ADVISOR_ROLE_TYPE}
   inner join user_roles ur on ur.role_id = rp.role_id
+  inner join users u on u.unique_id = ur.user_id and u.disabled = false
   where p.namespace = ${ADVISOR_PERMISSION.namespace}
     and p.action = ${ADVISOR_PERMISSION.action}
 `
@@ -76,7 +81,7 @@ export const assignedAdvisorCte = sql`
 `
 
 /**
- * total    = users with the advisor permission through a GLOBAL role
+ * total    = users (not disabled) with the advisor permission through a GLOBAL role
  * verified = of those, profile.verified = true
  * active   = of those, assigned to >= 1 FYP space whose last milestone is not
  *            verified yet (an ongoing project; no milestones counts as ongoing)

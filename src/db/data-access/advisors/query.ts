@@ -37,6 +37,7 @@ import { PaginationType } from "@/src/components/common/types/pagination.type"
 // (limit/offset + db.$count), like GetTasks. Filters use subqueries, never
 // joins. The rules match the snapshot counts (reporting/advisors/query.ts):
 //   - an advisor is anyone holding the advisor permission through a GLOBAL role
+//     and who is not disabled (users.disabled)
 //   - a project (FYP space) is completed when its last milestone is verified
 //   - a project's advisor is whoever accepted its latest advisor request
 
@@ -233,7 +234,9 @@ export async function GetAdminAdvisorsList({
     const offset = page && limit ? (page - 1) * limit : 0
 
     const whereClauses: (SQLWrapper | undefined)[] = [
-      inArray(usersTable.unique_id, advisorUserIds())
+      inArray(usersTable.unique_id, advisorUserIds()),
+      // Disabled users are not valid advisors (matches the snapshot counts)
+      eq(usersTable.disabled, false)
     ]
 
     if (filter === "active") {
