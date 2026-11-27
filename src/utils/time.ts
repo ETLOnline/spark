@@ -85,3 +85,34 @@ export function countOccurrences(p: RecurrencePattern): number {
   const step = p.repeat_type === "daily" ? 1 : 7
   return Math.max(1, Math.floor(days / step) + 1)
 }
+
+/**
+ * Every occurrence date (YYYY-MM-DD, ascending) this pattern has on or after
+ * `fromDateStr`, through its repeat_end_date — or a 1-year cap from
+ * `fromDateStr` if open-ended (no repeat_end_date), matching the cap already
+ * used for the "repeat until" picker (getRepeatUntilOptions in
+ * mentorCalendarUtils.ts). Empty array if the pattern has no occurrence
+ * left on/after `fromDateStr`.
+ */
+export function expandOccurrences(
+  p: RecurrencePattern,
+  fromDateStr: string
+): string[] {
+  const first = nextOccurrenceDate(p, fromDateStr)
+  if (!first) return []
+  if (p.repeat_type === "none") return [first]
+
+  const step = p.repeat_type === "daily" ? 1 : 7
+  const end =
+    p.repeat_end_date ??
+    moment(fromDateStr, "YYYY-MM-DD").add(1, "year").format("YYYY-MM-DD")
+  const endMoment = moment(end, "YYYY-MM-DD")
+
+  const dates: string[] = []
+  let cursor = moment(first, "YYYY-MM-DD")
+  while (!cursor.isAfter(endMoment)) {
+    dates.push(cursor.format("YYYY-MM-DD"))
+    cursor = cursor.clone().add(step, "days")
+  }
+  return dates
+}
