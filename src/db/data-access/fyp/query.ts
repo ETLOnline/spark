@@ -267,7 +267,8 @@ const fypEnrichedCte = sql`
 `
 
 /**
- * One row per FYP-enabled space (spaces."is_FYP_enable" = true), whether or
+ * One row per published FYP-enabled space (spaces."is_FYP_enable" = true and
+ * spaces.publish_space = 1), whether or
  * not it has ever raised an advisor request. The latest request, when there
  * is one, supplies domain/tech stack/advisor; team size is the space's
  * joined members (see the members lateral). Backs every space-driven
@@ -327,6 +328,8 @@ const fypSpacesCte = sql`
     ) members on true
     left join (${lastMilestoneCte}) lm on lm.space_id = s.id
     where s."is_FYP_enable" = true
+      -- Only published spaces count (publish_space = 1).
+      and s.publish_space = 1
   )
 `
 
@@ -447,7 +450,8 @@ export async function GetFypAcademicYears(): Promise<string[]> {
     from (
       select created_at from advisor_requests
       union all
-      select created_at from spaces where "is_FYP_enable" = true
+      select created_at from spaces
+      where "is_FYP_enable" = true and publish_space = 1
     ) r
     order by academic_year desc
   `)
