@@ -39,8 +39,8 @@ export const advisorUsersCte = sql`
 
 // An FYP project is a space that has FYP rows (advisor requests, milestones).
 // spaces."is_FYP_enable" is NOT filtered on: it only toggles FYP features in
-// the UI and can be switched off later, and the faculty FYP dashboard
-// (GetFypDashboardProjects) doesn't filter on it either.
+// the UI and can be switched off later. The faculty FYP dashboard
+// (GetFypDashboardProjects) is the exception: it lists FYP-enabled spaces.
 
 /**
  * Each FYP space's last milestone → (space_id, status, updated_at, created_at). "Last" is
