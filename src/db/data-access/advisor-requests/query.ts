@@ -67,6 +67,12 @@ export const GetAdvisorRequestsForAdvisor = async (advisorId: string) => {
   })
 }
 
+// Accepts a request only while it can still be accepted: it is awaiting
+// approval, its deadline hasn't passed (the expire cron may not have run yet,
+// so the stored status alone isn't enough), and it is still the space's
+// latest request (once a request is expired/rejected the space can raise a new
+// one, and the old one must not be accepted after that). Returns null when the
+// request can't be accepted.
 export const AcceptAdvisorRequest = async (
   requestId: string,
   advisorId: string
@@ -77,7 +83,14 @@ export const AcceptAdvisorRequest = async (
     .where(
       and(
         eq(advisorRequestsTable.id, requestId),
-        eq(advisorRequestsTable.status, AdvisorRequestStatus.AWAITING_APPROVAL)
+        eq(advisorRequestsTable.status, AdvisorRequestStatus.AWAITING_APPROVAL),
+        sql`${advisorRequestsTable.expiry_date}::timestamptz > now()`,
+        sql`not exists (
+          select 1
+          from advisor_requests newer
+          where newer.space_id = ${advisorRequestsTable.space_id}
+            and newer.created_at::timestamptz > ${advisorRequestsTable.created_at}::timestamptz
+        )`
       )
     )
     .returning()

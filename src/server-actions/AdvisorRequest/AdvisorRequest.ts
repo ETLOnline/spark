@@ -1,6 +1,7 @@
 "use server"
 
 import { CreateServerAction } from ".."
+import moment from "moment"
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   AcceptAdvisorRequest,
@@ -222,6 +223,26 @@ function getAdvisorViewerStatus(
   return AdvisorRequestStatus.AWAITING_APPROVAL
 }
 
+// Why AcceptAdvisorRequest refused a request, for the error shown to the advisor.
+async function getAcceptFailureReason(requestId: string): Promise<string> {
+  const request = await GetAdvisorRequestById(requestId)
+  if (!request) return "Request not found."
+  if (request.accepted_by)
+    return "This request has already been resolved by another advisor."
+
+  const latest = await GetLatestAdvisorRequestForSpace(request.space_id)
+  if (latest && latest.id !== request.id)
+    return "A newer advisor request has been submitted for this space, so this request can no longer be accepted."
+
+  if (
+    request.status === AdvisorRequestStatus.EXPIRED ||
+    !moment(request.expiry_date).isAfter(moment())
+  )
+    return "This request has expired and can no longer be accepted."
+
+  return "This request can no longer be accepted."
+}
+
 export const GetAdvisorRequestsForAdvisorAction = CreateServerAction(
   true,
   async () => {
@@ -267,7 +288,7 @@ export const AcceptAdvisorRequestAction = CreateServerAction(
       if (!request) {
         return {
           success: false,
-          error: "This request has already been resolved by another advisor."
+          error: await getAcceptFailureReason(requestId)
         }
       }
 
