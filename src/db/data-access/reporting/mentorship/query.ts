@@ -31,8 +31,11 @@ export async function GetMentorTotalsRaw(): Promise<RawMentorTotalsRow> {
 }
 
 /**
- * "Available" = is_active AND not yet expired — same date-level rule the
- * live Availability Slots modal uses (GetAvailabilitySlotsListAction in
+ * "Available" = is_active AND not yet expired, expanded into every remaining
+ * occurrence of each daily/weekly recurring slot (open-ended series capped
+ * at 1 year out, matching the cap used by getRepeatUntilOptions in
+ * mentorCalendarUtils.ts and expandOccurrences in utils/time.ts) — same rule
+ * the live Availability Slots modal uses (GetAvailabilitySlotsListAction in
  * MentorActions.ts), so this count and that list agree. One intentional gap:
  * this is date-only (no time-of-day), so a one-time slot scheduled earlier
  * today still counts here for the rest of today, while the modal (which also
@@ -41,17 +44,34 @@ export async function GetMentorTotalsRaw(): Promise<RawMentorTotalsRow> {
  */
 export async function GetMentorAvailabilityTotalsRaw(): Promise<RawAvailabilityRow> {
   const rows = await db.execute(sql`
-    select
-      count(*) as total_slots
-    from mentor_availability m
-    where m.is_active = true
-      and (
-        (m.repeat_type = 'none' and m.date >= current_date::text)
-        or (
-          m.repeat_type != 'none'
-          and (m.repeat_end_date is null or m.repeat_end_date >= current_date::text)
-        )
-      )
+    select coalesce(sum(t.occurrence_count), 0) as total_slots
+    from (
+      select
+        case
+          when m.repeat_type = 'none' then
+            case when m.date >= current_date::text then 1 else 0 end
+          when m.repeat_type = 'daily' then (
+            select count(*)
+            from generate_series(
+              greatest(m.date::date, current_date),
+              coalesce(m.repeat_end_date::date, current_date + interval '1 year'),
+              interval '1 day'
+            ) d
+          )
+          when m.repeat_type = 'weekly' then (
+            select count(*)
+            from generate_series(
+              m.date::date,
+              coalesce(m.repeat_end_date::date, current_date + interval '1 year'),
+              interval '7 days'
+            ) d
+            where d >= current_date
+          )
+          else 0
+        end as occurrence_count
+      from mentor_availability m
+      where m.is_active = true
+    ) t
   `)
   return rows[0] as unknown as RawAvailabilityRow
 }

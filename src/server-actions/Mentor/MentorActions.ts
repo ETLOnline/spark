@@ -78,7 +78,12 @@ import {
   SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
 import { getFeatureFlag } from "@/src/db/data-access/feature-flags/query"
-import { MIN_DURATION_MINS, nextOccurrenceDate, toMins } from "@/src/utils/time"
+import {
+  expandOccurrences,
+  MIN_DURATION_MINS,
+  nextOccurrenceDate,
+  toMins
+} from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
 import { sendPushNotification } from "@/src/services/notifications/PushNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -1429,37 +1434,42 @@ export const GetAvailabilitySlotsListAction = CreateServerAction(
       const todayStr = now.format("YYYY-MM-DD")
       const tomorrowStr = now.clone().add(1, "day").format("YYYY-MM-DD")
 
-      // Resolve each slot to its next upcoming occurrence (date-only math via
-      // nextOccurrenceDate), then drop to time-of-day precision so a
-      // recurring/one-time slot whose time already passed today rolls to its
-      // next real occurrence instead of showing as "available now".
+      // Expand each row to every remaining occurrence (date-only math via
+      // expandOccurrences, capped at 1 year out for open-ended recurring
+      // slots — same cap as getRepeatUntilOptions in mentorCalendarUtils.ts),
+      // so a daily/weekly slot counts as many active slots, matching what
+      // the mentor's own calendar view shows per-day. Time-of-day: if the
+      // slot's first remaining occurrence is today but its start time has
+      // already passed, start the expansion from tomorrow instead.
       const upcoming = rows
-        .map((row) => {
+        .flatMap((row) => {
           const pattern = {
             date: row.date,
             repeat_type: row.repeat_type,
             repeat_end_date: row.repeat_end_date
           }
 
-          let occDate = nextOccurrenceDate(pattern, todayStr)
-          if (!occDate) return null
+          let firstDate = nextOccurrenceDate(pattern, todayStr)
+          if (!firstDate) return []
 
-          let occDateTime = moment(
-            `${occDate} ${row.start_time}`,
+          const firstDateTime = moment(
+            `${firstDate} ${row.start_time}`,
             "YYYY-MM-DD HH:mm"
           )
-          if (occDateTime.isBefore(now)) {
-            occDate = nextOccurrenceDate(pattern, tomorrowStr)
-            if (!occDate) return null
-            occDateTime = moment(
+          if (firstDateTime.isBefore(now)) {
+            firstDate = nextOccurrenceDate(pattern, tomorrowStr)
+            if (!firstDate) return []
+          }
+
+          return expandOccurrences(pattern, firstDate).map((occDate) => ({
+            row,
+            occDate,
+            occDateTime: moment(
               `${occDate} ${row.start_time}`,
               "YYYY-MM-DD HH:mm"
             )
-          }
-
-          return { row, occDate, occDateTime }
+          }))
         })
-        .filter((x): x is NonNullable<typeof x> => x !== null)
         .sort((a, b) => a.occDateTime.valueOf() - b.occDateTime.valueOf())
 
       // Group by mentor. `upcoming` is already sorted nearest-first, and a
